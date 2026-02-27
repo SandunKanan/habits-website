@@ -1,0 +1,212 @@
+@use "../../styles/variables" as *;
+
+.habits {
+  display: grid;
+  gap: $pad;
+
+  &__header {
+    padding: $pad;
+
+    > button {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: transparent;
+      color: $text;
+      font: inherit;
+      cursor: pointer;
+    }
+  }
+
+  &__actions {
+    margin-top: 12px;
+
+    button {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: transparent;
+      color: $text;
+      font: inherit;
+      cursor: pointer;
+    }
+  }
+
+  &__form {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(180px, 1fr) 120px 120px auto auto;
+
+    input,
+    button {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: transparent;
+      color: $text;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__feedback {
+    margin: 8px 0 0;
+    color: $text;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: $muted;
+  }
+
+  code {
+    color: $text;
+  }
+
+  &__list {
+    display: grid;
+    gap: $pad;
+  }
+
+  &__item {
+    padding: $pad;
+
+    button {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 7px 10px;
+      background: transparent;
+      color: $text;
+      font: inherit;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    &-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    &-head-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    h3 {
+      margin: 0;
+    }
+
+  }
+
+  &__details {
+    margin: 0;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+
+    div {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    dt {
+      color: $muted;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    dd {
+      margin: 6px 0 0;
+      color: $text;
+      word-break: break-word;
+      font-weight: 600;
+    }
+
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__dates {
+    margin-top: 12px;
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      color: $muted;
+      display: grid;
+      gap: 4px;
+    }
+  }
+
+  &__edit-form {
+    display: grid;
+    gap: 10px;
+
+    h3 {
+      margin: 0 0 4px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: $muted;
+      font-size: 13px;
+    }
+
+    input {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: transparent;
+      color: $text;
+      font: inherit;
+    }
+  }
+
+  &__item-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__delete-btn {
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: rgb(248, 113, 113) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

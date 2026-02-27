@@ -1,0 +1,30 @@
+@use "../../styles/variables" as *;
+
+.layout__main {
+  padding: 18px 0 40px;
+}
+
+.layout__header {
+  padding: $pad;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.layout__title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.layout__subtitle {
+  color: $muted;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.layout__meta {
+  color: $muted;
+  font-size: 14px;
+}

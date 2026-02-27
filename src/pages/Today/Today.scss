@@ -1,0 +1,65 @@
+@use "../../styles/variables" as *;
+
+.today {
+  display: grid;
+  gap: $pad;
+}
+
+.today__section {
+  padding: $pad;
+
+  h2 {
+    margin: 0 0 12px;
+  }
+}
+
+.today__grid {
+  display: grid;
+  gap: 12px;
+}
+
+.today__completed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.today__completed-item {
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  div {
+    display: grid;
+    gap: 4px;
+  }
+
+  small {
+    display: block;
+    color: $muted;
+  }
+}
+
+.today__undo-btn {
+  background: transparent;
+  border: 1px solid $border;
+  color: $text;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.today__empty {
+  margin: 0;
+  color: $muted;
+}

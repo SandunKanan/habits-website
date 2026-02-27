@@ -1,0 +1,54 @@
+@use "../../styles/variables" as *;
+
+.habitcard {
+  padding: $pad;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.habitcard__title {
+  font-weight: 750;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.habitcard__meta {
+  margin-top: 6px;
+  color: $muted;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.habitcard__score {
+  margin-top: 8px;
+  font-size: 13px;
+  color: $muted;
+}
+
+.habitcard__badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid $border;
+
+  &--due {
+    color: $text;
+    background: rgba(251, 191, 36, 0.12);
+  }
+}
+
+.habitcard__btn {
+  background: rgba(45, 212, 191, 0.14);
+  border: 1px solid $border;
+  color: $text;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(45, 212, 191, 0.20);
+  }
+}

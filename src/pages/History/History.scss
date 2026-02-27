@@ -1,0 +1,10 @@
+@use "../../styles/variables" as *;
+
+.history {
+  padding: $pad;
+
+  h2 { margin: 0 0 8px; }
+  p { margin: 8px 0; color: $muted; }
+  ul { margin: 10px 0 0; padding-left: 18px; color: $muted; }
+  li { margin: 6px 0; }
+}

@@ -1,0 +1,39 @@
+@use "../../styles/variables" as *;
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(11, 15, 20, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $border;
+}
+
+.topnav__inner {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topnav__brand {
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.topnav__links {
+  display: flex;
+  gap: 14px;
+
+  a {
+    color: $muted;
+    padding: 8px 10px;
+    border-radius: 10px;
+
+    &.active {
+      color: $text;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid $border;
+    }
+  }
+}
