@@ -1,53 +1,5 @@
 [
   {
-    "id": "stretch",
-    "name": "Stretching",
-    "everyXDays": 1,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "run",
-    "name": "Run",
-    "everyXDays": 3,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "deep-clean",
-    "name": "Deep clean room",
-    "everyXDays": 14,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "finance",
-    "name": "Check finances",
-    "everyXDays": 7,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "read",
-    "name": "Read (30 min)",
-    "everyXDays": 2,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "friends",
-    "name": "Reach out to a friend",
-    "everyXDays": 7,
-    "importance": 0,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
     "id": "face-yoga",
     "name": "Face Yoga",
     "everyXDays": 1,
@@ -72,14 +24,6 @@
     "name": "Forearm Rice Exercises",
     "everyXDays": 1,
     "importance": 4,
-    "initialLastDone": null,
-    "doneDates": []
-  },
-  {
-    "id": "dcsc",
-    "name": "dcsc",
-    "everyXDays": 1,
-    "importance": 1,
     "initialLastDone": null,
     "doneDates": []
   }
