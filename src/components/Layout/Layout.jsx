@@ -11,6 +11,7 @@ export default function Layout({
   onAddHabit,
   onUpdateHabit,
   onDeleteHabit,
+  onAddCompletionDate,
   onMarkDone,
   onUndoDoneToday,
   completionLog
@@ -40,6 +41,7 @@ export default function Layout({
               onAddHabit,
               onUpdateHabit,
               onDeleteHabit,
+              onAddCompletionDate,
               onMarkDone,
               onUndoDoneToday,
               completionLog

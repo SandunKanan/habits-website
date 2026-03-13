@@ -8,6 +8,11 @@
   gap: 14px;
 }
 
+.habitcard__main {
+  flex: 1;
+  min-width: 0;
+}
+
 .habitcard__title {
   font-weight: 750;
   display: flex;
@@ -26,6 +31,43 @@
   margin-top: 8px;
   font-size: 13px;
   color: $muted;
+}
+
+.habitcard__past-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  input,
+  button {
+    border: 1px solid $border;
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: transparent;
+    color: $text;
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+.habitcard__ghost-btn {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid $border;
+  color: $muted;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.habitcard__feedback {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgb(248, 113, 113);
 }
 
 .habitcard__badge {
@@ -50,5 +92,12 @@
 
   &:hover {
     background: rgba(45, 212, 191, 0.20);
+  }
+}
+
+@media (max-width: 720px) {
+  .habitcard {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

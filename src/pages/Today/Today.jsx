@@ -4,8 +4,15 @@ import HabitCard from "../../components/HabitCard/HabitCard.jsx";
 import "./Today.scss";
 
 export default function Today() {
-  const { todayISO, habits, curatedTop5, lastDoneById, onMarkDone, onUndoDoneToday } =
-    useOutletContext();
+  const {
+    todayISO,
+    habits,
+    curatedTop5,
+    lastDoneById,
+    onMarkDone,
+    onAddCompletionDate,
+    onUndoDoneToday
+  } = useOutletContext();
 
   const todoItems = curatedTop5.filter((item) => lastDoneById[item.habit.id] !== todayISO);
   const completedToday = habits.filter((habit) => {
@@ -26,7 +33,9 @@ export default function Today() {
                 key={item.habit.id}
                 item={item}
                 lastDoneISO={lastDoneById[item.habit.id]}
+                todayISO={todayISO}
                 onMarkDone={onMarkDone}
+                onAddCompletionDate={onAddCompletionDate}
               />
             ))}
           </div>

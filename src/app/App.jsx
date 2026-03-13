@@ -189,6 +189,55 @@ export default function App() {
     return { ok: true };
   }
 
+  async function addCompletionDate(habitId, dateISO) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) {
+      return { ok: false, error: "Habit not found." };
+    }
+
+    const parsedDateISO = String(dateISO ?? "").trim();
+    if (!parsedDateISO) {
+      return { ok: false, error: "Completion date is required." };
+    }
+
+    if (parsedDateISO > todayISO) {
+      return { ok: false, error: "Completion date cannot be in the future." };
+    }
+
+    const currentDoneDates = getDoneDates(habit);
+    if (currentDoneDates.includes(parsedDateISO)) {
+      return { ok: false, error: "That completion date already exists." };
+    }
+
+    const nextDoneDates = [...currentDoneDates, parsedDateISO].sort((a, b) => a.localeCompare(b));
+    const nextLastDoneISO = nextDoneDates.reduce((latest, current) =>
+      current > latest ? current : latest
+    );
+
+    setLastDoneById((prev) => ({ ...prev, [habitId]: nextLastDoneISO }));
+    setCompletionLog((prev) => {
+      const nextLog = [{ dateISO: parsedDateISO, habitId }, ...prev];
+      nextLog.sort((a, b) => b.dateISO.localeCompare(a.dateISO));
+      return nextLog;
+    });
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        doneDates: nextDoneDates
+      };
+    });
+
+    setHabits(nextHabits);
+    const persisted = await persistHabits(nextHabits);
+    if (!persisted) {
+      return { ok: false, error: "Could not save habits.json." };
+    }
+
+    return { ok: true };
+  }
+
   function markDone(habitId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
@@ -257,6 +306,7 @@ export default function App() {
             onAddHabit={addHabit}
             onUpdateHabit={updateHabit}
             onDeleteHabit={deleteHabit}
+            onAddCompletionDate={addCompletionDate}
             onMarkDone={markDone}
             onUndoDoneToday={undoDoneToday}
             completionLog={completionLog}

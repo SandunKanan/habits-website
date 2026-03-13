@@ -1,8 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import "./HabitCard.scss";
 
-export default function HabitCard({ item, lastDoneISO, onMarkDone }) {
+export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
   const { habit, priorityScore, due, daysSinceLastDone, intervalDays, importance } = item;
+  const [isPastOpen, setIsPastOpen] = useState(false);
+  const [pastDateISO, setPastDateISO] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [isSavingPast, setIsSavingPast] = useState(false);
+
+  async function handleAddPastCompletion(e) {
+    e.preventDefault();
+    setFeedback("");
+    setIsSavingPast(true);
+
+    const result = await onAddCompletionDate(habit.id, pastDateISO);
+    if (result?.ok) {
+      setPastDateISO("");
+      setIsPastOpen(false);
+    } else {
+      setFeedback(result?.error ?? "Could not add completion date.");
+    }
+
+    setIsSavingPast(false);
+  }
 
   return (
     <div className="habitcard card">
@@ -20,9 +40,33 @@ export default function HabitCard({ item, lastDoneISO, onMarkDone }) {
         <div className="habitcard__score">
           Priority score: <b>{priorityScore.toFixed(2)}</b>
         </div>
+
+        {isPastOpen ? (
+          <form className="habitcard__past-form" onSubmit={handleAddPastCompletion}>
+            <input
+              type="date"
+              value={pastDateISO}
+              max={todayISO}
+              onChange={(e) => setPastDateISO(e.target.value)}
+              required
+            />
+            <button type="submit" disabled={isSavingPast}>
+              {isSavingPast ? "Saving..." : "Save past date"}
+            </button>
+            <button type="button" onClick={() => setIsPastOpen(false)} disabled={isSavingPast}>
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <button className="habitcard__ghost-btn" type="button" onClick={() => setIsPastOpen(true)}>
+            Add past completion
+          </button>
+        )}
+
+        {feedback ? <div className="habitcard__feedback">{feedback}</div> : null}
       </div>
 
-      <button className="habitcard__btn" onClick={() => onMarkDone(habit.id)}>
+      <button className="habitcard__btn" type="button" onClick={() => onMarkDone(habit.id)}>
         Mark done
       </button>
     </div>
