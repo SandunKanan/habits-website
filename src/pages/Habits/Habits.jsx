@@ -98,7 +98,7 @@ export default function Habits() {
       <div className="habits__header card">
         <h2>All Habits</h2>
         <p>
-          Loaded from <code>src/data/habits.json</code>. Total: <b>{habits.length}</b>
+          Synced habits store. Total: <b>{habits.length}</b>
         </p>
 
         {!isAddOpen ? (

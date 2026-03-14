@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "../components/Layout/Layout.jsx";
 
@@ -6,7 +6,6 @@ import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import History from "../pages/History/History.jsx";
 
-import habitsData from "../data/habits.json";
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
 import "./App.scss";
@@ -42,20 +41,57 @@ function getMostRecentDoneISO(habit) {
 }
 
 export default function App() {
-  const [habits, setHabits] = useState(habitsData);
+  const [habits, setHabits] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  // lastDoneById: { [habitId]: "YYYY-MM-DD" }
-  const [lastDoneById, setLastDoneById] = useState(() => {
-    // Seed from JSON doneDates/initialLastDone
+  const todayISO = startOfTodayLocalISO();
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadHabits() {
+      try {
+        setLoadError("");
+        const res = await fetch("/api/habits");
+        if (!res.ok) {
+          throw new Error(`Load failed with status ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!ignore) {
+          setHabits(Array.isArray(data.habits) ? data.habits : []);
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error("Failed to load habits", error);
+          setLoadError("Could not load habits data.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadHabits();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const lastDoneById = useMemo(() => {
     const map = {};
-    for (const h of habitsData) map[h.id] = getMostRecentDoneISO(h);
+    for (const h of habits) {
+      map[h.id] = getMostRecentDoneISO(h);
+    }
     return map;
-  });
+  }, [habits]);
 
-  // completionLog: array of { dateISO, habitId }
-  const [completionLog, setCompletionLog] = useState(() => {
+  const completionLog = useMemo(() => {
     const seeded = [];
-    for (const h of habitsData) {
+    for (const h of habits) {
       for (const dateISO of getDoneDates(h)) {
         seeded.push({ dateISO, habitId: h.id });
       }
@@ -63,9 +99,7 @@ export default function App() {
 
     seeded.sort((a, b) => b.dateISO.localeCompare(a.dateISO));
     return seeded;
-  });
-
-  const todayISO = startOfTodayLocalISO();
+  }, [habits]);
 
   const curatedTop5 = useMemo(() => {
     const scored = habits.map((h) => {
@@ -94,10 +128,15 @@ export default function App() {
         throw new Error(`Persist failed with status ${res.status}`);
       }
 
-      return true;
+      const data = await res.json();
+      if (Array.isArray(data.habits)) {
+        setHabits(data.habits);
+      }
+
+      return { ok: true, habits: Array.isArray(data.habits) ? data.habits : nextHabits };
     } catch (error) {
       console.error("Failed to persist habits.json", error);
-      return false;
+      return { ok: false };
     }
   }
 
@@ -122,10 +161,9 @@ export default function App() {
 
     const nextHabits = [...habits, newHabit];
     setHabits(nextHabits);
-    setLastDoneById((prev) => ({ ...prev, [id]: null }));
 
     const persisted = await persistHabits(nextHabits);
-    if (!persisted) {
+    if (!persisted.ok) {
       return { ok: false, error: "Could not save habits.json." };
     }
 
@@ -158,7 +196,7 @@ export default function App() {
 
     setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
-    if (!persisted) {
+    if (!persisted.ok) {
       return { ok: false, error: "Could not save habits.json." };
     }
 
@@ -174,15 +212,8 @@ export default function App() {
     const nextHabits = habits.filter((h) => h.id !== habitId);
     setHabits(nextHabits);
 
-    setLastDoneById((prev) => {
-      const { [habitId]: _deleted, ...rest } = prev;
-      return rest;
-    });
-
-    setCompletionLog((prev) => prev.filter((e) => e.habitId !== habitId));
-
     const persisted = await persistHabits(nextHabits);
-    if (!persisted) {
+    if (!persisted.ok) {
       return { ok: false, error: "Could not save habits.json." };
     }
 
@@ -210,16 +241,6 @@ export default function App() {
     }
 
     const nextDoneDates = [...currentDoneDates, parsedDateISO].sort((a, b) => a.localeCompare(b));
-    const nextLastDoneISO = nextDoneDates.reduce((latest, current) =>
-      current > latest ? current : latest
-    );
-
-    setLastDoneById((prev) => ({ ...prev, [habitId]: nextLastDoneISO }));
-    setCompletionLog((prev) => {
-      const nextLog = [{ dateISO: parsedDateISO, habitId }, ...prev];
-      nextLog.sort((a, b) => b.dateISO.localeCompare(a.dateISO));
-      return nextLog;
-    });
 
     const nextHabits = habits.map((h) => {
       if (h.id !== habitId) return h;
@@ -231,7 +252,7 @@ export default function App() {
 
     setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
-    if (!persisted) {
+    if (!persisted.ok) {
       return { ok: false, error: "Could not save habits.json." };
     }
 
@@ -245,9 +266,6 @@ export default function App() {
     const currentDoneDates = getDoneDates(habit);
     const alreadyDoneToday = currentDoneDates.includes(todayISO);
     if (alreadyDoneToday) return;
-
-    setLastDoneById((prev) => ({ ...prev, [habitId]: todayISO }));
-    setCompletionLog((prev) => [{ dateISO: todayISO, habitId }, ...prev]);
 
     const nextHabits = habits.map((h) => {
       if (h.id !== habitId) return h;
@@ -269,18 +287,6 @@ export default function App() {
     if (!currentDoneDates.includes(todayISO)) return;
 
     const nextDoneDates = currentDoneDates.filter((dateISO) => dateISO !== todayISO);
-    const previousDoneISO =
-      nextDoneDates.length > 0
-        ? nextDoneDates.reduce((latest, dateISO) => (dateISO > latest ? dateISO : latest))
-        : habit.initialLastDone ?? null;
-
-    setLastDoneById((prev) => ({ ...prev, [habitId]: previousDoneISO }));
-
-    setCompletionLog((prev) => {
-      const idx = prev.findIndex((e) => e.dateISO === todayISO && e.habitId === habitId);
-      if (idx === -1) return prev;
-      return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
-    });
 
     const nextHabits = habits.map((h) => {
       if (h.id !== habitId) return h;
@@ -292,6 +298,14 @@ export default function App() {
 
     setHabits(nextHabits);
     void persistHabits(nextHabits);
+  }
+
+  if (isLoading) {
+    return <div className="appstatus card">Loading habits...</div>;
+  }
+
+  if (loadError) {
+    return <div className="appstatus card">{loadError}</div>;
   }
 
   return (

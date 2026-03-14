@@ -7,7 +7,8 @@
     "initialLastDone": null,
     "doneDates": [
       "2026-02-27",
-      "2026-03-12"
+      "2026-03-12",
+      "2026-03-13"
     ]
   },
   {
@@ -17,7 +18,9 @@
     "importance": 4,
     "initialLastDone": null,
     "doneDates": [
-      "2026-02-27"
+      "2026-02-27",
+      "2026-03-12",
+      "2026-03-13"
     ]
   },
   {
@@ -25,6 +28,59 @@
     "name": "Forearm Rice Exercises",
     "everyXDays": 1,
     "importance": 4,
+    "initialLastDone": null,
+    "doneDates": [
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-14"
+    ]
+  },
+  {
+    "id": "hair-mask",
+    "name": "Hair Mask",
+    "everyXDays": 14,
+    "importance": 4,
+    "initialLastDone": null,
+    "doneDates": [
+      "2026-03-14"
+    ]
+  },
+  {
+    "id": "body-coconut-oil",
+    "name": "Apply Coconut Oil on Body",
+    "everyXDays": 14,
+    "importance": 4,
+    "initialLastDone": null,
+    "doneDates": [
+      "2026-03-14"
+    ]
+  },
+  {
+    "id": "shave-body-hair",
+    "name": "Shave Body Hair",
+    "everyXDays": 28,
+    "importance": 3,
+    "initialLastDone": null,
+    "doneDates": [
+      "2026-02-21"
+    ]
+  },
+  {
+    "id": "shower-exfoliate",
+    "name": "Exfoliate in Shower",
+    "everyXDays": 7,
+    "importance": 4,
+    "initialLastDone": null,
+    "doneDates": [
+      "2026-03-14"
+    ]
+  },
+  {
+    "id": "yoga-sadhana",
+    "name": "Yoga Sadhana",
+    "everyXDays": 1,
+    "importance": 1,
     "initialLastDone": null,
     "doneDates": []
   }

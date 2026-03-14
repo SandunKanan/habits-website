@@ -1,16 +1,41 @@
-# React + Vite
+# Habits Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite habits tracker with Vercel API routes and a Supabase-backed store.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Install dependencies and run:
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+If `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not set, the app falls back to `src/data/habits.json` for local storage.
 
-## Expanding the ESLint configuration
+## Supabase setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Create a Supabase project.
+2. Open the SQL editor and run [supabase/schema.sql](/Users/sandunkanangama/Documents/Code/habits-website/supabase/schema.sql).
+3. Copy your project URL and service role key from Supabase project settings.
+
+## Environment variables
+
+Create `.env.local` from [.env.example](/Users/sandunkanangama/Documents/Code/habits-website/.env.example):
+
+```bash
+cp .env.example .env.local
+```
+
+Set:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+## Vercel deployment
+
+1. Import the repo into Vercel.
+2. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project environment variables.
+3. Deploy.
+
+The first load will seed Supabase from `src/data/habits.json` if the `habits_state` row is empty.
