@@ -2,16 +2,20 @@
 
 .habits {
   display: grid;
-  gap: $pad;
+  gap: 18px;
 
   &__header {
-    padding: $pad;
+    padding: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(82, 214, 195, 0.12), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+      $panel;
 
     > button {
       border: 1px solid $border;
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: transparent;
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.03);
       color: $text;
       font: inherit;
       cursor: pointer;
@@ -22,13 +26,19 @@
     margin-top: 12px;
 
     button {
-      border: 1px solid $border;
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: transparent;
+      border: 1px solid $border-strong;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(82, 214, 195, 0.16), rgba(143, 211, 255, 0.12));
       color: $text;
       font: inherit;
       cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(82, 214, 195, 0.12);
+      }
     }
   }
 
@@ -41,15 +51,21 @@
     input,
     button {
       border: 1px solid $border;
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: transparent;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
       color: $text;
       font: inherit;
     }
 
     button {
       cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+      }
 
       &:disabled {
         opacity: 0.6;
@@ -63,12 +79,15 @@
   }
 
   &__feedback {
-    margin: 8px 0 0;
-    color: $text;
+    margin: 10px 0 0;
+    color: $accent;
   }
 
   h2 {
     margin: 0 0 8px;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(1.75rem, 3vw, 2.4rem);
+    line-height: 1;
   }
 
   p {
@@ -82,20 +101,32 @@
 
   &__list {
     display: grid;
-    gap: $pad;
+    gap: 16px;
   }
 
   &__item {
-    padding: $pad;
+    padding: 20px;
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(143, 211, 255, 0.05), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+      $panel;
 
     button {
       border: 1px solid $border;
-      border-radius: 10px;
-      padding: 7px 10px;
-      background: transparent;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.03);
       color: $text;
       font: inherit;
       cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: $border-strong;
+        transform: translateY(-1px);
+      }
 
       &:disabled {
         opacity: 0.6;
@@ -106,9 +137,9 @@
     &-head {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     &-head-actions {
@@ -118,6 +149,7 @@
 
     h3 {
       margin: 0;
+      font-size: 1.18rem;
     }
 
   }
@@ -130,8 +162,9 @@
 
     div {
       border: 1px solid $border;
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
     dt {
@@ -155,12 +188,19 @@
   &__dates {
     margin-top: 12px;
 
+    button {
+      color: $accent;
+    }
+
     ul {
-      margin: 8px 0 0;
-      padding-left: 20px;
+      margin: 10px 0 0;
+      padding: 14px 16px 14px 32px;
       color: $muted;
       display: grid;
       gap: 4px;
+      border: 1px solid $border;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.02);
     }
   }
 
@@ -181,9 +221,9 @@
 
     input {
       border: 1px solid $border;
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: transparent;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
       color: $text;
       font: inherit;
     }

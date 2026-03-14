@@ -7,9 +7,9 @@ export default function History() {
 
   return (
     <div className="history card">
-      <h2>History (MVP)</h2>
+      <h2>Completion History</h2>
       {completionLog.length === 0 ? (
-        <p>No completions yet. Mark something done on Today.</p>
+        <p>No completions yet. Start logging habits from the Today view.</p>
       ) : (
         <ul>
           {completionLog.slice(0, 25).map((e, idx) => (

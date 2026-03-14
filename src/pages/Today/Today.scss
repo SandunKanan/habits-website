@@ -2,20 +2,36 @@
 
 .today {
   display: grid;
-  gap: $pad;
+  gap: 18px;
 }
 
 .today__section {
-  padding: $pad;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(143, 211, 255, 0.12), transparent 70%);
+    pointer-events: none;
+  }
 
   h2 {
-    margin: 0 0 12px;
+    position: relative;
+    margin: 0 0 16px;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
   }
 }
 
 .today__grid {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .today__completed-list {
@@ -28,38 +44,48 @@
 
 .today__completed-item {
   border: 1px solid $border;
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 16px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  background: linear-gradient(135deg, rgba(82, 214, 195, 0.09), rgba(143, 211, 255, 0.04));
 
   div {
     display: grid;
     gap: 4px;
   }
 
+  span {
+    font-weight: 650;
+  }
+
   small {
     display: block;
     color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 }
 
 .today__undo-btn {
-  background: transparent;
-  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid $border-strong;
   color: $text;
-  border-radius: 10px;
-  padding: 6px 10px;
+  border-radius: 999px;
+  padding: 8px 12px;
   cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
   }
 }
 
 .today__empty {
   margin: 0;
   color: $muted;
+  font-style: italic;
 }

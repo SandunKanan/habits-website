@@ -1,12 +1,18 @@
-$bg: #0b0f14;
-$panel: #121826;
-$text: #e6edf3;
-$muted: #9aa4b2;
-$border: rgba(255,255,255,0.08);
+$bg: #09111a;
+$bg-elevated: #0f1b28;
+$panel: rgba(11, 20, 31, 0.88);
+$panel-strong: #132334;
+$text: #eef5fb;
+$muted: #9db0c3;
+$border: rgba(167, 206, 255, 0.12);
+$border-strong: rgba(167, 206, 255, 0.2);
 
 $radius: 14px;
 $pad: 16px;
 
-$good: #2dd4bf;
-$warn: #fbbf24;
+$good: #52d6c3;
+$warn: #f0bf55;
 $bad: #fb7185;
+$accent: #8fd3ff;
+$accent-deep: #3b82a6;
+$shadow-lg: 0 24px 64px rgba(2, 8, 18, 0.38);

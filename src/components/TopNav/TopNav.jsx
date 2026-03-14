@@ -6,7 +6,7 @@ export default function TopNav() {
   return (
     <nav className="topnav">
       <div className="container topnav__inner">
-        <div className="topnav__brand">Habits</div>
+        <div className="topnav__brand">Habit Ledger</div>
         <div className="topnav__links">
           <NavLink to="/today" className={({ isActive }) => (isActive ? "active" : "")}>
             Today

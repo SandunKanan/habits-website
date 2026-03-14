@@ -1,10 +1,38 @@
 @use "../../styles/variables" as *;
 
 .history {
-  padding: $pad;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
 
-  h2 { margin: 0 0 8px; }
-  p { margin: 8px 0; color: $muted; }
-  ul { margin: 10px 0 0; padding-left: 18px; color: $muted; }
-  li { margin: 6px 0; }
+  h2 {
+    margin: 0 0 8px;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.9rem;
+  }
+
+  p {
+    margin: 10px 0;
+    color: $muted;
+    font-style: italic;
+  }
+
+  ul {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+    color: $muted;
+  }
+
+  li {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid $border;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+  }
 }

@@ -4,36 +4,79 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(11, 15, 20, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(9, 17, 26, 0.76);
+  backdrop-filter: blur(18px);
   border-bottom: 1px solid $border;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
 }
 
 .topnav__inner {
-  height: 56px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .topnav__brand {
-  font-weight: 800;
-  letter-spacing: 0.2px;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $text;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: -10px;
+    bottom: -8px;
+    height: 1px;
+    background: linear-gradient(90deg, $good, transparent);
+  }
 }
 
 .topnav__links {
   display: flex;
-  gap: 14px;
+  gap: 10px;
 
   a {
     color: $muted;
-    padding: 8px 10px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease,
+      transform 0.18s ease;
+
+    &:hover {
+      color: $text;
+      border-color: $border;
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-1px);
+    }
 
     &.active {
       color: $text;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid $border;
+      background: linear-gradient(135deg, rgba(82, 214, 195, 0.15), rgba(143, 211, 255, 0.12));
+      border: 1px solid $border-strong;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
+  }
+}
+
+@media (max-width: 720px) {
+  .topnav__inner {
+    height: auto;
+    padding: 14px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .topnav__links {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
 }
