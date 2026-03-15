@@ -25,10 +25,12 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
   const priorityScore = behindRatio * importance;
 
   const due = importance > 0 && daysSinceLastDone >= intervalDays;
+  const overdueDays = due ? Math.max(0, daysSinceLastDone - intervalDays) : 0;
 
   return {
     intervalDays,
     daysSinceLastDone,
+    overdueDays,
     behindRatio,
     importance,
     priorityScore,

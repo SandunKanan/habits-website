@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./HabitCard.scss";
 
 export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
-  const { habit, priorityScore, due, daysSinceLastDone, intervalDays, importance } = item;
+  const { habit, priorityScore, due, overdueDays, intervalDays, importance } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -34,7 +34,17 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
 
         <div className="habitcard__meta">
           Every <b>{intervalDays}</b>d · Importance <b>{importance}</b> · Last done{" "}
-          <b>{lastDoneISO ?? "never"}</b> · Behind <b>{daysSinceLastDone ?? "—"}</b>d
+          <b>{lastDoneISO ?? "never"}</b> · {due ? (
+            overdueDays > 0 ? (
+              <>
+                Behind <b>{overdueDays}</b>d
+              </>
+            ) : (
+              <>Due today</>
+            )
+          ) : (
+            <>On schedule</>
+          )}
         </div>
 
         <div className="habitcard__score">

@@ -108,7 +108,7 @@ export default function App() {
       return { habit: h, ...s };
     });
 
-    const schedulable = scored.filter((item) => item.importance > 0);
+    const schedulable = scored.filter((item) => item.importance > 0 && item.due);
 
     // Sort by priorityScore desc
     schedulable.sort((a, b) => b.priorityScore - a.priorityScore);
