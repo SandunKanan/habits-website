@@ -1,11 +1,7 @@
-create table if not exists public.habits_state (
-  id text primary key,
+create table if not exists public.user_habits_state (
+  user_id uuid primary key references auth.users (id) on delete cascade,
   habits jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-alter table public.habits_state enable row level security;
-
-insert into public.habits_state (id, habits)
-values ('default', '[]'::jsonb)
-on conflict (id) do nothing;
+alter table public.user_habits_state enable row level security;

@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const DEFAULT_ROW_ID = "default";
 const localHabitsPath = path.resolve(process.cwd(), "src/data/habits.json");
 
 function getSupabaseConfig() {
@@ -45,9 +44,9 @@ async function writeLocalHabits(habits) {
   return normalized;
 }
 
-async function loadFromSupabase(config) {
+async function loadFromSupabase(config, userId) {
   const res = await fetch(
-    `${config.url}/rest/v1/habits_state?id=eq.${DEFAULT_ROW_ID}&select=habits`,
+    `${config.url}/rest/v1/user_habits_state?user_id=eq.${userId}&select=habits`,
     {
       headers: {
         apikey: config.serviceRoleKey,
@@ -63,16 +62,16 @@ async function loadFromSupabase(config) {
   const rows = await res.json();
   if (rows.length === 0) {
     const fallbackHabits = await readLocalHabits();
-    return saveToSupabase(config, fallbackHabits);
+    return saveToSupabase(config, userId, fallbackHabits);
   }
 
   return normalizeHabits(rows[0].habits);
 }
 
-async function saveToSupabase(config, habits) {
+async function saveToSupabase(config, userId, habits) {
   const normalized = normalizeHabits(habits);
   const res = await fetch(
-    `${config.url}/rest/v1/habits_state?on_conflict=id`,
+    `${config.url}/rest/v1/user_habits_state?on_conflict=user_id`,
     {
       method: "POST",
       headers: {
@@ -83,7 +82,7 @@ async function saveToSupabase(config, habits) {
       },
       body: JSON.stringify([
         {
-          id: DEFAULT_ROW_ID,
+          user_id: userId,
           habits: normalized
         }
       ])
@@ -98,20 +97,20 @@ async function saveToSupabase(config, habits) {
   return normalizeHabits(rows[0]?.habits ?? normalized);
 }
 
-export async function loadHabitsFromStore() {
+export async function loadHabitsFromStore(userId) {
   const supabaseConfig = getSupabaseConfig();
   if (!supabaseConfig) {
     return readLocalHabits();
   }
 
-  return loadFromSupabase(supabaseConfig);
+  return loadFromSupabase(supabaseConfig, userId);
 }
 
-export async function saveHabitsToStore(habits) {
+export async function saveHabitsToStore(userId, habits) {
   const supabaseConfig = getSupabaseConfig();
   if (!supabaseConfig) {
     return writeLocalHabits(habits);
   }
 
-  return saveToSupabase(supabaseConfig, habits);
+  return saveToSupabase(supabaseConfig, userId, habits);
 }

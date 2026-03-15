@@ -5,9 +5,17 @@ import Layout from "../components/Layout/Layout.jsx";
 import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import History from "../pages/History/History.jsx";
+import Auth from "../pages/Auth/Auth.jsx";
 
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
+import {
+  initializeAuth,
+  isAuthEnabled,
+  signInWithPassword,
+  signOutCurrentSession,
+  signUpWithPassword
+} from "../lib/authClient.js";
 import "./App.scss";
 
 function getDoneDates(habit) {
@@ -44,16 +52,64 @@ export default function App() {
   const [habits, setHabits] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [session, setSession] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAuthWorking, setIsAuthWorking] = useState(false);
 
   const todayISO = startOfTodayLocalISO();
+  const authEnabled = isAuthEnabled();
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function bootstrapAuth() {
+      if (!authEnabled) {
+        if (!ignore) {
+          setIsAuthReady(true);
+        }
+        return;
+      }
+
+      const { session: nextSession, user } = await initializeAuth();
+      if (!ignore) {
+        setSession(nextSession);
+        setAuthUser(user);
+        setIsAuthReady(true);
+      }
+    }
+
+    void bootstrapAuth();
+
+    return () => {
+      ignore = true;
+    };
+  }, [authEnabled]);
 
   useEffect(() => {
     let ignore = false;
 
     async function loadHabits() {
+      if (!isAuthReady) return;
+      if (authEnabled && !session?.access_token) {
+        if (!ignore) {
+          setHabits([]);
+          setIsLoading(false);
+          setLoadError("");
+        }
+        return;
+      }
+
       try {
+        if (!ignore) {
+          setIsLoading(true);
+        }
         setLoadError("");
-        const res = await fetch("/api/habits");
+        const res = await fetch("/api/habits", {
+          headers: session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : undefined
+        });
         if (!res.ok) {
           throw new Error(`Load failed with status ${res.status}`);
         }
@@ -79,7 +135,7 @@ export default function App() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [authEnabled, isAuthReady, session?.access_token]);
 
   const lastDoneById = useMemo(() => {
     const map = {};
@@ -120,7 +176,10 @@ export default function App() {
     try {
       const res = await fetch("/api/habits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify(nextHabits)
       });
 
@@ -300,12 +359,68 @@ export default function App() {
     void persistHabits(nextHabits);
   }
 
+  async function handleSignIn({ email, password }) {
+    setIsAuthWorking(true);
+
+    try {
+      const { session: nextSession, user } = await signInWithPassword({ email, password });
+      setIsLoading(true);
+      setSession(nextSession);
+      setAuthUser(user);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    } finally {
+      setIsAuthWorking(false);
+    }
+  }
+
+  async function handleSignUp({ email, password }) {
+    setIsAuthWorking(true);
+
+    try {
+      const result = await signUpWithPassword({ email, password });
+      if (result.requiresEmailConfirmation) {
+        return {
+          ok: true,
+          message: "Account created. Check your email to confirm, then sign in."
+        };
+      }
+
+      setIsLoading(true);
+      setSession(result.session);
+      setAuthUser(result.user);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    } finally {
+      setIsAuthWorking(false);
+    }
+  }
+
+  async function handleSignOut() {
+    await signOutCurrentSession(session);
+    setSession(null);
+    setAuthUser(null);
+    setHabits([]);
+    setIsLoading(false);
+    setLoadError("");
+  }
+
+  if (authEnabled && !isAuthReady) {
+    return <div className="appstatus card">Checking session...</div>;
+  }
+
   if (isLoading) {
     return <div className="appstatus card">Loading habits...</div>;
   }
 
   if (loadError) {
     return <div className="appstatus card">{loadError}</div>;
+  }
+
+  if (authEnabled && !session) {
+    return <Auth onSignIn={handleSignIn} onSignUp={handleSignUp} isLoading={isAuthWorking} />;
   }
 
   return (
@@ -324,6 +439,8 @@ export default function App() {
             onMarkDone={markDone}
             onUndoDoneToday={undoDoneToday}
             completionLog={completionLog}
+            authUser={authUser}
+            onSignOut={handleSignOut}
           />
         }
       >

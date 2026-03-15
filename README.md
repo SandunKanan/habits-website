@@ -1,6 +1,6 @@
 # Habits Website
 
-React + Vite habits tracker with Vercel API routes and a Supabase-backed store.
+React + Vite habits tracker with Vercel API routes, Supabase-backed storage, and Supabase Auth.
 
 ## Local development
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-If `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are not set, the app falls back to `src/data/habits.json` for local storage.
+If the Supabase variables are not set, the app falls back to `src/data/habits.json` for local storage and skips auth.
 
 ## Supabase setup
 
@@ -29,6 +29,8 @@ cp .env.example .env.local
 
 Set:
 
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -36,6 +38,7 @@ Set:
 
 1. Import the repo into Vercel.
 2. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project environment variables.
-3. Deploy.
+3. In Supabase Auth settings, enable the email/password provider.
+4. Deploy.
 
-The first load will seed Supabase from `src/data/habits.json` if the `habits_state` row is empty.
+The first authenticated load for a user will seed their `user_habits_state` row from `src/data/habits.json` if they do not yet have saved habits.

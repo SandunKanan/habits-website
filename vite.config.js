@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { getAuthenticatedUserFromAccessToken, isServerAuthEnabled } from "./server/authUser.js";
 import { loadHabitsFromStore, saveHabitsToStore } from "./server/habitsStore.js";
 
 function habitsPersistencePlugin() {
@@ -15,8 +16,23 @@ function habitsPersistencePlugin() {
         }
 
         try {
+          let authUser = null;
+          if (isServerAuthEnabled()) {
+            const authHeader = req.headers.authorization;
+            const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+            const auth = await getAuthenticatedUserFromAccessToken(accessToken);
+            if (auth?.error) {
+              res.statusCode = 401;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ ok: false, error: auth.error }));
+              return;
+            }
+
+            authUser = auth?.user ?? null;
+          }
+
           if (req.method === "GET") {
-            const habits = await loadHabitsFromStore();
+            const habits = await loadHabitsFromStore(authUser?.id);
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ habits }));
@@ -34,7 +50,7 @@ function habitsPersistencePlugin() {
             return;
           }
 
-          const habits = await saveHabitsToStore(parsed);
+          const habits = await saveHabitsToStore(authUser?.id, parsed);
 
           res.statusCode = 200;
           res.setHeader("Content-Type", "application/json");

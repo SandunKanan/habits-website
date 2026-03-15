@@ -14,11 +14,13 @@ export default function Layout({
   onAddCompletionDate,
   onMarkDone,
   onUndoDoneToday,
-  completionLog
+  completionLog,
+  authUser,
+  onSignOut
 }) {
   return (
     <div className="layout">
-      <TopNav />
+      <TopNav authUser={authUser} onSignOut={onSignOut} />
 
       <main className="container layout__main">
         <header className="layout__header card">

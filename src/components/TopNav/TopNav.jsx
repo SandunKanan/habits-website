@@ -2,21 +2,32 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import "./TopNav.scss";
 
-export default function TopNav() {
+export default function TopNav({ authUser, onSignOut }) {
   return (
     <nav className="topnav">
       <div className="container topnav__inner">
         <div className="topnav__brand">Habit Ledger</div>
-        <div className="topnav__links">
-          <NavLink to="/today" className={({ isActive }) => (isActive ? "active" : "")}>
-            Today
-          </NavLink>
-          <NavLink to="/habits" className={({ isActive }) => (isActive ? "active" : "")}>
-            Habits
-          </NavLink>
-          <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
-            History
-          </NavLink>
+        <div className="topnav__right">
+          <div className="topnav__links">
+            <NavLink to="/today" className={({ isActive }) => (isActive ? "active" : "")}>
+              Today
+            </NavLink>
+            <NavLink to="/habits" className={({ isActive }) => (isActive ? "active" : "")}>
+              Habits
+            </NavLink>
+            <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
+              History
+            </NavLink>
+          </div>
+
+          {authUser ? (
+            <div className="topnav__account">
+              <span>{authUser.email}</span>
+              <button type="button" onClick={onSignOut}>
+                Sign out
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </nav>

@@ -17,6 +17,12 @@
   justify-content: space-between;
 }
 
+.topnav__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .topnav__brand {
   font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
   font-weight: 700;
@@ -65,6 +71,30 @@
   }
 }
 
+.topnav__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: $muted;
+  font-size: 0.92rem;
+
+  span {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    cursor: pointer;
+  }
+}
+
 @media (max-width: 720px) {
   .topnav__inner {
     height: auto;
@@ -74,9 +104,20 @@
     gap: 14px;
   }
 
+  .topnav__right {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .topnav__links {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
+  }
+
+  .topnav__account {
+    width: 100%;
+    justify-content: space-between;
   }
 }
