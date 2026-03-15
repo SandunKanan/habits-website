@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { daysBetweenISO, startOfTodayLocalISO } from "../../lib/date.js";
 import "./Habits.scss";
 
 export default function Habits() {
@@ -17,6 +18,20 @@ export default function Habits() {
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDatesById, setExpandedDatesById] = useState({});
+  const todayISO = startOfTodayLocalISO();
+
+  function formatLastCompleted(dateISO) {
+    if (!dateISO) return "Never";
+
+    const daysAgo = daysBetweenISO(dateISO, todayISO);
+    if (daysAgo !== null && daysAgo >= 0 && daysAgo <= 7) {
+      if (daysAgo === 0) return "Today";
+      if (daysAgo === 1) return "1 day ago";
+      return `${daysAgo} days ago`;
+    }
+
+    return dateISO;
+  }
 
   async function handleAddHabit(e) {
     e.preventDefault();
@@ -220,7 +235,7 @@ export default function Habits() {
                 {(() => {
                   const doneDates = Array.isArray(habit.doneDates) ? habit.doneDates : [];
                   const sortedDoneDates = [...doneDates].sort((a, b) => b.localeCompare(a));
-                  const lastCompleted = sortedDoneDates[0] ?? "Never";
+                  const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
                   const isExpanded = Boolean(expandedDatesById[habit.id]);
 
                   return (

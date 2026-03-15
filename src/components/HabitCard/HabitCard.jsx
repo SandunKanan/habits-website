@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { daysBetweenISO } from "../../lib/date.js";
 import "./HabitCard.scss";
 
 export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
@@ -7,6 +8,19 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
+
+  function formatLastDone(dateISO) {
+    if (!dateISO) return "never";
+
+    const daysAgo = daysBetweenISO(dateISO, todayISO);
+    if (daysAgo !== null && daysAgo >= 0 && daysAgo <= 7) {
+      if (daysAgo === 0) return "today";
+      if (daysAgo === 1) return "1 day ago";
+      return `${daysAgo} days ago`;
+    }
+
+    return dateISO;
+  }
 
   async function handleAddPastCompletion(e) {
     e.preventDefault();
@@ -34,7 +48,7 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
 
         <div className="habitcard__meta">
           Every <b>{intervalDays}</b>d · Importance <b>{importance}</b> · Last done{" "}
-          <b>{lastDoneISO ?? "never"}</b> · {due ? (
+          <b>{formatLastDone(lastDoneISO)}</b> · {due ? (
             overdueDays > 0 ? (
               <>
                 Behind <b>{overdueDays}</b>d
