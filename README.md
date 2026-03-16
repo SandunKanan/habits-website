@@ -1,6 +1,6 @@
 # Habits Website
 
-React + Vite habits tracker with Vercel API routes, Supabase-backed storage, and Supabase Auth.
+React + Vite habits tracker with Supabase-backed storage, Supabase Auth, and row-level security.
 
 ## Local development
 
@@ -11,13 +11,13 @@ npm install
 npm run dev
 ```
 
-If the Supabase variables are not set, the app falls back to `src/data/habits.json` for local storage and skips auth.
+The app expects Supabase to be configured for auth and habits data.
 
 ## Supabase setup
 
 1. Create a Supabase project.
 2. Open the SQL editor and run [supabase/schema.sql](/Users/sandunkanangama/Documents/Code/habits-website/supabase/schema.sql).
-3. Copy your project URL and service role key from Supabase project settings.
+3. Copy your project URL, publishable key, and service role key from Supabase project settings.
 
 ## Environment variables
 
@@ -34,11 +34,12 @@ Set:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+The `VITE_` variables are used by the browser app. The service-role variables are no longer used for normal habit CRUD, but can be kept for future admin/server features.
+
 ## Vercel deployment
 
 1. Import the repo into Vercel.
-2. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project environment variables.
-3. In Supabase Auth settings, enable the email/password provider.
-4. Deploy.
-
-The first authenticated load for a user will seed their `user_habits_state` row from `src/data/habits.json` if they do not yet have saved habits.
+2. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to the Vercel project environment variables.
+3. Optionally also add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` if you plan to add admin/server features later.
+4. In Supabase Auth settings, enable the email/password provider.
+5. Deploy.
