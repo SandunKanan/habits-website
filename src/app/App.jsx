@@ -5,6 +5,7 @@ import Layout from "../components/Layout/Layout.jsx";
 import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import History from "../pages/History/History.jsx";
+import Help from "../pages/Help/Help.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
 
 import { scoreHabitForToday } from "../lib/scoring.js";
@@ -448,6 +449,7 @@ export default function App() {
         <Route path="/today" element={<Today />} />
         <Route path="/habits" element={<Habits />} />
         <Route path="/history" element={<History />} />
+        <Route path="/help" element={<Help />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
       </Route>
     </Routes>
