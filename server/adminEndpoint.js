@@ -60,7 +60,26 @@ async function getAuthenticatedUser(config, request) {
   return { user };
 }
 
-function buildAdminPayload(users, habits, completions) {
+async function getRequestingAdmin(config, request) {
+  const auth = await getAuthenticatedUser(config, request);
+  if (auth?.error) {
+    return auth;
+  }
+
+  const userRole =
+    (await fetchSupabase(
+      config,
+      `/rest/v1/user_roles?user_id=eq.${auth.user.id}&select=is_admin&limit=1`
+    )) ?? [];
+
+  if (!userRole?.[0]?.is_admin) {
+    return { error: "Forbidden." };
+  }
+
+  return auth;
+}
+
+function buildAdminPayload(users, roles, habits, completions) {
   const completionsByHabitId = new Map();
   for (const completion of completions) {
     const items = completionsByHabitId.get(completion.habit_id) ?? [];
@@ -89,6 +108,8 @@ function buildAdminPayload(users, habits, completions) {
     habitsByUserId.set(habit.user_id, items);
   }
 
+  const rolesByUserId = new Map(roles.map((role) => [role.user_id, Boolean(role.is_admin)]));
+
   return users.map((user) => {
     const userHabits = habitsByUserId.get(user.id) ?? [];
     const completionCount = userHabits.reduce((total, habit) => total + habit.completion_count, 0);
@@ -96,6 +117,7 @@ function buildAdminPayload(users, habits, completions) {
     return {
       id: user.id,
       email: user.email,
+      is_admin: rolesByUserId.get(user.id) ?? false,
       created_at: user.created_at,
       last_sign_in_at: user.last_sign_in_at,
       habit_count: userHabits.length,
@@ -112,23 +134,17 @@ export async function handleAdminGet(request) {
       return Response.json({ error: "Admin API is not configured." }, { status: 500 });
     }
 
-    const auth = await getAuthenticatedUser(config, request);
+    const auth = await getRequestingAdmin(config, request);
     if (auth?.error) {
-      return Response.json({ error: auth.error }, { status: 401 });
+      return Response.json(
+        { error: auth.error },
+        { status: auth.error === "Forbidden." ? 403 : 401 }
+      );
     }
 
-    const userRole =
-      (await fetchSupabase(
-        config,
-        `/rest/v1/user_roles?user_id=eq.${auth.user.id}&select=is_admin&limit=1`
-      )) ?? [];
-
-    if (!userRole?.[0]?.is_admin) {
-      return Response.json({ error: "Forbidden." }, { status: 403 });
-    }
-
-    const [usersResponse, habits, completions] = await Promise.all([
+    const [usersResponse, roles, habits, completions] = await Promise.all([
       fetchSupabase(config, "/auth/v1/admin/users?page=1&per_page=1000"),
+      fetchSupabase(config, "/rest/v1/user_roles?select=user_id,is_admin"),
       fetchSupabase(
         config,
         "/rest/v1/habits?select=id,user_id,slug,name,frequency_mode,frequency_value,frequency_unit,importance,initial_last_done&order=created_at.asc"
@@ -140,9 +156,59 @@ export async function handleAdminGet(request) {
     ]);
 
     const users = Array.isArray(usersResponse?.users) ? usersResponse.users : [];
-    return Response.json({ users: buildAdminPayload(users, habits ?? [], completions ?? []) });
+    return Response.json({
+      users: buildAdminPayload(users, roles ?? [], habits ?? [], completions ?? [])
+    });
   } catch (error) {
     console.error("GET /api/admin failed", error);
     return Response.json({ error: "Failed to load admin data." }, { status: 500 });
+  }
+}
+
+export async function handleAdminPost(request) {
+  try {
+    const config = getConfig();
+    if (!config) {
+      return Response.json({ error: "Admin API is not configured." }, { status: 500 });
+    }
+
+    const auth = await getRequestingAdmin(config, request);
+    if (auth?.error) {
+      return Response.json(
+        { error: auth.error },
+        { status: auth.error === "Forbidden." ? 403 : 401 }
+      );
+    }
+
+    const payload = await request.json();
+    const targetUserId = String(payload?.userId ?? "").trim();
+    const nextIsAdmin = Boolean(payload?.isAdmin);
+
+    if (!targetUserId) {
+      return Response.json({ error: "Target user is required." }, { status: 400 });
+    }
+
+    if (targetUserId === auth.user.id && !nextIsAdmin) {
+      return Response.json({ error: "You cannot remove your own admin access." }, { status: 400 });
+    }
+
+    await fetchSupabase(config, "/rest/v1/user_roles?on_conflict=user_id", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates, return=representation"
+      },
+      body: JSON.stringify([
+        {
+          user_id: targetUserId,
+          is_admin: nextIsAdmin
+        }
+      ])
+    });
+
+    return Response.json({ ok: true });
+  } catch (error) {
+    console.error("POST /api/admin failed", error);
+    return Response.json({ error: "Failed to update admin access." }, { status: 500 });
   }
 }

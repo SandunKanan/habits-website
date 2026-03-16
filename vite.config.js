@@ -1,13 +1,13 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import { handleAdminGet } from "./server/adminEndpoint.js";
+import { handleAdminGet, handleAdminPost } from "./server/adminEndpoint.js";
 
 function adminApiPlugin() {
   return {
     name: "admin-api",
     configureServer(server) {
       server.middlewares.use("/api/admin", async (req, res) => {
-        if (req.method !== "GET") {
+        if (req.method !== "GET" && req.method !== "POST") {
           res.statusCode = 405;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify({ error: "Method not allowed." }));
@@ -18,9 +18,17 @@ function adminApiPlugin() {
           const origin = `http://${req.headers.host}`;
           const request = new Request(new URL(req.url, origin), {
             method: req.method,
-            headers: req.headers
+            headers: req.headers,
+            body:
+              req.method === "POST"
+                ? await (async () => {
+                    let body = "";
+                    for await (const chunk of req) body += chunk;
+                    return body;
+                  })()
+                : undefined
           });
-          const response = await handleAdminGet(request);
+          const response = req.method === "POST" ? await handleAdminPost(request) : await handleAdminGet(request);
           const text = await response.text();
 
           res.statusCode = response.status;

@@ -65,6 +65,84 @@
   }
 }
 
+.admin__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.admin__detail-btn,
+.admin__role-btn {
+  border-radius: 999px;
+  padding: 9px 13px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.admin__detail-btn {
+  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+}
+
+.admin__role-btn {
+  border: 1px solid $border-strong;
+  color: $text;
+
+  &--add {
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.16), rgba(143, 211, 255, 0.12));
+  }
+
+  &--remove {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.28);
+  }
+}
+
+.admin__details {
+  display: grid;
+  gap: 14px;
+}
+
+.admin__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  div {
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid $border;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  dt {
+    margin: 0;
+    color: $muted;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  dd {
+    margin: 6px 0 0;
+    color: $text;
+    word-break: break-word;
+  }
+}
+
 .admin__habits {
   display: grid;
   gap: 10px;
@@ -100,5 +178,9 @@
   .admin__user-head,
   .admin__habit-head {
     flex-direction: column;
+  }
+
+  .admin__detail-grid {
+    grid-template-columns: 1fr;
   }
 }
