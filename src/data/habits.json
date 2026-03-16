@@ -3,7 +3,7 @@
     "id": "face-yoga",
     "name": "Face Yoga",
     "everyXDays": 1,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-02-27",
@@ -15,7 +15,7 @@
     "id": "reading-pen-exercise",
     "name": "Reading Pen Exercise",
     "everyXDays": 1,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-02-27",
@@ -27,7 +27,7 @@
     "id": "forearm-rice-exercises",
     "name": "Forearm Rice Exercises",
     "everyXDays": 1,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-03-11",
@@ -40,7 +40,7 @@
     "id": "hair-mask",
     "name": "Hair Mask",
     "everyXDays": 14,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-03-14"
@@ -50,7 +50,7 @@
     "id": "body-coconut-oil",
     "name": "Apply Coconut Oil on Body",
     "everyXDays": 14,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-03-14"
@@ -60,7 +60,7 @@
     "id": "shave-body-hair",
     "name": "Shave Body Hair",
     "everyXDays": 28,
-    "importance": 3,
+    "importance": 7,
     "initialLastDone": null,
     "doneDates": [
       "2026-02-21"
@@ -70,7 +70,7 @@
     "id": "shower-exfoliate",
     "name": "Exfoliate in Shower",
     "everyXDays": 7,
-    "importance": 4,
+    "importance": 8,
     "initialLastDone": null,
     "doneDates": [
       "2026-03-14"
@@ -80,7 +80,7 @@
     "id": "yoga-sadhana",
     "name": "Yoga Sadhana",
     "everyXDays": 1,
-    "importance": 1,
+    "importance": 5,
     "initialLastDone": null,
     "doneDates": []
   }

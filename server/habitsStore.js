@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { normalizeImportanceValue } from "../src/lib/importance.js";
 
 const localHabitsPath = path.resolve(process.cwd(), "src/data/habits.json");
 
@@ -50,6 +51,7 @@ function normalizeHabit(habit) {
 
   return {
     ...habit,
+    importance: normalizeImportanceValue(habit.importance),
     initialLastDone: habit.initialLastDone ?? null,
     doneDates
   };
@@ -76,7 +78,7 @@ function serializeHabitRow(userId, habit) {
     slug: habit.id,
     name: habit.name,
     every_x_days: Math.max(1, Number(habit.everyXDays) || 1),
-    importance: Math.max(0, Number(habit.importance) || 0),
+    importance: normalizeImportanceValue(habit.importance),
     initial_last_done: habit.initialLastDone ?? null
   };
 }

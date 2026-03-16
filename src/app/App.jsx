@@ -8,6 +8,7 @@ import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
 
+import { normalizeImportanceValue } from "../lib/importance.js";
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
 import {
@@ -207,7 +208,7 @@ export default function App() {
     }
 
     const parsedEveryXDays = Math.max(1, Math.floor(Number(everyXDays) || 1));
-    const parsedImportance = Math.max(0, Math.floor(Number(importance) || 0));
+    const parsedImportance = normalizeImportanceValue(importance);
     const id = buildHabitId(trimmedName, new Set(habits.map((h) => h.id)));
 
     const newHabit = {
@@ -242,7 +243,7 @@ export default function App() {
     }
 
     const parsedEveryXDays = Math.max(1, Math.floor(Number(everyXDays) || 1));
-    const parsedImportance = Math.max(0, Math.floor(Number(importance) || 0));
+    const parsedImportance = normalizeImportanceValue(importance);
 
     const nextHabits = habits.map((h) => {
       if (h.id !== habitId) return h;

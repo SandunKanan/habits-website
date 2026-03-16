@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { daysBetweenISO } from "../../lib/date.js";
+import { getImportanceLabel } from "../../lib/importance.js";
 import "./HabitCard.scss";
 
 export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
@@ -47,7 +48,7 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
         </div>
 
         <div className="habitcard__meta">
-          Every <b>{intervalDays}</b>d · Importance <b>{importance}</b> · Last done{" "}
+          Every <b>{intervalDays}</b>d · Priority <b>{getImportanceLabel(importance)}</b> · Last done{" "}
           <b>{formatLastDone(lastDoneISO)}</b> · {due ? (
             overdueDays > 0 ? (
               <>

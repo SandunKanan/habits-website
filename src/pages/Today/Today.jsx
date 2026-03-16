@@ -27,7 +27,7 @@ export default function Today() {
         <p className="today__eyebrow">New account</p>
         <h2>Start with your first habit.</h2>
         <p className="today__welcome-copy">
-          Your daily list will appear here once you add habits. Set a frequency and importance,
+          Your daily list will appear here once you add habits. Set a frequency and priority level,
           then this page will decide what is due today.
         </p>
         <div className="today__welcome-actions">

@@ -49,6 +49,7 @@
     grid-template-columns: minmax(180px, 1fr) 120px 120px auto auto;
 
     input,
+    select,
     button {
       border: 1px solid $border;
       border-radius: 12px;
@@ -267,7 +268,8 @@
       font-size: 13px;
     }
 
-    input {
+    input,
+    select {
       border: 1px solid $border;
       border-radius: 12px;
       padding: 10px 12px;

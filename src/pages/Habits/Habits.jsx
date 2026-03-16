@@ -1,20 +1,26 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { daysBetweenISO, startOfTodayLocalISO } from "../../lib/date.js";
+import {
+  DEFAULT_IMPORTANCE_VALUE,
+  getImportanceLabel,
+  IMPORTANCE_LEVELS,
+  normalizeImportanceValue
+} from "../../lib/importance.js";
 import "./Habits.scss";
 
 export default function Habits() {
   const { habits, onAddHabit, onUpdateHabit, onDeleteHabit } = useOutletContext();
   const [name, setName] = useState("");
   const [everyXDays, setEveryXDays] = useState("1");
-  const [importance, setImportance] = useState("0");
+  const [importance, setImportance] = useState(String(IMPORTANCE_LEVELS[0].value));
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editEveryXDays, setEditEveryXDays] = useState("1");
-  const [editImportance, setEditImportance] = useState("0");
+  const [editImportance, setEditImportance] = useState(String(DEFAULT_IMPORTANCE_VALUE));
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDatesById, setExpandedDatesById] = useState({});
@@ -43,7 +49,7 @@ export default function Habits() {
     if (result?.ok) {
       setName("");
       setEveryXDays("1");
-      setImportance("0");
+      setImportance(String(IMPORTANCE_LEVELS[0].value));
       setFeedback("Habit added.");
       setIsAddOpen(false);
     } else {
@@ -57,7 +63,7 @@ export default function Habits() {
     setEditingId(habit.id);
     setEditName(String(habit.name ?? ""));
     setEditEveryXDays(String(habit.everyXDays ?? 1));
-    setEditImportance(String(habit.importance ?? 0));
+    setEditImportance(String(normalizeImportanceValue(habit.importance)));
     setEditFeedback("");
   }
 
@@ -148,15 +154,18 @@ export default function Habits() {
               title="Repeat every X days"
               required
             />
-            <input
-              type="number"
-              min="0"
-              step="1"
+            <select
               value={importance}
               onChange={(e) => setImportance(e.target.value)}
-              title="Importance"
+              title="Priority"
               required
-            />
+            >
+              {IMPORTANCE_LEVELS.map((level) => (
+                <option key={level.key} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
             <button type="submit" disabled={isSaving}>
               {isSaving ? "Adding..." : "Save Habit"}
             </button>
@@ -174,7 +183,7 @@ export default function Habits() {
             <p className="habits__empty-eyebrow">First setup</p>
             <h3>No habits yet.</h3>
             <p className="habits__empty-copy">
-              Create a few habits with their frequency and importance. Once they exist, the Today
+              Create a few habits with their frequency and priority level. Once they exist, the Today
               page will automatically decide what belongs on your schedule.
             </p>
             {!isAddOpen ? (
@@ -211,15 +220,18 @@ export default function Habits() {
                   />
                 </label>
                 <label>
-                  Importance
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
+                  Priority
+                  <select
                     value={editImportance}
                     onChange={(e) => setEditImportance(e.target.value)}
                     required
-                  />
+                  >
+                    {IMPORTANCE_LEVELS.map((level) => (
+                      <option key={level.key} value={level.value}>
+                        {level.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <div className="habits__item-actions">
                   <button type="submit" disabled={isSavingEdit}>
@@ -270,8 +282,8 @@ export default function Habits() {
                           <dd>Every {habit.everyXDays} day(s)</dd>
                         </div>
                         <div>
-                          <dt>Importance</dt>
-                          <dd>{habit.importance}</dd>
+                          <dt>Priority</dt>
+                          <dd>{getImportanceLabel(habit.importance)}</dd>
                         </div>
                         <div>
                           <dt>Last completed</dt>

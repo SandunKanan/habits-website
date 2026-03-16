@@ -6,7 +6,7 @@ create table if not exists public.habits (
   slug text not null,
   name text not null,
   every_x_days integer not null check (every_x_days >= 1),
-  importance integer not null check (importance >= 0),
+  importance integer not null check (importance >= 0 and importance <= 10),
   initial_last_done date,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),

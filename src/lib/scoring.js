@@ -1,4 +1,5 @@
 import { daysBetweenISO } from "./date.js";
+import { normalizeImportanceValue } from "./importance.js";
 
 /**
  * MVP scoring:
@@ -19,8 +20,7 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
     lastDoneISO ? daysBetweenISO(lastDoneISO, todayISO) : intervalDays;
 
   const behindRatio = daysSinceLastDone / intervalDays;
-  const rawImportance = Number(habit.importance);
-  const importance = Number.isFinite(rawImportance) ? Math.max(0, rawImportance) : 1;
+  const importance = normalizeImportanceValue(habit.importance);
 
   const priorityScore = behindRatio * importance;
 

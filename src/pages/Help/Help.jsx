@@ -5,12 +5,12 @@ const workflowSteps = [
   {
     title: "Add habits",
     description:
-      "Create habits on the Habits page with a name, frequency, and importance level. Importance 0 keeps a habit stored without placing it into the daily schedule."
+      "Create habits on the Habits page with a name, frequency, and priority level. Inactive keeps a habit stored without placing it into the daily schedule."
   },
   {
     title: "Review Today",
     description:
-      "The Today page shows only habits that are currently due. Higher-importance habits rise in priority when they are overdue."
+      "The Today page shows only habits that are currently due. Higher-priority habits rise in the list when they are overdue."
   },
   {
     title: "Log completions",
@@ -60,8 +60,8 @@ const toolCards = [
 ];
 
 const priorityExamples = [
-  "Importance 4 is treated as higher priority than importance 1 when habits are equally overdue.",
-  "A habit with importance 0 stays in your account but is excluded from the daily schedule.",
+  "Core outranks lower priority levels when habits are equally overdue.",
+  "Inactive keeps a habit in your account without adding it to the daily schedule.",
   "A 7-day or 14-day habit does not show up again the day after you complete it."
 ];
 
