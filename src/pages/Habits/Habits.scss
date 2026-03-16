@@ -45,8 +45,9 @@
   &__form {
     margin-top: 12px;
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(180px, 1fr) 120px 120px auto auto;
+    gap: 12px;
+    grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.25fr) minmax(180px, 220px);
+    align-items: end;
 
     input,
     select,
@@ -59,12 +60,44 @@
       font: inherit;
     }
 
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__form-field,
+  &__form-group {
+    display: grid;
+    gap: 6px;
+  }
+
+  &__form-field {
+    span {
+      color: $muted;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  }
+
+  &__form-label {
+    color: $muted;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+
     button {
       cursor: pointer;
-      transition: background 0.18s ease, transform 0.18s ease;
+      transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.08);
         transform: translateY(-1px);
       }
 
@@ -73,9 +106,21 @@
         cursor: not-allowed;
       }
     }
+  }
 
-    @media (max-width: 720px) {
-      grid-template-columns: 1fr;
+  &__save-btn {
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.16), rgba(143, 211, 255, 0.12)) !important;
+    border-color: $border-strong !important;
+  }
+
+  &__cancel-btn {
+    background: rgba(255, 255, 255, 0.015) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: $muted !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: $text !important;
     }
   }
 
@@ -276,6 +321,16 @@
       background: rgba(255, 255, 255, 0.03);
       color: $text;
       font: inherit;
+    }
+  }
+
+  &__frequency-row {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 100px 1fr 1fr;
+
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
     }
   }
 

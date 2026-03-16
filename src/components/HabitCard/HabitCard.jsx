@@ -4,7 +4,7 @@ import { getImportanceLabel } from "../../lib/importance.js";
 import "./HabitCard.scss";
 
 export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
-  const { habit, priorityScore, due, overdueDays, intervalDays, importance } = item;
+  const { habit, priorityScore, due, frequencyLabel, importance, statusLabel } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -48,18 +48,8 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
         </div>
 
         <div className="habitcard__meta">
-          Every <b>{intervalDays}</b>d · Priority <b>{getImportanceLabel(importance)}</b> · Last done{" "}
-          <b>{formatLastDone(lastDoneISO)}</b> · {due ? (
-            overdueDays > 0 ? (
-              <>
-                Behind <b>{overdueDays}</b>d
-              </>
-            ) : (
-              <>Due today</>
-            )
-          ) : (
-            <>On schedule</>
-          )}
+          {frequencyLabel} · Priority <b>{getImportanceLabel(importance)}</b> · Last done{" "}
+          <b>{formatLastDone(lastDoneISO)}</b> · {statusLabel}
         </div>
 
         <div className="habitcard__score">

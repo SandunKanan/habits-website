@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { normalizeFrequency } from "../src/lib/frequency.js";
 import { normalizeImportanceValue } from "../src/lib/importance.js";
 
 const localHabitsPath = path.resolve(process.cwd(), "src/data/habits.json");
@@ -48,9 +49,11 @@ function normalizeHabit(habit) {
   const doneDates = Array.isArray(habit.doneDates)
     ? [...new Set(habit.doneDates)].sort((a, b) => a.localeCompare(b))
     : [];
+  const frequency = normalizeFrequency(habit);
 
   return {
     ...habit,
+    ...frequency,
     importance: normalizeImportanceValue(habit.importance),
     initialLastDone: habit.initialLastDone ?? null,
     doneDates
@@ -73,11 +76,15 @@ async function writeLocalHabits(habits) {
 }
 
 function serializeHabitRow(userId, habit) {
+  const frequency = normalizeFrequency(habit);
+
   return {
     user_id: userId,
     slug: habit.id,
     name: habit.name,
-    every_x_days: Math.max(1, Number(habit.everyXDays) || 1),
+    frequency_mode: frequency.frequencyMode,
+    frequency_value: frequency.frequencyValue,
+    frequency_unit: frequency.frequencyUnit,
     importance: normalizeImportanceValue(habit.importance),
     initial_last_done: habit.initialLastDone ?? null
   };
@@ -96,6 +103,9 @@ function parseHabitRows(habitRows, completionRows) {
     normalizeHabit({
       id: habitRow.slug,
       name: habitRow.name,
+      frequencyMode: habitRow.frequency_mode,
+      frequencyValue: habitRow.frequency_value,
+      frequencyUnit: habitRow.frequency_unit,
       everyXDays: habitRow.every_x_days,
       importance: habitRow.importance,
       initialLastDone: habitRow.initial_last_done,
@@ -108,7 +118,7 @@ async function loadFromSupabase(config, userId) {
   const habitRows =
     (await fetchSupabase(
       config,
-      `/rest/v1/habits?user_id=eq.${userId}&select=id,slug,name,every_x_days,importance,initial_last_done&order=created_at.asc`
+      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`
     )) ?? [];
 
   if (habitRows.length === 0) {
@@ -197,7 +207,7 @@ async function saveToSupabase(config, userId, habits) {
   const currentHabitRows =
     (await fetchSupabase(
       config,
-      `/rest/v1/habits?user_id=eq.${userId}&select=id,slug,name,every_x_days,importance,initial_last_done&order=created_at.asc`
+      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`
     )) ?? [];
   const habitIdBySlug = new Map(currentHabitRows.map((row) => [row.slug, row.id]));
 
@@ -238,7 +248,7 @@ async function saveToSupabase(config, userId, habits) {
   const finalHabitRows =
     (await fetchSupabase(
       config,
-      `/rest/v1/habits?user_id=eq.${userId}&select=id,slug,name,every_x_days,importance,initial_last_done&order=created_at.asc`
+      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`
     )) ?? [];
   const finalCompletionRows =
     (await fetchSupabase(

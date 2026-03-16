@@ -8,6 +8,7 @@ import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
 
+import { normalizeFrequency } from "../lib/frequency.js";
 import { normalizeImportanceValue } from "../lib/importance.js";
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
@@ -201,20 +202,20 @@ export default function App() {
     }
   }
 
-  async function addHabit({ name, everyXDays, importance }) {
+  async function addHabit({ name, frequencyMode, frequencyValue, frequencyUnit, importance }) {
     const trimmedName = String(name ?? "").trim();
     if (!trimmedName) {
       return { ok: false, error: "Habit name is required." };
     }
 
-    const parsedEveryXDays = Math.max(1, Math.floor(Number(everyXDays) || 1));
+    const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
     const id = buildHabitId(trimmedName, new Set(habits.map((h) => h.id)));
 
     const newHabit = {
       id,
       name: trimmedName,
-      everyXDays: parsedEveryXDays,
+      ...frequency,
       importance: parsedImportance,
       initialLastDone: null,
       doneDates: []
@@ -231,7 +232,7 @@ export default function App() {
     return { ok: true, id };
   }
 
-  async function updateHabit(habitId, { name, everyXDays, importance }) {
+  async function updateHabit(habitId, { name, frequencyMode, frequencyValue, frequencyUnit, importance }) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) {
       return { ok: false, error: "Habit not found." };
@@ -242,7 +243,7 @@ export default function App() {
       return { ok: false, error: "Habit name is required." };
     }
 
-    const parsedEveryXDays = Math.max(1, Math.floor(Number(everyXDays) || 1));
+    const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
 
     const nextHabits = habits.map((h) => {
@@ -250,7 +251,7 @@ export default function App() {
       return {
         ...h,
         name: trimmedName,
-        everyXDays: parsedEveryXDays,
+        ...frequency,
         importance: parsedImportance
       };
     });

@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { daysBetweenISO, startOfTodayLocalISO } from "../../lib/date.js";
 import {
+  formatFrequencyLabel,
+  FREQUENCY_MODES,
+  getFrequencyUnitsForMode,
+  normalizeFrequency
+} from "../../lib/frequency.js";
+import {
   DEFAULT_IMPORTANCE_VALUE,
   getImportanceLabel,
   IMPORTANCE_LEVELS,
@@ -12,14 +18,18 @@ import "./Habits.scss";
 export default function Habits() {
   const { habits, onAddHabit, onUpdateHabit, onDeleteHabit } = useOutletContext();
   const [name, setName] = useState("");
-  const [everyXDays, setEveryXDays] = useState("1");
+  const [frequencyMode, setFrequencyMode] = useState("interval");
+  const [frequencyValue, setFrequencyValue] = useState("1");
+  const [frequencyUnit, setFrequencyUnit] = useState("day");
   const [importance, setImportance] = useState(String(IMPORTANCE_LEVELS[0].value));
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
-  const [editEveryXDays, setEditEveryXDays] = useState("1");
+  const [editFrequencyMode, setEditFrequencyMode] = useState("interval");
+  const [editFrequencyValue, setEditFrequencyValue] = useState("1");
+  const [editFrequencyUnit, setEditFrequencyUnit] = useState("day");
   const [editImportance, setEditImportance] = useState(String(DEFAULT_IMPORTANCE_VALUE));
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -44,11 +54,19 @@ export default function Habits() {
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddHabit({ name, everyXDays, importance });
+    const result = await onAddHabit({
+      name,
+      frequencyMode,
+      frequencyValue,
+      frequencyUnit,
+      importance
+    });
 
     if (result?.ok) {
       setName("");
-      setEveryXDays("1");
+      setFrequencyMode("interval");
+      setFrequencyValue("1");
+      setFrequencyUnit("day");
       setImportance(String(IMPORTANCE_LEVELS[0].value));
       setFeedback("Habit added.");
       setIsAddOpen(false);
@@ -60,9 +78,12 @@ export default function Habits() {
   }
 
   function startEdit(habit) {
+    const frequency = normalizeFrequency(habit);
     setEditingId(habit.id);
     setEditName(String(habit.name ?? ""));
-    setEditEveryXDays(String(habit.everyXDays ?? 1));
+    setEditFrequencyMode(frequency.frequencyMode);
+    setEditFrequencyValue(String(frequency.frequencyValue));
+    setEditFrequencyUnit(frequency.frequencyUnit);
     setEditImportance(String(normalizeImportanceValue(habit.importance)));
     setEditFeedback("");
   }
@@ -81,7 +102,9 @@ export default function Habits() {
 
     const result = await onUpdateHabit(editingId, {
       name: editName,
-      everyXDays: editEveryXDays,
+      frequencyMode: editFrequencyMode,
+      frequencyValue: editFrequencyValue,
+      frequencyUnit: editFrequencyUnit,
       importance: editImportance
     });
 
@@ -138,40 +161,87 @@ export default function Habits() {
           </div>
         ) : (
           <form className="habits__form" onSubmit={handleAddHabit}>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Habit name"
-              required
-            />
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={everyXDays}
-              onChange={(e) => setEveryXDays(e.target.value)}
-              title="Repeat every X days"
-              required
-            />
-            <select
-              value={importance}
-              onChange={(e) => setImportance(e.target.value)}
-              title="Priority"
-              required
-            >
-              {IMPORTANCE_LEVELS.map((level) => (
-                <option key={level.key} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
-            <button type="submit" disabled={isSaving}>
-              {isSaving ? "Adding..." : "Save Habit"}
-            </button>
-            <button type="button" onClick={() => setIsAddOpen(false)} disabled={isSaving}>
-              Cancel
-            </button>
+            <label className="habits__form-field habits__form-field--name">
+              <span>Name</span>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Habit name"
+                required
+              />
+            </label>
+
+            <div className="habits__form-group">
+              <div className="habits__form-label">Frequency</div>
+              <div className="habits__frequency-row">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={frequencyValue}
+                  onChange={(e) => setFrequencyValue(e.target.value)}
+                  title="Frequency value"
+                  required
+                />
+                <select
+                  value={frequencyMode}
+                  onChange={(e) => {
+                    const nextMode = e.target.value;
+                    setFrequencyMode(nextMode);
+                    setFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                  }}
+                  title="Frequency type"
+                >
+                  {FREQUENCY_MODES.map((mode) => (
+                    <option key={mode.value} value={mode.value}>
+                      {mode.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={frequencyUnit}
+                  onChange={(e) => setFrequencyUnit(e.target.value)}
+                  title="Frequency unit"
+                >
+                  {getFrequencyUnitsForMode(frequencyMode).map((unit) => (
+                    <option key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <label className="habits__form-field habits__form-field--priority">
+              <span>Priority</span>
+              <select
+                value={importance}
+                onChange={(e) => setImportance(e.target.value)}
+                title="Priority"
+                required
+              >
+                {IMPORTANCE_LEVELS.map((level) => (
+                  <option key={level.key} value={level.value}>
+                    {level.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="habits__form-actions">
+              <button type="submit" className="habits__save-btn" disabled={isSaving}>
+                {isSaving ? "Adding..." : "Save Habit"}
+              </button>
+              <button
+                type="button"
+                className="habits__cancel-btn"
+                onClick={() => setIsAddOpen(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         )}
         {feedback ? <p className="habits__feedback">{feedback}</p> : null}
@@ -209,15 +279,43 @@ export default function Habits() {
                   />
                 </label>
                 <label>
-                  Every X days
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={editEveryXDays}
-                    onChange={(e) => setEditEveryXDays(e.target.value)}
-                    required
-                  />
+                  Frequency
+                  <div className="habits__frequency-row">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={editFrequencyValue}
+                      onChange={(e) => setEditFrequencyValue(e.target.value)}
+                      required
+                    />
+                    <select
+                      value={editFrequencyMode}
+                      onChange={(e) => {
+                        const nextMode = e.target.value;
+                        setEditFrequencyMode(nextMode);
+                        setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                      }}
+                      required
+                    >
+                      {FREQUENCY_MODES.map((mode) => (
+                        <option key={mode.value} value={mode.value}>
+                          {mode.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={editFrequencyUnit}
+                      onChange={(e) => setEditFrequencyUnit(e.target.value)}
+                      required
+                    >
+                      {getFrequencyUnitsForMode(editFrequencyMode).map((unit) => (
+                        <option key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </label>
                 <label>
                   Priority
@@ -279,7 +377,7 @@ export default function Habits() {
                       <dl className="habits__details">
                         <div>
                           <dt>Frequency</dt>
-                          <dd>Every {habit.everyXDays} day(s)</dd>
+                          <dd>{formatFrequencyLabel(habit)}</dd>
                         </div>
                         <div>
                           <dt>Priority</dt>

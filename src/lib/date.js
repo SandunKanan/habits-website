@@ -11,10 +11,42 @@ export function toISODate(dateObj) {
   return `${y}-${m}-${d}`;
 }
 
+export function parseISODate(dateISO) {
+  return new Date(`${dateISO}T00:00:00`);
+}
+
 export function daysBetweenISO(aISO, bISO) {
   if (!aISO || !bISO) return null;
-  const a = new Date(`${aISO}T00:00:00`);
-  const b = new Date(`${bISO}T00:00:00`);
+  const a = parseISODate(aISO);
+  const b = parseISODate(bISO);
   const ms = b.getTime() - a.getTime();
   return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+export function addDaysISO(dateISO, dayCount) {
+  const date = parseISODate(dateISO);
+  date.setDate(date.getDate() + dayCount);
+  return toISODate(date);
+}
+
+export function addMonthsISO(dateISO, monthCount) {
+  const date = parseISODate(dateISO);
+  const originalDay = date.getDate();
+  date.setDate(1);
+  date.setMonth(date.getMonth() + monthCount);
+  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  date.setDate(Math.min(originalDay, lastDayOfMonth));
+  return toISODate(date);
+}
+
+export function startOfWeekISO(dateISO) {
+  const date = parseISODate(dateISO);
+  date.setDate(date.getDate() - date.getDay());
+  return toISODate(date);
+}
+
+export function startOfMonthISO(dateISO) {
+  const date = parseISODate(dateISO);
+  date.setDate(1);
+  return toISODate(date);
 }

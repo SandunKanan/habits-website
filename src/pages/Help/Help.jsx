@@ -5,7 +5,7 @@ const workflowSteps = [
   {
     title: "Add habits",
     description:
-      "Create habits on the Habits page with a name, frequency, and priority level. Inactive keeps a habit stored without placing it into the daily schedule."
+      "Create habits on the Habits page with a name, frequency style, and priority level. You can schedule a habit every X days, weeks, or months, or target X times per week or month."
   },
   {
     title: "Review Today",
@@ -15,7 +15,7 @@ const workflowSteps = [
   {
     title: "Log completions",
     description:
-      "Mark a habit done for today, or add a past completion date if you are catching up on previous days. Completed items move into the Completed area."
+      "Mark a habit done for today, or add a past completion date if you are catching up on previous days. Each habit can only be logged once per date."
   },
   {
     title: "Track history",
@@ -62,7 +62,7 @@ const toolCards = [
 const priorityExamples = [
   "Core outranks lower priority levels when habits are equally overdue.",
   "Inactive keeps a habit in your account without adding it to the daily schedule.",
-  "A 7-day or 14-day habit does not show up again the day after you complete it."
+  "Weekly and monthly quotas are paced across the current period rather than treated like one-time interval reminders."
 ];
 
 export default function Help() {
