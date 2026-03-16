@@ -14,6 +14,7 @@ import { loadHabitsForSession, saveHabitsForSession } from "../lib/habitsClient.
 import { normalizeImportanceValue } from "../lib/importance.js";
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
+import { loadUserRole } from "../lib/userRoleClient.js";
 import {
   initializeAuth,
   isAuthEnabled,
@@ -61,6 +62,8 @@ export default function App() {
   const [authUser, setAuthUser] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAuthWorking, setIsAuthWorking] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isRoleReady, setIsRoleReady] = useState(false);
 
   const todayISO = startOfTodayLocalISO();
   const authEnabled = isAuthEnabled();
@@ -90,6 +93,48 @@ export default function App() {
       ignore = true;
     };
   }, [authEnabled]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadRole() {
+      if (!isAuthReady) return;
+
+      if (!authEnabled || !session?.access_token || !authUser?.id) {
+        if (!ignore) {
+          setIsAdmin(false);
+          setIsRoleReady(true);
+        }
+        return;
+      }
+
+      try {
+        if (!ignore) {
+          setIsRoleReady(false);
+        }
+
+        const role = await loadUserRole(session.access_token, authUser.id);
+        if (!ignore) {
+          setIsAdmin(Boolean(role.isAdmin));
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error("Failed to load user role", error);
+          setIsAdmin(false);
+        }
+      } finally {
+        if (!ignore) {
+          setIsRoleReady(true);
+        }
+      }
+    }
+
+    void loadRole();
+
+    return () => {
+      ignore = true;
+    };
+  }, [authEnabled, authUser?.id, isAuthReady, session?.access_token]);
 
   useEffect(() => {
     let ignore = false;
@@ -385,6 +430,8 @@ export default function App() {
     await signOutCurrentSession(session);
     setSession(null);
     setAuthUser(null);
+    setIsAdmin(false);
+    setIsRoleReady(false);
     setHabits([]);
     setIsLoading(false);
     setLoadError("");
@@ -392,6 +439,10 @@ export default function App() {
 
   if (authEnabled && !isAuthReady) {
     return <div className="appstatus card">Checking session...</div>;
+  }
+
+  if (authEnabled && session && !isRoleReady) {
+    return <div className="appstatus card">Loading account access...</div>;
   }
 
   if (isLoading) {
@@ -423,6 +474,7 @@ export default function App() {
             onUndoDoneToday={undoDoneToday}
             completionLog={completionLog}
             authUser={authUser}
+            isAdmin={isAdmin}
             session={session}
             onSignOut={handleSignOut}
           />

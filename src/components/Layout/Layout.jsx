@@ -3,8 +3,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import TopNav from "../TopNav/TopNav.jsx";
 import "./Layout.scss";
 
-const ADMIN_EMAIL = "sandunkanangama@gmail.com";
-
 export default function Layout({
   todayISO,
   habits,
@@ -18,6 +16,7 @@ export default function Layout({
   onUndoDoneToday,
   completionLog,
   authUser,
+  isAdmin,
   session,
   onSignOut
 }) {
@@ -99,13 +98,14 @@ export default function Layout({
               onUndoDoneToday,
               completionLog,
               authUser,
+              isAdmin,
               session
             }}
           />
         </section>
       </main>
 
-      {authUser?.email === ADMIN_EMAIL ? (
+      {isAdmin ? (
         <Link className="layout__admin-link" to="/admin">
           Admin
         </Link>

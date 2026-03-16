@@ -4,10 +4,8 @@ import { formatFrequencyLabel } from "../../lib/frequency.js";
 import { getImportanceLabel } from "../../lib/importance.js";
 import "./Admin.scss";
 
-const ADMIN_EMAIL = "sandunkanangama@gmail.com";
-
 export default function Admin() {
-  const { authUser, session } = useOutletContext();
+  const { isAdmin, session } = useOutletContext();
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +14,7 @@ export default function Admin() {
     let ignore = false;
 
     async function loadAdmin() {
-      if (authUser?.email !== ADMIN_EMAIL || !session?.access_token) {
+      if (!isAdmin || !session?.access_token) {
         if (!ignore) {
           setIsLoading(false);
           setError("");
@@ -60,9 +58,9 @@ export default function Admin() {
     return () => {
       ignore = true;
     };
-  }, [authUser?.email, session?.access_token]);
+  }, [isAdmin, session?.access_token]);
 
-  if (authUser?.email !== ADMIN_EMAIL) {
+  if (!isAdmin) {
     return <Navigate to="/today" replace />;
   }
 

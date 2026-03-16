@@ -1,5 +1,3 @@
-const ADMIN_EMAIL = "sandunkanangama@gmail.com";
-
 function getConfig() {
   const url = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -119,7 +117,13 @@ export async function handleAdminGet(request) {
       return Response.json({ error: auth.error }, { status: 401 });
     }
 
-    if (auth.user?.email !== ADMIN_EMAIL) {
+    const userRole =
+      (await fetchSupabase(
+        config,
+        `/rest/v1/user_roles?user_id=eq.${auth.user.id}&select=is_admin&limit=1`
+      )) ?? [];
+
+    if (!userRole?.[0]?.is_admin) {
       return Response.json({ error: "Forbidden." }, { status: 403 });
     }
 
