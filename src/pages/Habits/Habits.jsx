@@ -113,13 +113,21 @@ export default function Habits() {
       <div className="habits__header card">
         <h2>All Habits</h2>
         <p>
-          Synced habits store. Total: <b>{habits.length}</b>
+          {habits.length === 0 ? (
+            <>
+              Your account is empty. Add your first habit to start building a daily plan.
+            </>
+          ) : (
+            <>
+              Synced habits store. Total: <b>{habits.length}</b>
+            </>
+          )}
         </p>
 
         {!isAddOpen ? (
           <div className="habits__actions">
             <button type="button" onClick={() => setIsAddOpen(true)}>
-              Add Habit
+              {habits.length === 0 ? "Create first habit" : "Add Habit"}
             </button>
           </div>
         ) : (
@@ -161,6 +169,22 @@ export default function Habits() {
       </div>
 
       <div className="habits__list">
+        {habits.length === 0 ? (
+          <section className="habits__empty card">
+            <p className="habits__empty-eyebrow">First setup</p>
+            <h3>No habits yet.</h3>
+            <p className="habits__empty-copy">
+              Create a few habits with their frequency and importance. Once they exist, the Today
+              page will automatically decide what belongs on your schedule.
+            </p>
+            {!isAddOpen ? (
+              <button type="button" onClick={() => setIsAddOpen(true)}>
+                Add your first habit
+              </button>
+            ) : null}
+          </section>
+        ) : null}
+
         {habits.map((habit) => (
           <article key={habit.id} className="habits__item card">
             {editingId === habit.id ? (

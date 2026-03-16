@@ -110,8 +110,7 @@ async function loadFromSupabase(config, userId) {
     )) ?? [];
 
   if (habitRows.length === 0) {
-    const fallbackHabits = await readLocalHabits();
-    return saveToSupabase(config, userId, fallbackHabits);
+    return [];
   }
 
   const completionRows =

@@ -1,9 +1,10 @@
 import React from "react";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import HabitCard from "../../components/HabitCard/HabitCard.jsx";
 import "./Today.scss";
 
 export default function Today() {
+  const navigate = useNavigate();
   const {
     todayISO,
     habits,
@@ -19,6 +20,24 @@ export default function Today() {
     const importance = Number(habit.importance);
     return importance > 0 && lastDoneById[habit.id] === todayISO;
   });
+
+  if (habits.length === 0) {
+    return (
+      <section className="today__welcome card">
+        <p className="today__eyebrow">New account</p>
+        <h2>Start with your first habit.</h2>
+        <p className="today__welcome-copy">
+          Your daily list will appear here once you add habits. Set a frequency and importance,
+          then this page will decide what is due today.
+        </p>
+        <div className="today__welcome-actions">
+          <button type="button" onClick={() => navigate("/habits")}>
+            Create first habit
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="today">
