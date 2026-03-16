@@ -6,9 +6,11 @@ import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
+import Admin from "../pages/Admin/Admin.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
 
 import { normalizeFrequency } from "../lib/frequency.js";
+import { loadHabitsForSession, saveHabitsForSession } from "../lib/habitsClient.js";
 import { normalizeImportanceValue } from "../lib/importance.js";
 import { scoreHabitForToday } from "../lib/scoring.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
@@ -108,18 +110,9 @@ export default function App() {
           setIsLoading(true);
         }
         setLoadError("");
-        const res = await fetch("/api/habits", {
-          headers: session?.access_token
-            ? { Authorization: `Bearer ${session.access_token}` }
-            : undefined
-        });
-        if (!res.ok) {
-          throw new Error(`Load failed with status ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await loadHabitsForSession(session?.access_token, authUser?.id);
         if (!ignore) {
-          setHabits(Array.isArray(data.habits) ? data.habits : []);
+          setHabits(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         if (!ignore) {
@@ -138,7 +131,7 @@ export default function App() {
     return () => {
       ignore = true;
     };
-  }, [authEnabled, isAuthReady, session?.access_token]);
+  }, [authEnabled, authUser?.id, isAuthReady, session?.access_token]);
 
   const lastDoneById = useMemo(() => {
     const map = {};
@@ -177,27 +170,14 @@ export default function App() {
 
   async function persistHabits(nextHabits) {
     try {
-      const res = await fetch("/api/habits", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
-        },
-        body: JSON.stringify(nextHabits)
-      });
-
-      if (!res.ok) {
-        throw new Error(`Persist failed with status ${res.status}`);
+      const data = await saveHabitsForSession(session?.access_token, authUser?.id, nextHabits);
+      if (Array.isArray(data)) {
+        setHabits(data);
       }
 
-      const data = await res.json();
-      if (Array.isArray(data.habits)) {
-        setHabits(data.habits);
-      }
-
-      return { ok: true, habits: Array.isArray(data.habits) ? data.habits : nextHabits };
+      return { ok: true, habits: Array.isArray(data) ? data : nextHabits };
     } catch (error) {
-      console.error("Failed to persist habits.json", error);
+      console.error("Failed to persist habits", error);
       return { ok: false };
     }
   }
@@ -226,7 +206,7 @@ export default function App() {
 
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save habits.json." };
+      return { ok: false, error: "Could not save habits." };
     }
 
     return { ok: true, id };
@@ -259,7 +239,7 @@ export default function App() {
     setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save habits.json." };
+      return { ok: false, error: "Could not save habits." };
     }
 
     return { ok: true };
@@ -276,7 +256,7 @@ export default function App() {
 
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save habits.json." };
+      return { ok: false, error: "Could not save habits." };
     }
 
     return { ok: true };
@@ -315,7 +295,7 @@ export default function App() {
     setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save habits.json." };
+      return { ok: false, error: "Could not save habits." };
     }
 
     return { ok: true };
@@ -443,6 +423,7 @@ export default function App() {
             onUndoDoneToday={undoDoneToday}
             completionLog={completionLog}
             authUser={authUser}
+            session={session}
             onSignOut={handleSignOut}
           />
         }
@@ -452,6 +433,7 @@ export default function App() {
         <Route path="/habits" element={<Habits />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
       </Route>
     </Routes>

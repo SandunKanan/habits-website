@@ -1,7 +1,9 @@
 import React from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import TopNav from "../TopNav/TopNav.jsx";
 import "./Layout.scss";
+
+const ADMIN_EMAIL = "sandunkanangama@gmail.com";
 
 export default function Layout({
   todayISO,
@@ -16,6 +18,7 @@ export default function Layout({
   onUndoDoneToday,
   completionLog,
   authUser,
+  session,
   onSignOut
 }) {
   const location = useLocation();
@@ -55,6 +58,15 @@ export default function Layout({
           Core tools: <b>4</b>
         </>
       )
+    },
+    "/admin": {
+      title: "Admin",
+      subtitle: "Users and habits overview",
+      meta: (
+        <>
+          Access: <b>Restricted</b>
+        </>
+      )
     }
   };
   const pageMeta = pageMetaByPath[location.pathname] ?? pageMetaByPath["/today"];
@@ -85,11 +97,19 @@ export default function Layout({
               onAddCompletionDate,
               onMarkDone,
               onUndoDoneToday,
-              completionLog
+              completionLog,
+              authUser,
+              session
             }}
           />
         </section>
       </main>
+
+      {authUser?.email === ADMIN_EMAIL ? (
+        <Link className="layout__admin-link" to="/admin">
+          Admin
+        </Link>
+      ) : null}
     </div>
   );
 }

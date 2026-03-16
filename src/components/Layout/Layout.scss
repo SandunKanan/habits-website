@@ -46,9 +46,34 @@
   }
 }
 
+.layout__admin-link {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 12;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid $border-strong;
+  background: rgba(8, 17, 26, 0.82);
+  color: $text;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
+  transition: transform 0.18s ease, background 0.18s ease;
+
+  &:hover {
+    background: rgba(17, 29, 40, 0.92);
+    transform: translateY(-1px);
+  }
+}
+
 @media (max-width: 720px) {
   .layout__header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .layout__admin-link {
+    right: 16px;
+    bottom: 16px;
   }
 }
