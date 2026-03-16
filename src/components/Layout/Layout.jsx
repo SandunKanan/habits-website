@@ -61,11 +61,7 @@ export default function Layout({
     "/admin": {
       title: "Admin",
       subtitle: "Users and habits overview",
-      meta: (
-        <>
-          Access: <b>Restricted</b>
-        </>
-      )
+      meta: null
     }
   };
   const pageMeta = pageMetaByPath[location.pathname] ?? pageMetaByPath["/today"];
@@ -80,7 +76,7 @@ export default function Layout({
             <div className="layout__title">{pageMeta.title}</div>
             <div className="layout__subtitle">{pageMeta.subtitle}</div>
           </div>
-          <div className="layout__meta">{pageMeta.meta}</div>
+          {pageMeta.meta ? <div className="layout__meta">{pageMeta.meta}</div> : null}
         </header>
 
         <section className="layout__section">
