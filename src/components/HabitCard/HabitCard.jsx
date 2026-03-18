@@ -3,7 +3,14 @@ import { daysBetweenISO } from "../../lib/date.js";
 import { getImportanceLabel } from "../../lib/importance.js";
 import "./HabitCard.scss";
 
-export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onAddCompletionDate }) {
+export default function HabitCard({
+  item,
+  lastDoneISO,
+  todayISO,
+  onMarkDone,
+  onSkipToday,
+  onAddCompletionDate
+}) {
   const { habit, priorityScore, due, frequencyLabel, importance, statusLabel } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
@@ -81,9 +88,14 @@ export default function HabitCard({ item, lastDoneISO, todayISO, onMarkDone, onA
         {feedback ? <div className="habitcard__feedback">{feedback}</div> : null}
       </div>
 
-      <button className="habitcard__btn" type="button" onClick={() => onMarkDone(habit.id)}>
-        Mark done
-      </button>
+      <div className="habitcard__actions">
+        <button className="habitcard__skip-btn" type="button" onClick={() => onSkipToday(habit.id)}>
+          Skip today
+        </button>
+        <button className="habitcard__btn" type="button" onClick={() => onMarkDone(habit.id)}>
+          Mark done
+        </button>
+      </div>
     </div>
   );
 }

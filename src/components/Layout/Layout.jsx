@@ -14,20 +14,24 @@ export default function Layout({
   onAddCompletionDate,
   onMarkDone,
   onUndoDoneToday,
+  onSkipToday,
+  onUndoSkipToday,
   completionLog,
+  skippedTodayIds,
   authUser,
   isAdmin,
   session,
   onSignOut
 }) {
   const location = useLocation();
+  const activeTodayCount = curatedTop5.filter((item) => !skippedTodayIds.has(item.habit.id)).length;
   const pageMetaByPath = {
     "/today": {
       title: "Today",
       subtitle: todayISO,
       meta: (
         <>
-          Curated list size: <b>{curatedTop5.length}</b>
+          Curated list size: <b>{activeTodayCount}</b>
         </>
       )
     },
@@ -92,7 +96,10 @@ export default function Layout({
               onAddCompletionDate,
               onMarkDone,
               onUndoDoneToday,
+              onSkipToday,
+              onUndoSkipToday,
               completionLog,
+              skippedTodayIds,
               authUser,
               isAdmin,
               session

@@ -24,6 +24,15 @@ create table if not exists public.habit_completions (
   unique (habit_id, completed_on)
 );
 
+create table if not exists public.habit_skips (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  habit_id uuid not null references public.habits (id) on delete cascade,
+  skipped_on date not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  unique (habit_id, skipped_on)
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -34,9 +43,12 @@ create table if not exists public.user_roles (
 create index if not exists habits_user_id_idx on public.habits (user_id);
 create index if not exists habit_completions_user_id_idx on public.habit_completions (user_id);
 create index if not exists habit_completions_habit_id_idx on public.habit_completions (habit_id);
+create index if not exists habit_skips_user_id_idx on public.habit_skips (user_id);
+create index if not exists habit_skips_habit_id_idx on public.habit_skips (habit_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
+alter table public.habit_skips enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -71,4 +83,45 @@ drop policy if exists "Users can read own role" on public.user_roles;
 create policy "Users can read own role"
   on public.user_roles
   for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own skips" on public.habit_skips;
+create policy "Users can read own skips"
+  on public.habit_skips
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own skips" on public.habit_skips;
+create policy "Users can insert own skips"
+  on public.habit_skips
+  for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.habits
+      where public.habits.id = habit_id
+        and public.habits.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "Users can update own skips" on public.habit_skips;
+create policy "Users can update own skips"
+  on public.habit_skips
+  for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.habits
+      where public.habits.id = habit_id
+        and public.habits.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "Users can delete own skips" on public.habit_skips;
+create policy "Users can delete own skips"
+  on public.habit_skips
+  for delete
   using (auth.uid() = user_id);

@@ -122,6 +122,10 @@
   }
 }
 
+.today__completed-item--skipped {
+  background: linear-gradient(135deg, rgba(240, 191, 85, 0.08), rgba(255, 255, 255, 0.03));
+}
+
 .today__undo-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid $border-strong;

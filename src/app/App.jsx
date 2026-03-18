@@ -28,6 +28,10 @@ function getDoneDates(habit) {
   return Array.isArray(habit.doneDates) ? habit.doneDates : [];
 }
 
+function getSkippedDates(habit) {
+  return Array.isArray(habit.skippedDates) ? habit.skippedDates : [];
+}
+
 function buildHabitId(name, existingIds) {
   const base = name
     .toLowerCase()
@@ -198,6 +202,18 @@ export default function App() {
     return seeded;
   }, [habits]);
 
+  const skippedTodayIds = useMemo(() => {
+    const ids = new Set();
+
+    for (const h of habits) {
+      if (getSkippedDates(h).includes(todayISO)) {
+        ids.add(h.id);
+      }
+    }
+
+    return ids;
+  }, [habits, todayISO]);
+
   const curatedTop5 = useMemo(() => {
     const scored = habits.map((h) => {
       const lastDoneISO = lastDoneById[h.id];
@@ -243,7 +259,8 @@ export default function App() {
       ...frequency,
       importance: parsedImportance,
       initialLastDone: null,
-      doneDates: []
+      doneDates: [],
+      skippedDates: []
     };
 
     const nextHabits = [...habits, newHabit];
@@ -323,6 +340,7 @@ export default function App() {
     }
 
     const currentDoneDates = getDoneDates(habit);
+    const currentSkippedDates = getSkippedDates(habit);
     if (currentDoneDates.includes(parsedDateISO)) {
       return { ok: false, error: "That completion date already exists." };
     }
@@ -333,7 +351,8 @@ export default function App() {
       if (h.id !== habitId) return h;
       return {
         ...h,
-        doneDates: nextDoneDates
+        doneDates: nextDoneDates,
+        skippedDates: currentSkippedDates.filter((value) => value !== parsedDateISO)
       };
     });
 
@@ -351,6 +370,7 @@ export default function App() {
     if (!habit) return;
 
     const currentDoneDates = getDoneDates(habit);
+    const currentSkippedDates = getSkippedDates(habit);
     const alreadyDoneToday = currentDoneDates.includes(todayISO);
     if (alreadyDoneToday) return;
 
@@ -358,7 +378,8 @@ export default function App() {
       if (h.id !== habitId) return h;
       return {
         ...h,
-        doneDates: [...currentDoneDates, todayISO]
+        doneDates: [...currentDoneDates, todayISO],
+        skippedDates: currentSkippedDates.filter((value) => value !== todayISO)
       };
     });
 
@@ -380,6 +401,45 @@ export default function App() {
       return {
         ...h,
         doneDates: nextDoneDates
+      };
+    });
+
+    setHabits(nextHabits);
+    void persistHabits(nextHabits);
+  }
+
+  function skipToday(habitId) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const currentDoneDates = getDoneDates(habit);
+    const currentSkippedDates = getSkippedDates(habit);
+    if (currentDoneDates.includes(todayISO) || currentSkippedDates.includes(todayISO)) return;
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        skippedDates: [...currentSkippedDates, todayISO]
+      };
+    });
+
+    setHabits(nextHabits);
+    void persistHabits(nextHabits);
+  }
+
+  function undoSkipToday(habitId) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const currentSkippedDates = getSkippedDates(habit);
+    if (!currentSkippedDates.includes(todayISO)) return;
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        skippedDates: currentSkippedDates.filter((dateISO) => dateISO !== todayISO)
       };
     });
 
@@ -472,7 +532,10 @@ export default function App() {
             onAddCompletionDate={addCompletionDate}
             onMarkDone={markDone}
             onUndoDoneToday={undoDoneToday}
+            onSkipToday={skipToday}
+            onUndoSkipToday={undoSkipToday}
             completionLog={completionLog}
+            skippedTodayIds={skippedTodayIds}
             authUser={authUser}
             isAdmin={isAdmin}
             session={session}

@@ -10,16 +10,23 @@ export default function Today() {
     habits,
     curatedTop5,
     lastDoneById,
+    skippedTodayIds,
     onMarkDone,
+    onSkipToday,
     onAddCompletionDate,
-    onUndoDoneToday
+    onUndoDoneToday,
+    onUndoSkipToday
   } = useOutletContext();
 
-  const todoItems = curatedTop5.filter((item) => lastDoneById[item.habit.id] !== todayISO);
+  const todoItems = curatedTop5.filter((item) => {
+    const habitId = item.habit.id;
+    return lastDoneById[habitId] !== todayISO && !skippedTodayIds.has(habitId);
+  });
   const completedToday = habits.filter((habit) => {
     const importance = Number(habit.importance);
     return importance > 0 && lastDoneById[habit.id] === todayISO;
   });
+  const skippedToday = habits.filter((habit) => skippedTodayIds.has(habit.id));
 
   if (habits.length === 0) {
     return (
@@ -54,6 +61,7 @@ export default function Today() {
                 lastDoneISO={lastDoneById[item.habit.id]}
                 todayISO={todayISO}
                 onMarkDone={onMarkDone}
+                onSkipToday={onSkipToday}
                 onAddCompletionDate={onAddCompletionDate}
               />
             ))}
@@ -79,6 +87,31 @@ export default function Today() {
                   onClick={() => onUndoDoneToday(habit.id)}
                 >
                   Undo
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="today__section card">
+        <h2>Skipped</h2>
+        {skippedToday.length === 0 ? (
+          <p className="today__empty">No tasks skipped today.</p>
+        ) : (
+          <ul className="today__completed-list">
+            {skippedToday.map((habit) => (
+              <li key={habit.id} className="today__completed-item today__completed-item--skipped">
+                <div>
+                  <span>{habit.name}</span>
+                  <small>Skipped on {todayISO}</small>
+                </div>
+                <button
+                  className="today__undo-btn"
+                  type="button"
+                  onClick={() => onUndoSkipToday(habit.id)}
+                >
+                  Undo skip
                 </button>
               </li>
             ))}
