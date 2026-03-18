@@ -137,6 +137,75 @@ export default function Habits() {
     setExpandedDatesById((prev) => ({ ...prev, [habitId]: !prev[habitId] }));
   }
 
+  function renderFrequencyControls({
+    mode,
+    value,
+    unit,
+    onModeChange,
+    onValueChange,
+    onUnitChange
+  }) {
+    const numericValue = Math.max(1, Number(value) || 1);
+
+    if (mode === "quota") {
+      return (
+        <div className="habits__frequency-row">
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={value}
+            onChange={onValueChange}
+            title="Frequency value"
+            required
+          />
+          <select value={mode} onChange={onModeChange} title="Frequency type">
+            {FREQUENCY_MODES.map((frequencyMode) => (
+              <option key={frequencyMode.value} value={frequencyMode.value}>
+                {frequencyMode.label}
+              </option>
+            ))}
+          </select>
+          <select value={unit} onChange={onUnitChange} title="Frequency unit">
+            {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
+              <option key={frequencyUnit.value} value={frequencyUnit.value}>
+                {frequencyUnit.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div className="habits__frequency-row">
+        <select value={mode} onChange={onModeChange} title="Frequency type">
+          {FREQUENCY_MODES.map((frequencyMode) => (
+            <option key={frequencyMode.value} value={frequencyMode.value}>
+              {frequencyMode.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={value}
+          onChange={onValueChange}
+          title="Frequency value"
+          required
+        />
+        <select value={unit} onChange={onUnitChange} title="Frequency unit">
+          {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
+            <option key={frequencyUnit.value} value={frequencyUnit.value}>
+              {numericValue === 1 ? frequencyUnit.label : `${frequencyUnit.label}s`}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
   return (
     <div className="habits">
       <div className="habits__header card">
@@ -174,43 +243,18 @@ export default function Habits() {
 
             <div className="habits__form-group">
               <div className="habits__form-label">Frequency</div>
-              <div className="habits__frequency-row">
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={frequencyValue}
-                  onChange={(e) => setFrequencyValue(e.target.value)}
-                  title="Frequency value"
-                  required
-                />
-                <select
-                  value={frequencyMode}
-                  onChange={(e) => {
-                    const nextMode = e.target.value;
-                    setFrequencyMode(nextMode);
-                    setFrequencyUnit(nextMode === "quota" ? "week" : "day");
-                  }}
-                  title="Frequency type"
-                >
-                  {FREQUENCY_MODES.map((mode) => (
-                    <option key={mode.value} value={mode.value}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={frequencyUnit}
-                  onChange={(e) => setFrequencyUnit(e.target.value)}
-                  title="Frequency unit"
-                >
-                  {getFrequencyUnitsForMode(frequencyMode).map((unit) => (
-                    <option key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {renderFrequencyControls({
+                mode: frequencyMode,
+                value: frequencyValue,
+                unit: frequencyUnit,
+                onModeChange: (e) => {
+                  const nextMode = e.target.value;
+                  setFrequencyMode(nextMode);
+                  setFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                },
+                onValueChange: (e) => setFrequencyValue(e.target.value),
+                onUnitChange: (e) => setFrequencyUnit(e.target.value)
+              })}
             </div>
 
             <label className="habits__form-field habits__form-field--priority">
@@ -280,42 +324,18 @@ export default function Habits() {
                 </label>
                 <label>
                   Frequency
-                  <div className="habits__frequency-row">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={editFrequencyValue}
-                      onChange={(e) => setEditFrequencyValue(e.target.value)}
-                      required
-                    />
-                    <select
-                      value={editFrequencyMode}
-                      onChange={(e) => {
-                        const nextMode = e.target.value;
-                        setEditFrequencyMode(nextMode);
-                        setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
-                      }}
-                      required
-                    >
-                      {FREQUENCY_MODES.map((mode) => (
-                        <option key={mode.value} value={mode.value}>
-                          {mode.label}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={editFrequencyUnit}
-                      onChange={(e) => setEditFrequencyUnit(e.target.value)}
-                      required
-                    >
-                      {getFrequencyUnitsForMode(editFrequencyMode).map((unit) => (
-                        <option key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {renderFrequencyControls({
+                    mode: editFrequencyMode,
+                    value: editFrequencyValue,
+                    unit: editFrequencyUnit,
+                    onModeChange: (e) => {
+                      const nextMode = e.target.value;
+                      setEditFrequencyMode(nextMode);
+                      setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                    },
+                    onValueChange: (e) => setEditFrequencyValue(e.target.value),
+                    onUnitChange: (e) => setEditFrequencyUnit(e.target.value)
+                  })}
                 </label>
                 <label>
                   Priority
