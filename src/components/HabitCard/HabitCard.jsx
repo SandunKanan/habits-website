@@ -89,11 +89,11 @@ export default function HabitCard({
       </div>
 
       <div className="habitcard__actions">
-        <button className="habitcard__skip-btn" type="button" onClick={() => onSkipToday(habit.id)}>
-          Skip today
-        </button>
         <button className="habitcard__btn" type="button" onClick={() => onMarkDone(habit.id)}>
           Mark done
+        </button>
+        <button className="habitcard__skip-btn" type="button" onClick={() => onSkipToday(habit.id)}>
+          Skip today
         </button>
       </div>
     </div>
