@@ -1,12 +1,20 @@
 @use "../../styles/variables" as *;
 
 .history {
+  display: grid;
+  gap: 16px;
+}
+
+.history__empty,
+.history__day {
   padding: 22px;
   background:
     radial-gradient(circle at top right, rgba(143, 211, 255, 0.1), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
     $panel;
+}
 
+.history__empty {
   h2 {
     margin: 0 0 8px;
     font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
@@ -18,21 +26,114 @@
     color: $muted;
     font-style: italic;
   }
+}
 
-  ul {
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 10px;
+.history__day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.55rem;
+  }
+
+  span {
+    color: $muted;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.history__event-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.history__event {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid $border;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.history__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid $border;
+  white-space: nowrap;
+}
+
+.history__badge--habit-done {
+  background: rgba(82, 214, 195, 0.12);
+  border-color: rgba(82, 214, 195, 0.2);
+}
+
+.history__badge--habit-skipped {
+  background: rgba(240, 191, 85, 0.12);
+  border-color: rgba(240, 191, 85, 0.2);
+}
+
+.history__badge--subtask-done {
+  background: rgba(143, 211, 255, 0.12);
+  border-color: rgba(143, 211, 255, 0.2);
+}
+
+.history__badge--subtask-only {
+  background: rgba(143, 211, 255, 0.12);
+  border-color: rgba(143, 211, 255, 0.2);
+}
+
+.history__event-copy {
+  display: grid;
+  gap: 4px;
+
+  strong {
+    color: $text;
+  }
+
+  small {
     color: $muted;
   }
+}
 
-  li {
-    margin: 0;
-    padding: 12px 14px;
-    border: 1px solid $border;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.025);
+.history__subtask-copy {
+  list-style: none;
+  padding-left: 18px;
+  position: relative;
+  color: $muted;
+  font-size: 0.95rem;
+  font-weight: 400;
+
+  &::before {
+    content: "└";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: $muted;
+    font-weight: 700;
   }
+
+}
+
+.history__subtask-list {
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
 }
