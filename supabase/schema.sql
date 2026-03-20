@@ -9,6 +9,7 @@ create table if not exists public.habits (
   frequency_value integer not null check (frequency_value >= 1),
   frequency_unit text not null check (frequency_unit in ('day', 'week', 'month')),
   importance integer not null check (importance >= 0 and importance <= 10),
+  subtasks jsonb not null default '[]'::jsonb,
   initial_last_done date,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),

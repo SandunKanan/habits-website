@@ -23,6 +23,9 @@ export default function Habits() {
     onAddHabit,
     onUpdateHabit,
     onDeleteHabit,
+    onAddSubtask,
+    onMarkSubtaskDoneToday,
+    onUndoSubtaskDoneToday,
     onAddCompletionDate,
     onMarkDone,
     onUndoDoneToday
@@ -45,6 +48,9 @@ export default function Habits() {
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDatesById, setExpandedDatesById] = useState({});
+  const [subtaskNameByHabitId, setSubtaskNameByHabitId] = useState({});
+  const [subtaskFeedbackByHabitId, setSubtaskFeedbackByHabitId] = useState({});
+  const [isSavingSubtaskByHabitId, setIsSavingSubtaskByHabitId] = useState({});
   const [pastDateById, setPastDateById] = useState({});
   const [isPastOpenById, setIsPastOpenById] = useState({});
   const [completionFeedbackById, setCompletionFeedbackById] = useState({});
@@ -157,6 +163,30 @@ export default function Habits() {
   function togglePastCompletionForm(habitId) {
     setIsPastOpenById((prev) => ({ ...prev, [habitId]: !prev[habitId] }));
     setCompletionFeedbackById((prev) => ({ ...prev, [habitId]: "" }));
+  }
+
+  async function handleAddSubtask(habitId) {
+    const subtaskName = String(subtaskNameByHabitId[habitId] ?? "").trim();
+    if (!subtaskName) {
+      setSubtaskFeedbackByHabitId((prev) => ({ ...prev, [habitId]: "Subtask name is required." }));
+      return;
+    }
+
+    setIsSavingSubtaskByHabitId((prev) => ({ ...prev, [habitId]: true }));
+    setSubtaskFeedbackByHabitId((prev) => ({ ...prev, [habitId]: "" }));
+
+    const result = await onAddSubtask(habitId, subtaskName);
+    if (result?.ok) {
+      setSubtaskNameByHabitId((prev) => ({ ...prev, [habitId]: "" }));
+      setSubtaskFeedbackByHabitId((prev) => ({ ...prev, [habitId]: "Subtask added." }));
+    } else {
+      setSubtaskFeedbackByHabitId((prev) => ({
+        ...prev,
+        [habitId]: result?.error ?? "Could not add subtask."
+      }));
+    }
+
+    setIsSavingSubtaskByHabitId((prev) => ({ ...prev, [habitId]: false }));
   }
 
   async function handleAddPastCompletion(habitId) {
@@ -452,6 +482,14 @@ export default function Habits() {
                   const completionFeedback = completionFeedbackById[habit.id];
                   const isSavingCompletion = Boolean(isSavingCompletionById[habit.id]);
                   const isDoneToday = sortedDoneDates[0] === todayISO;
+                  const subtasks = Array.isArray(habit.subtasks) ? habit.subtasks : [];
+                  const sortedSubtasks = [...subtasks].sort((a, b) => {
+                    const aLast = [...(Array.isArray(a.doneDates) ? a.doneDates : [])]
+                      .sort((x, y) => y.localeCompare(x))[0] ?? "";
+                    const bLast = [...(Array.isArray(b.doneDates) ? b.doneDates : [])]
+                      .sort((x, y) => y.localeCompare(x))[0] ?? "";
+                    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
+                  });
                   const score = scoreHabitForToday({
                     habit,
                     lastDoneISO: sortedDoneDates[0] ?? habit.initialLastDone ?? null,
@@ -531,6 +569,81 @@ export default function Habits() {
                           {completionFeedback}
                         </p>
                       ) : null}
+
+                      <div className="habits__subtasks">
+                        <div className="habits__subtasks-head">
+                          <h4>Subtasks</h4>
+                          <small>Track smaller parts separately from the main habit.</small>
+                        </div>
+
+                        <div className="habits__subtask-create">
+                          <input
+                            type="text"
+                            value={subtaskNameByHabitId[habit.id] ?? ""}
+                            onChange={(e) =>
+                              setSubtaskNameByHabitId((prev) => ({
+                                ...prev,
+                                [habit.id]: e.target.value
+                              }))
+                            }
+                            placeholder="Add subtask"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddSubtask(habit.id)}
+                            disabled={Boolean(isSavingSubtaskByHabitId[habit.id])}
+                          >
+                            {isSavingSubtaskByHabitId[habit.id] ? "Saving..." : "Add"}
+                          </button>
+                        </div>
+
+                        {subtaskFeedbackByHabitId[habit.id] ? (
+                          <p className="habits__feedback habits__feedback--inline">
+                            {subtaskFeedbackByHabitId[habit.id]}
+                          </p>
+                        ) : null}
+
+                        {sortedSubtasks.length === 0 ? (
+                          <p className="habits__subtasks-empty">No subtasks yet.</p>
+                        ) : (
+                          <ul className="habits__subtask-list">
+                            {sortedSubtasks.map((subtask) => {
+                              const subtaskDoneDates = Array.isArray(subtask.doneDates)
+                                ? [...subtask.doneDates].sort((a, b) => b.localeCompare(a))
+                                : [];
+                              const lastSubtaskDone = subtaskDoneDates[0];
+                              const isSubtaskDoneToday = lastSubtaskDone === todayISO;
+
+                              return (
+                                <li key={subtask.id} className="habits__subtask-item">
+                                  <div>
+                                    <strong>{subtask.name}</strong>
+                                    <small>
+                                      Last completed {formatLastCompleted(lastSubtaskDone)} ·{" "}
+                                      {subtaskDoneDates.length} total
+                                    </small>
+                                  </div>
+                                  {isSubtaskDoneToday ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => onUndoSubtaskDoneToday(habit.id, subtask.id)}
+                                    >
+                                      Undo today
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => onMarkSubtaskDoneToday(habit.id, subtask.id)}
+                                    >
+                                      Tick today
+                                    </button>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
 
                       <div className="habits__dates">
                         <button

@@ -307,6 +307,81 @@
     margin-top: 10px;
   }
 
+  &__subtasks {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__subtasks-head {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+
+    h4 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    small {
+      color: $muted;
+    }
+  }
+
+  &__subtask-create {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    input,
+    button {
+      border: 1px solid $border;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: $text;
+      font: inherit;
+    }
+
+    input {
+      flex: 1 1 220px;
+    }
+  }
+
+  &__subtasks-empty {
+    margin: 10px 0 0;
+    color: $muted;
+    font-style: italic;
+  }
+
+  &__subtask-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  &__subtask-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid $border;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+
+    div {
+      display: grid;
+      gap: 4px;
+    }
+
+    small {
+      color: $muted;
+    }
+  }
+
   &__dates {
     margin-top: 12px;
 

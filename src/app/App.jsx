@@ -32,6 +32,10 @@ function getSkippedDates(habit) {
   return Array.isArray(habit.skippedDates) ? habit.skippedDates : [];
 }
 
+function getSubtasks(habit) {
+  return Array.isArray(habit.subtasks) ? habit.subtasks : [];
+}
+
 function buildHabitId(name, existingIds) {
   const base = name
     .toLowerCase()
@@ -261,7 +265,8 @@ export default function App() {
       createdAt: new Date().toISOString(),
       initialLastDone: null,
       doneDates: [],
-      skippedDates: []
+      skippedDates: [],
+      subtasks: []
     };
 
     const nextHabits = [...habits, newHabit];
@@ -331,6 +336,103 @@ export default function App() {
     }
 
     return { ok: true };
+  }
+
+  async function addSubtask(habitId, name) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) {
+      return { ok: false, error: "Habit not found." };
+    }
+
+    const trimmedName = String(name ?? "").trim();
+    if (!trimmedName) {
+      return { ok: false, error: "Subtask name is required." };
+    }
+
+    const existingIds = new Set(getSubtasks(habit).map((subtask) => subtask.id));
+    const subtaskId = buildHabitId(trimmedName, existingIds);
+    const nextSubtasks = [
+      ...getSubtasks(habit),
+      {
+        id: subtaskId,
+        name: trimmedName,
+        doneDates: []
+      }
+    ];
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        subtasks: nextSubtasks
+      };
+    });
+
+    setHabits(nextHabits);
+    const persisted = await persistHabits(nextHabits);
+    if (!persisted.ok) {
+      return { ok: false, error: "Could not save subtasks." };
+    }
+
+    return { ok: true };
+  }
+
+  function markSubtaskDoneToday(habitId, subtaskId) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const nextSubtasks = getSubtasks(habit).map((subtask) => {
+      if (subtask.id !== subtaskId) return subtask;
+      const currentDoneDates = Array.isArray(subtask.doneDates) ? subtask.doneDates : [];
+      if (currentDoneDates.includes(todayISO)) {
+        return subtask;
+      }
+
+      return {
+        ...subtask,
+        doneDates: [...currentDoneDates, todayISO].sort((a, b) => a.localeCompare(b))
+      };
+    });
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        subtasks: nextSubtasks
+      };
+    });
+
+    setHabits(nextHabits);
+    void persistHabits(nextHabits);
+  }
+
+  function undoSubtaskDoneToday(habitId, subtaskId) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const nextSubtasks = getSubtasks(habit).map((subtask) => {
+      if (subtask.id !== subtaskId) return subtask;
+      const currentDoneDates = Array.isArray(subtask.doneDates) ? subtask.doneDates : [];
+      if (!currentDoneDates.includes(todayISO)) {
+        return subtask;
+      }
+
+      return {
+        ...subtask,
+        doneDates: currentDoneDates.filter((dateISO) => dateISO !== todayISO)
+      };
+    });
+
+    const nextHabits = habits.map((h) => {
+      if (h.id !== habitId) return h;
+      return {
+        ...h,
+        subtasks: nextSubtasks
+      };
+    });
+
+    setHabits(nextHabits);
+    void persistHabits(nextHabits);
   }
 
   async function addCompletionDate(habitId, dateISO) {
@@ -538,6 +640,9 @@ export default function App() {
             onAddHabit={addHabit}
             onUpdateHabit={updateHabit}
             onDeleteHabit={deleteHabit}
+            onAddSubtask={addSubtask}
+            onMarkSubtaskDoneToday={markSubtaskDoneToday}
+            onUndoSubtaskDoneToday={undoSubtaskDoneToday}
             onAddCompletionDate={addCompletionDate}
             onMarkDone={markDone}
             onUndoDoneToday={undoDoneToday}

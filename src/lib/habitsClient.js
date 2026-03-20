@@ -56,6 +56,15 @@ function normalizeHabit(habit) {
   const skippedDates = Array.isArray(habit.skippedDates)
     ? [...new Set(habit.skippedDates)].sort((a, b) => a.localeCompare(b))
     : [];
+  const subtasks = Array.isArray(habit.subtasks)
+    ? habit.subtasks.map((subtask) => ({
+        id: String(subtask.id ?? ""),
+        name: String(subtask.name ?? "").trim(),
+        doneDates: Array.isArray(subtask.doneDates)
+          ? [...new Set(subtask.doneDates)].sort((a, b) => a.localeCompare(b))
+          : []
+      }))
+    : [];
   const frequency = normalizeFrequency(habit);
 
   return {
@@ -65,7 +74,8 @@ function normalizeHabit(habit) {
     createdAt: habit.createdAt ?? null,
     initialLastDone: habit.initialLastDone ?? null,
     doneDates,
-    skippedDates
+    skippedDates,
+    subtasks
   };
 }
 
@@ -96,7 +106,8 @@ function parseHabitRows(habitRows, completionRows, skipRows) {
       createdAt: habitRow.created_at,
       initialLastDone: habitRow.initial_last_done,
       doneDates: completionsByHabitId.get(habitRow.id) ?? [],
-      skippedDates: skipsByHabitId.get(habitRow.id) ?? []
+      skippedDates: skipsByHabitId.get(habitRow.id) ?? [],
+      subtasks: habitRow.subtasks ?? []
     })
   );
 }
@@ -113,7 +124,8 @@ function serializeHabitRow(habit, userId) {
     frequency_unit: frequency.frequencyUnit,
     importance: normalizeImportanceValue(habit.importance),
     created_at: habit.createdAt ?? null,
-    initial_last_done: habit.initialLastDone ?? null
+    initial_last_done: habit.initialLastDone ?? null,
+    subtasks: habit.subtasks ?? []
   };
 }
 

@@ -9,10 +9,13 @@ export default function HabitCard({
   todayISO,
   onMarkDone,
   onSkipToday,
+  onMarkSubtaskDoneToday,
+  onUndoSubtaskDoneToday,
   onAddCompletionDate
 }) {
   const { habit, parScore, due, frequencyLabel, importance, statusLabel } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
+  const [isSubtasksOpen, setIsSubtasksOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
@@ -46,6 +49,13 @@ export default function HabitCard({
     setIsSavingPast(false);
   }
 
+  const subtasks = Array.isArray(habit.subtasks) ? habit.subtasks : [];
+  const sortedSubtasks = [...subtasks].sort((a, b) => {
+    const aLast = [...(Array.isArray(a.doneDates) ? a.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
+    const bLast = [...(Array.isArray(b.doneDates) ? b.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
+    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
+  });
+
   return (
     <div className="habitcard card">
       <div className="habitcard__main">
@@ -63,29 +73,73 @@ export default function HabitCard({
           Par score: <b>{parScore.toFixed(2)}</b>
         </div>
 
-        {isPastOpen ? (
-          <form className="habitcard__past-form" onSubmit={handleAddPastCompletion}>
-            <input
-              type="date"
-              value={pastDateISO}
-              max={todayISO}
-              onChange={(e) => setPastDateISO(e.target.value)}
-              required
-            />
-            <button type="submit" disabled={isSavingPast}>
-              {isSavingPast ? "Saving..." : "Save past date"}
+        <div className="habitcard__inline-actions">
+          {isPastOpen ? (
+            <form className="habitcard__past-form" onSubmit={handleAddPastCompletion}>
+              <input
+                type="date"
+                value={pastDateISO}
+                max={todayISO}
+                onChange={(e) => setPastDateISO(e.target.value)}
+                required
+              />
+              <button type="submit" disabled={isSavingPast}>
+                {isSavingPast ? "Saving..." : "Save past date"}
+              </button>
+              <button type="button" onClick={() => setIsPastOpen(false)} disabled={isSavingPast}>
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <button className="habitcard__ghost-btn" type="button" onClick={() => setIsPastOpen(true)}>
+              Add past completion
             </button>
-            <button type="button" onClick={() => setIsPastOpen(false)} disabled={isSavingPast}>
-              Cancel
+          )}
+
+          {sortedSubtasks.length > 0 ? (
+            <button
+              className="habitcard__ghost-btn"
+              type="button"
+              onClick={() => setIsSubtasksOpen((current) => !current)}
+            >
+              {isSubtasksOpen ? "Hide subtasks" : `Show subtasks (${sortedSubtasks.length})`}
             </button>
-          </form>
-        ) : (
-          <button className="habitcard__ghost-btn" type="button" onClick={() => setIsPastOpen(true)}>
-            Add past completion
-          </button>
-        )}
+          ) : null}
+        </div>
 
         {feedback ? <div className="habitcard__feedback">{feedback}</div> : null}
+
+        {sortedSubtasks.length > 0 && isSubtasksOpen ? (
+          <div className="habitcard__subtasks">
+            <ul className="habitcard__subtask-list">
+              {sortedSubtasks.map((subtask) => {
+                const doneDates = Array.isArray(subtask.doneDates)
+                  ? [...subtask.doneDates].sort((a, b) => b.localeCompare(a))
+                  : [];
+                const lastSubtaskDone = doneDates[0];
+                const isDoneToday = lastSubtaskDone === todayISO;
+
+                return (
+                  <li key={subtask.id} className="habitcard__subtask-item">
+                    <div>
+                      <strong>{subtask.name}</strong>
+                      <small>Last completed {formatLastDone(lastSubtaskDone)}</small>
+                    </div>
+                    {isDoneToday ? (
+                      <button type="button" onClick={() => onUndoSubtaskDoneToday(habit.id, subtask.id)}>
+                        Undo
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => onMarkSubtaskDoneToday(habit.id, subtask.id)}>
+                        Tick
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
       </div>
 
       <div className="habitcard__actions">

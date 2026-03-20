@@ -15,6 +15,8 @@ export default function Today() {
     skippedTodayIds,
     onMarkDone,
     onSkipToday,
+    onMarkSubtaskDoneToday,
+    onUndoSubtaskDoneToday,
     onAddCompletionDate,
     onUndoDoneToday,
     onUndoSkipToday
@@ -92,6 +94,8 @@ export default function Today() {
                 todayISO={todayISO}
                 onMarkDone={onMarkDone}
                 onSkipToday={onSkipToday}
+                onMarkSubtaskDoneToday={onMarkSubtaskDoneToday}
+                onUndoSubtaskDoneToday={onUndoSubtaskDoneToday}
                 onAddCompletionDate={onAddCompletionDate}
               />
             ))}
