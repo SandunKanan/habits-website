@@ -11,7 +11,7 @@ export default function HabitCard({
   onSkipToday,
   onAddCompletionDate
 }) {
-  const { habit, priorityScore, due, frequencyLabel, importance, statusLabel } = item;
+  const { habit, parScore, due, frequencyLabel, importance, statusLabel } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -60,7 +60,7 @@ export default function HabitCard({
         </div>
 
         <div className="habitcard__score">
-          Priority score: <b>{priorityScore.toFixed(2)}</b>
+          Par score: <b>{parScore.toFixed(2)}</b>
         </div>
 
         {isPastOpen ? (

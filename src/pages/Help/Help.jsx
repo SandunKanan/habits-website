@@ -10,7 +10,7 @@ const workflowSteps = [
   {
     title: "Review Today",
     description:
-      "The Today page shows only habits that are currently due. Higher-priority habits rise in the list when they are overdue."
+      "The Today page shows only habits that are currently due. Each card shows a par score, where 1.00 means the habit is due and on track, based on recent completions rather than old debt."
   },
   {
     title: "Log completions",
@@ -62,7 +62,7 @@ const toolCards = [
 const priorityExamples = [
   "Core outranks lower priority levels when habits are equally overdue.",
   "Inactive keeps a habit in your account without adding it to the daily schedule.",
-  "Weekly and monthly quotas are paced across the current period rather than treated like one-time interval reminders."
+  "Weekly and monthly targets use a rolling debt window, so old misses fall away and the score reflects what is most useful to do today."
 ];
 
 export default function Help() {

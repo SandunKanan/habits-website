@@ -258,6 +258,7 @@ export default function App() {
       name: trimmedName,
       ...frequency,
       importance: parsedImportance,
+      createdAt: new Date().toISOString(),
       initialLastDone: null,
       doneDates: [],
       skippedDates: []
@@ -274,7 +275,10 @@ export default function App() {
     return { ok: true, id };
   }
 
-  async function updateHabit(habitId, { name, frequencyMode, frequencyValue, frequencyUnit, importance }) {
+  async function updateHabit(
+    habitId,
+    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt }
+  ) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) {
       return { ok: false, error: "Habit not found." };
@@ -284,9 +288,13 @@ export default function App() {
     if (!trimmedName) {
       return { ok: false, error: "Habit name is required." };
     }
+    if (!createdAt) {
+      return { ok: false, error: "Created date is required." };
+    }
 
     const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
+    const normalizedCreatedAt = `${String(createdAt).slice(0, 10)}T00:00:00.000Z`;
 
     const nextHabits = habits.map((h) => {
       if (h.id !== habitId) return h;
@@ -294,7 +302,8 @@ export default function App() {
         ...h,
         name: trimmedName,
         ...frequency,
-        importance: parsedImportance
+        importance: parsedImportance,
+        createdAt: normalizedCreatedAt
       };
     });
 

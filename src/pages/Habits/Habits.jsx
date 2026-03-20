@@ -13,10 +13,20 @@ import {
   IMPORTANCE_LEVELS,
   normalizeImportanceValue
 } from "../../lib/importance.js";
+import { scoreHabitForToday } from "../../lib/scoring.js";
 import "./Habits.scss";
 
 export default function Habits() {
-  const { habits, onAddHabit, onUpdateHabit, onDeleteHabit } = useOutletContext();
+  const {
+    habits,
+    todayISO: contextTodayISO,
+    onAddHabit,
+    onUpdateHabit,
+    onDeleteHabit,
+    onAddCompletionDate,
+    onMarkDone,
+    onUndoDoneToday
+  } = useOutletContext();
   const [name, setName] = useState("");
   const [frequencyMode, setFrequencyMode] = useState("interval");
   const [frequencyValue, setFrequencyValue] = useState("1");
@@ -31,10 +41,15 @@ export default function Habits() {
   const [editFrequencyValue, setEditFrequencyValue] = useState("1");
   const [editFrequencyUnit, setEditFrequencyUnit] = useState("day");
   const [editImportance, setEditImportance] = useState(String(DEFAULT_IMPORTANCE_VALUE));
+  const [editCreatedAt, setEditCreatedAt] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDatesById, setExpandedDatesById] = useState({});
-  const todayISO = startOfTodayLocalISO();
+  const [pastDateById, setPastDateById] = useState({});
+  const [isPastOpenById, setIsPastOpenById] = useState({});
+  const [completionFeedbackById, setCompletionFeedbackById] = useState({});
+  const [isSavingCompletionById, setIsSavingCompletionById] = useState({});
+  const todayISO = contextTodayISO ?? startOfTodayLocalISO();
 
   function formatLastCompleted(dateISO) {
     if (!dateISO) return "Never";
@@ -85,6 +100,7 @@ export default function Habits() {
     setEditFrequencyValue(String(frequency.frequencyValue));
     setEditFrequencyUnit(frequency.frequencyUnit);
     setEditImportance(String(normalizeImportanceValue(habit.importance)));
+    setEditCreatedAt(habit.createdAt ? String(habit.createdAt).slice(0, 10) : todayISO);
     setEditFeedback("");
   }
 
@@ -105,7 +121,8 @@ export default function Habits() {
       frequencyMode: editFrequencyMode,
       frequencyValue: editFrequencyValue,
       frequencyUnit: editFrequencyUnit,
-      importance: editImportance
+      importance: editImportance,
+      createdAt: editCreatedAt
     });
 
     if (result?.ok) {
@@ -135,6 +152,36 @@ export default function Habits() {
 
   function toggleCompletionDates(habitId) {
     setExpandedDatesById((prev) => ({ ...prev, [habitId]: !prev[habitId] }));
+  }
+
+  function togglePastCompletionForm(habitId) {
+    setIsPastOpenById((prev) => ({ ...prev, [habitId]: !prev[habitId] }));
+    setCompletionFeedbackById((prev) => ({ ...prev, [habitId]: "" }));
+  }
+
+  async function handleAddPastCompletion(habitId) {
+    const dateISO = String(pastDateById[habitId] ?? "").trim();
+    if (!dateISO) {
+      setCompletionFeedbackById((prev) => ({ ...prev, [habitId]: "Choose a date first." }));
+      return;
+    }
+
+    setIsSavingCompletionById((prev) => ({ ...prev, [habitId]: true }));
+    setCompletionFeedbackById((prev) => ({ ...prev, [habitId]: "" }));
+
+    const result = await onAddCompletionDate(habitId, dateISO);
+    if (result?.ok) {
+      setPastDateById((prev) => ({ ...prev, [habitId]: "" }));
+      setIsPastOpenById((prev) => ({ ...prev, [habitId]: false }));
+      setCompletionFeedbackById((prev) => ({ ...prev, [habitId]: "Past completion saved." }));
+    } else {
+      setCompletionFeedbackById((prev) => ({
+        ...prev,
+        [habitId]: result?.error ?? "Could not add completion date."
+      }));
+    }
+
+    setIsSavingCompletionById((prev) => ({ ...prev, [habitId]: false }));
   }
 
   function renderFrequencyControls({
@@ -338,6 +385,16 @@ export default function Habits() {
                   })}
                 </label>
                 <label>
+                  Created at
+                  <input
+                    type="date"
+                    value={editCreatedAt}
+                    onChange={(e) => setEditCreatedAt(e.target.value)}
+                    max={todayISO}
+                    required
+                  />
+                </label>
+                <label>
                   Priority
                   <select
                     value={editImportance}
@@ -391,6 +448,15 @@ export default function Habits() {
                   const sortedDoneDates = [...doneDates].sort((a, b) => b.localeCompare(a));
                   const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
                   const isExpanded = Boolean(expandedDatesById[habit.id]);
+                  const isPastOpen = Boolean(isPastOpenById[habit.id]);
+                  const completionFeedback = completionFeedbackById[habit.id];
+                  const isSavingCompletion = Boolean(isSavingCompletionById[habit.id]);
+                  const isDoneToday = sortedDoneDates[0] === todayISO;
+                  const score = scoreHabitForToday({
+                    habit,
+                    lastDoneISO: sortedDoneDates[0] ?? habit.initialLastDone ?? null,
+                    todayISO
+                  });
 
                   return (
                     <>
@@ -408,10 +474,63 @@ export default function Habits() {
                           <dd>{lastCompleted}</dd>
                         </div>
                         <div>
+                          <dt>Created at</dt>
+                          <dd>{habit.createdAt ? String(habit.createdAt).slice(0, 10) : "Unknown"}</dd>
+                        </div>
+                        <div>
                           <dt>Times completed</dt>
                           <dd>{sortedDoneDates.length}</dd>
                         </div>
+                        <div>
+                          <dt>Current score</dt>
+                          <dd>{score.parScore.toFixed(2)}</dd>
+                        </div>
+                        <div>
+                          <dt>Priority score</dt>
+                          <dd>{score.priorityScore.toFixed(2)}</dd>
+                        </div>
                       </dl>
+
+                      <div className="habits__completion-actions">
+                        {isDoneToday ? (
+                          <button type="button" onClick={() => onUndoDoneToday(habit.id)}>
+                            Undo today
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => onMarkDone(habit.id)}>
+                            Mark done today
+                          </button>
+                        )}
+                        <button type="button" onClick={() => togglePastCompletionForm(habit.id)}>
+                          {isPastOpen ? "Cancel past date" : "Add past completion"}
+                        </button>
+                      </div>
+
+                      {isPastOpen ? (
+                        <div className="habits__past-form">
+                          <input
+                            type="date"
+                            value={pastDateById[habit.id] ?? ""}
+                            max={todayISO}
+                            onChange={(e) =>
+                              setPastDateById((prev) => ({ ...prev, [habit.id]: e.target.value }))
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddPastCompletion(habit.id)}
+                            disabled={isSavingCompletion}
+                          >
+                            {isSavingCompletion ? "Saving..." : "Save past date"}
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {completionFeedback ? (
+                        <p className="habits__feedback habits__feedback--inline">
+                          {completionFeedback}
+                        </p>
+                      ) : null}
 
                       <div className="habits__dates">
                         <button

@@ -1,10 +1,4 @@
-import {
-  addDaysISO,
-  addMonthsISO,
-  daysBetweenISO,
-  startOfMonthISO,
-  startOfWeekISO
-} from "./date.js";
+import { addDaysISO, addMonthsISO } from "./date.js";
 
 export const FREQUENCY_MODES = [
   { value: "interval", label: "Every" },
@@ -59,6 +53,18 @@ export function getApproximateIntervalDays(frequency) {
   return frequency.frequencyValue;
 }
 
+export function getFrequencyRatePerDay(frequency) {
+  if (frequency.frequencyMode !== "quota") {
+    return 1 / getApproximateIntervalDays(frequency);
+  }
+
+  if (frequency.frequencyUnit === "month") {
+    return frequency.frequencyValue / 30;
+  }
+
+  return frequency.frequencyValue / 7;
+}
+
 export function getNextDueISO(lastDoneISO, frequency) {
   if (!lastDoneISO) return null;
 
@@ -68,26 +74,4 @@ export function getNextDueISO(lastDoneISO, frequency) {
 
   const dayCount = frequency.frequencyUnit === "week" ? frequency.frequencyValue * 7 : frequency.frequencyValue;
   return addDaysISO(lastDoneISO, dayCount);
-}
-
-export function getQuotaProgress(doneDates, frequency, todayISO) {
-  const periodStartISO =
-    frequency.frequencyUnit === "month" ? startOfMonthISO(todayISO) : startOfWeekISO(todayISO);
-  const nextPeriodStartISO =
-    frequency.frequencyUnit === "month" ? addMonthsISO(periodStartISO, 1) : addDaysISO(periodStartISO, 7);
-  const completedCount = doneDates.filter(
-    (dateISO) => dateISO >= periodStartISO && dateISO < nextPeriodStartISO
-  ).length;
-  const totalDays = Math.max(1, daysBetweenISO(periodStartISO, nextPeriodStartISO));
-  const elapsedDays = Math.max(1, (daysBetweenISO(periodStartISO, todayISO) ?? 0) + 1);
-  const targetByNow = Math.min(
-    frequency.frequencyValue,
-    Math.ceil((elapsedDays / totalDays) * frequency.frequencyValue)
-  );
-
-  return {
-    completedCount,
-    targetCount: frequency.frequencyValue,
-    targetByNow
-  };
 }

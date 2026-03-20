@@ -62,6 +62,7 @@ function normalizeHabit(habit) {
     ...habit,
     ...frequency,
     importance: normalizeImportanceValue(habit.importance),
+    createdAt: habit.createdAt ?? null,
     initialLastDone: habit.initialLastDone ?? null,
     doneDates,
     skippedDates
@@ -92,6 +93,7 @@ function parseHabitRows(habitRows, completionRows, skipRows) {
       frequencyValue: habitRow.frequency_value,
       frequencyUnit: habitRow.frequency_unit,
       importance: habitRow.importance,
+      createdAt: habitRow.created_at,
       initialLastDone: habitRow.initial_last_done,
       doneDates: completionsByHabitId.get(habitRow.id) ?? [],
       skippedDates: skipsByHabitId.get(habitRow.id) ?? []
@@ -110,6 +112,7 @@ function serializeHabitRow(habit, userId) {
     frequency_value: frequency.frequencyValue,
     frequency_unit: frequency.frequencyUnit,
     importance: normalizeImportanceValue(habit.importance),
+    created_at: habit.createdAt ?? null,
     initial_last_done: habit.initialLastDone ?? null
   };
 }

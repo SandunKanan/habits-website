@@ -279,6 +279,34 @@
     }
   }
 
+  &__completion-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__past-form {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    input,
+    button {
+      border: 1px solid $border;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: $text;
+      font: inherit;
+    }
+  }
+
+  &__feedback--inline {
+    margin-top: 10px;
+  }
+
   &__dates {
     margin-top: 12px;
 
