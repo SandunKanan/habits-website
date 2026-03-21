@@ -73,6 +73,7 @@ export default function Layout({
     }
   };
   const pageMeta = pageMetaByPath[location.pathname] ?? pageMetaByPath["/today"];
+  const metaContent = pageMeta.meta ? <div className="layout__meta">{pageMeta.meta}</div> : null;
 
   return (
     <div className="layout">
@@ -84,7 +85,10 @@ export default function Layout({
             <div className="layout__title">{pageMeta.title}</div>
             <div className="layout__subtitle">{pageMeta.subtitle}</div>
           </div>
-          {pageMeta.meta ? <div className="layout__meta">{pageMeta.meta}</div> : null}
+          <div className="layout__meta-group">
+            {isPersisting ? <div className="layout__saving">Saving...</div> : null}
+            {metaContent}
+          </div>
         </header>
 
         <section className="layout__section">

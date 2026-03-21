@@ -19,7 +19,8 @@ export default function Today() {
     onUndoSubtaskDoneToday,
     onAddCompletionDate,
     onUndoDoneToday,
-    onUndoSkipToday
+    onUndoSkipToday,
+    isPersisting
   } = useOutletContext();
 
   const todoItems = curatedTop5.filter((item) => {
@@ -92,6 +93,7 @@ export default function Today() {
                 item={item}
                 lastDoneISO={lastDoneById[item.habit.id]}
                 todayISO={todayISO}
+                isPersisting={isPersisting}
                 onMarkDone={onMarkDone}
                 onSkipToday={onSkipToday}
                 onMarkSubtaskDoneToday={onMarkSubtaskDoneToday}
@@ -119,8 +121,9 @@ export default function Today() {
                   className="today__undo-btn"
                   type="button"
                   onClick={() => onUndoDoneToday(habit.id)}
+                  disabled={isPersisting}
                 >
-                  Undo
+                  {isPersisting ? "Saving..." : "Undo"}
                 </button>
               </li>
             ))}
@@ -144,8 +147,9 @@ export default function Today() {
                   className="today__undo-btn"
                   type="button"
                   onClick={() => onUndoSkipToday(habit.id)}
+                  disabled={isPersisting}
                 >
-                  Undo skip
+                  {isPersisting ? "Saving..." : "Undo skip"}
                 </button>
               </li>
             ))}

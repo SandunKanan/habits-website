@@ -28,7 +28,8 @@ export default function Habits() {
     onUndoSubtaskDoneToday,
     onAddCompletionDate,
     onMarkDone,
-    onUndoDoneToday
+    onUndoDoneToday,
+    isPersisting
   } = useOutletContext();
   const [name, setName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,6 +237,7 @@ export default function Habits() {
     mode,
     value,
     unit,
+    disabled,
     onModeChange,
     onValueChange,
     onUnitChange
@@ -252,16 +254,17 @@ export default function Habits() {
             value={value}
             onChange={onValueChange}
             title="Frequency value"
+            disabled={disabled}
             required
           />
-          <select value={mode} onChange={onModeChange} title="Frequency type">
+          <select value={mode} onChange={onModeChange} title="Frequency type" disabled={disabled}>
             {FREQUENCY_MODES.map((frequencyMode) => (
               <option key={frequencyMode.value} value={frequencyMode.value}>
                 {frequencyMode.label}
               </option>
             ))}
           </select>
-          <select value={unit} onChange={onUnitChange} title="Frequency unit">
+          <select value={unit} onChange={onUnitChange} title="Frequency unit" disabled={disabled}>
             {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
               <option key={frequencyUnit.value} value={frequencyUnit.value}>
                 {frequencyUnit.label}
@@ -274,7 +277,7 @@ export default function Habits() {
 
     return (
       <div className="habits__frequency-row">
-        <select value={mode} onChange={onModeChange} title="Frequency type">
+        <select value={mode} onChange={onModeChange} title="Frequency type" disabled={disabled}>
           {FREQUENCY_MODES.map((frequencyMode) => (
             <option key={frequencyMode.value} value={frequencyMode.value}>
               {frequencyMode.label}
@@ -288,9 +291,10 @@ export default function Habits() {
           value={value}
           onChange={onValueChange}
           title="Frequency value"
+          disabled={disabled}
           required
         />
-        <select value={unit} onChange={onUnitChange} title="Frequency unit">
+        <select value={unit} onChange={onUnitChange} title="Frequency unit" disabled={disabled}>
           {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
             <option key={frequencyUnit.value} value={frequencyUnit.value}>
               {numericValue === 1 ? frequencyUnit.label : `${frequencyUnit.label}s`}
@@ -329,7 +333,7 @@ export default function Habits() {
 
         {!isAddOpen ? (
           <div className="habits__actions">
-            <button type="button" onClick={() => setIsAddOpen(true)}>
+            <button type="button" onClick={() => setIsAddOpen(true)} disabled={isPersisting}>
               {habits.length === 0 ? "Create first habit" : "Add Habit"}
             </button>
           </div>
@@ -342,6 +346,7 @@ export default function Habits() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Habit name"
+                disabled={isSaving || isPersisting}
                 required
               />
             </label>
@@ -357,6 +362,7 @@ export default function Habits() {
                   setFrequencyMode(nextMode);
                   setFrequencyUnit(nextMode === "quota" ? "week" : "day");
                 },
+                disabled: isSaving || isPersisting,
                 onValueChange: (e) => setFrequencyValue(e.target.value),
                 onUnitChange: (e) => setFrequencyUnit(e.target.value)
               })}
@@ -368,6 +374,7 @@ export default function Habits() {
                 value={importance}
                 onChange={(e) => setImportance(e.target.value)}
                 title="Priority"
+                disabled={isSaving || isPersisting}
                 required
               >
                 {IMPORTANCE_LEVELS.map((level) => (
@@ -379,14 +386,14 @@ export default function Habits() {
             </label>
 
             <div className="habits__form-actions">
-              <button type="submit" className="habits__save-btn" disabled={isSaving}>
-                {isSaving ? "Adding..." : "Save Habit"}
+              <button type="submit" className="habits__save-btn" disabled={isSaving || isPersisting}>
+                {isSaving || isPersisting ? "Saving..." : "Save Habit"}
               </button>
               <button
                 type="button"
                 className="habits__cancel-btn"
                 onClick={() => setIsAddOpen(false)}
-                disabled={isSaving}
+                disabled={isSaving || isPersisting}
               >
                 Cancel
               </button>
@@ -406,7 +413,7 @@ export default function Habits() {
               page will automatically decide what belongs on your schedule.
             </p>
             {!isAddOpen ? (
-              <button type="button" onClick={() => setIsAddOpen(true)}>
+              <button type="button" onClick={() => setIsAddOpen(true)} disabled={isPersisting}>
                 Add your first habit
               </button>
             ) : null}
@@ -434,6 +441,7 @@ export default function Habits() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
+                    disabled={isSavingEdit || isPersisting}
                     required
                   />
                 </label>
@@ -448,6 +456,7 @@ export default function Habits() {
                       setEditFrequencyMode(nextMode);
                       setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
                     },
+                    disabled: isSavingEdit || isPersisting,
                     onValueChange: (e) => setEditFrequencyValue(e.target.value),
                     onUnitChange: (e) => setEditFrequencyUnit(e.target.value)
                   })}
@@ -459,6 +468,7 @@ export default function Habits() {
                     value={editCreatedAt}
                     onChange={(e) => setEditCreatedAt(e.target.value)}
                     max={todayISO}
+                    disabled={isSavingEdit || isPersisting}
                     required
                   />
                 </label>
@@ -467,6 +477,7 @@ export default function Habits() {
                   <select
                     value={editImportance}
                     onChange={(e) => setEditImportance(e.target.value)}
+                    disabled={isSavingEdit || isPersisting}
                     required
                   >
                     {IMPORTANCE_LEVELS.map((level) => (
@@ -477,10 +488,10 @@ export default function Habits() {
                   </select>
                 </label>
                 <div className="habits__item-actions">
-                  <button type="submit" disabled={isSavingEdit}>
-                    {isSavingEdit ? "Saving..." : "Save"}
+                  <button type="submit" disabled={isSavingEdit || isPersisting}>
+                    {isSavingEdit || isPersisting ? "Saving..." : "Save"}
                   </button>
-                  <button type="button" onClick={cancelEdit} disabled={isSavingEdit}>
+                  <button type="button" onClick={cancelEdit} disabled={isSavingEdit || isPersisting}>
                     Cancel
                   </button>
                 </div>
@@ -496,6 +507,7 @@ export default function Habits() {
                       className="habits__toggle"
                       aria-expanded={Boolean(expandedDetailsById[habit.id])}
                       onClick={() => toggleDetails(habit.id)}
+                      disabled={isPersisting}
                     >
                       <span>{Boolean(expandedDetailsById[habit.id]) ? "Hide details" : "Show details"}</span>
                       <svg
@@ -516,7 +528,7 @@ export default function Habits() {
                         />
                       </svg>
                     </button>
-                    <button type="button" onClick={() => startEdit(habit)}>
+                    <button type="button" onClick={() => startEdit(habit)} disabled={isPersisting}>
                       Edit
                     </button>
                     <button
@@ -525,6 +537,7 @@ export default function Habits() {
                       aria-label={`Delete ${habit.name}`}
                       title="Delete habit"
                       onClick={() => handleDeleteHabit(habit)}
+                      disabled={isPersisting}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path
@@ -600,15 +613,15 @@ export default function Habits() {
 
                           <div className="habits__completion-actions">
                             {isDoneToday ? (
-                              <button type="button" onClick={() => onUndoDoneToday(habit.id)}>
-                                Undo today
+                              <button type="button" onClick={() => onUndoDoneToday(habit.id)} disabled={isPersisting}>
+                                {isPersisting ? "Saving..." : "Undo today"}
                               </button>
                             ) : (
-                              <button type="button" onClick={() => onMarkDone(habit.id)}>
-                                Mark done today
+                              <button type="button" onClick={() => onMarkDone(habit.id)} disabled={isPersisting}>
+                                {isPersisting ? "Saving..." : "Mark done today"}
                               </button>
                             )}
-                            <button type="button" onClick={() => togglePastCompletionForm(habit.id)}>
+                            <button type="button" onClick={() => togglePastCompletionForm(habit.id)} disabled={isPersisting}>
                               {isPastOpen ? "Cancel past date" : "Add past completion"}
                             </button>
                           </div>
@@ -622,13 +635,14 @@ export default function Habits() {
                                 onChange={(e) =>
                                   setPastDateById((prev) => ({ ...prev, [habit.id]: e.target.value }))
                                 }
+                                disabled={isSavingCompletion || isPersisting}
                               />
                               <button
                                 type="button"
                                 onClick={() => handleAddPastCompletion(habit.id)}
-                                disabled={isSavingCompletion}
+                                disabled={isSavingCompletion || isPersisting}
                               >
-                                {isSavingCompletion ? "Saving..." : "Save past date"}
+                                {isSavingCompletion || isPersisting ? "Saving..." : "Save past date"}
                               </button>
                             </div>
                           ) : null}
@@ -656,13 +670,14 @@ export default function Habits() {
                                   }))
                                 }
                                 placeholder="Add subtask"
+                                disabled={Boolean(isSavingSubtaskByHabitId[habit.id]) || isPersisting}
                               />
                               <button
                                 type="button"
                                 onClick={() => handleAddSubtask(habit.id)}
-                                disabled={Boolean(isSavingSubtaskByHabitId[habit.id])}
+                                disabled={Boolean(isSavingSubtaskByHabitId[habit.id]) || isPersisting}
                               >
-                                {isSavingSubtaskByHabitId[habit.id] ? "Saving..." : "Add"}
+                                {isSavingSubtaskByHabitId[habit.id] || isPersisting ? "Saving..." : "Add"}
                               </button>
                             </div>
 
@@ -696,15 +711,17 @@ export default function Habits() {
                                         <button
                                           type="button"
                                           onClick={() => onUndoSubtaskDoneToday(habit.id, subtask.id)}
+                                          disabled={isPersisting}
                                         >
-                                          Undo today
+                                          {isPersisting ? "Saving..." : "Undo today"}
                                         </button>
                                       ) : (
                                         <button
                                           type="button"
                                           onClick={() => onMarkSubtaskDoneToday(habit.id, subtask.id)}
+                                          disabled={isPersisting}
                                         >
-                                          Tick today
+                                          {isPersisting ? "Saving..." : "Tick today"}
                                         </button>
                                       )}
                                     </li>
@@ -718,7 +735,7 @@ export default function Habits() {
                             <button
                               type="button"
                               onClick={() => toggleCompletionDates(habit.id)}
-                              disabled={sortedDoneDates.length === 0}
+                              disabled={sortedDoneDates.length === 0 || isPersisting}
                             >
                               {isExpanded ? "Hide completion dates" : "View completion dates"}
                             </button>
