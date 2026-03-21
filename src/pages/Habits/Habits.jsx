@@ -491,8 +491,30 @@ export default function Habits() {
                 <div className="habits__item-head">
                   <h3>{habit.name}</h3>
                   <div className="habits__item-head-actions">
-                    <button type="button" onClick={() => toggleDetails(habit.id)}>
-                      {Boolean(expandedDetailsById[habit.id]) ? "Hide details" : "Show details"}
+                    <button
+                      type="button"
+                      className="habits__toggle"
+                      aria-expanded={Boolean(expandedDetailsById[habit.id])}
+                      onClick={() => toggleDetails(habit.id)}
+                    >
+                      <span>{Boolean(expandedDetailsById[habit.id]) ? "Hide details" : "Show details"}</span>
+                      <svg
+                        className={`habits__toggle-caret ${
+                          Boolean(expandedDetailsById[habit.id]) ? "habits__toggle-caret--up" : ""
+                        }`}
+                        viewBox="0 0 12 12"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path
+                          d="M2.25 4.25 6 8l3.75-3.75"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
                     <button type="button" onClick={() => startEdit(habit)}>
                       Edit

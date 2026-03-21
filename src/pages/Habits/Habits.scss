@@ -65,6 +65,24 @@
     }
   }
 
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__toggle-caret {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    transform: translateY(1px);
+    transition: transform 0.18s ease;
+  }
+
+  &__toggle-caret--up {
+    transform: rotate(180deg) translateY(1px);
+  }
+
   &__form {
     margin-top: 12px;
     display: grid;
