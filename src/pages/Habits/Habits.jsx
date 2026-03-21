@@ -589,7 +589,7 @@ export default function Habits() {
                               <dd>{sortedDoneDates.length}</dd>
                             </div>
                             <div>
-                              <dt>Current score</dt>
+                              <dt>Urgency score</dt>
                               <dd>{score.parScore.toFixed(2)}</dd>
                             </div>
                             <div>

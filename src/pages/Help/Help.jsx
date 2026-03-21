@@ -10,7 +10,7 @@ const workflowSteps = [
   {
     title: "Review Today",
     description:
-      "The Today page shows only habits that are currently due. Each card shows a par score, where 1.00 means the habit is due and on track, based on recent completions rather than old debt."
+      "The Today page shows only habits that are currently due. Each card shows an urgency score, where 1.00 means the habit is due and on track, based on recent completions rather than old debt."
   },
   {
     title: "Log completions",

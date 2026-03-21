@@ -70,7 +70,7 @@ export default function HabitCard({
         </div>
 
         <div className="habitcard__score">
-          Par score: <b>{parScore.toFixed(2)}</b>
+          Urgency score: <b>{parScore.toFixed(2)}</b>
         </div>
 
         <div className="habitcard__inline-actions">
