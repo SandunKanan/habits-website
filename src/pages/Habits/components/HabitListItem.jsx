@@ -29,6 +29,8 @@ export default function HabitListItem({
   completionFeedback,
   isSavingCompletion,
   onAddPastCompletion,
+  pendingHabitActionKey,
+  pendingSubtaskActionKey,
   subtaskName,
   onSubtaskNameChange,
   subtaskFeedback,
@@ -43,6 +45,7 @@ export default function HabitListItem({
   const sortedDoneDates = getSortedDoneDates(habit);
   const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
   const isDoneToday = sortedDoneDates[0] === todayISO;
+  const isDeleting = pendingHabitActionKey === `delete:${habit.id}`;
   const score = scoreHabitForToday({
     habit,
     lastDoneISO: sortedDoneDates[0] ?? habit.initialLastDone ?? null,
@@ -112,16 +115,21 @@ export default function HabitListItem({
             type="button"
             className="habits__delete-btn"
             aria-label={`Delete ${habit.name}`}
-            title="Delete habit"
+            title={isDeleting ? "Deleting habit" : "Delete habit"}
             onClick={() => onDeleteHabit(habit)}
             disabled={isPersisting}
+            aria-busy={isDeleting}
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path
-                d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9z"
-                fill="currentColor"
-              />
-            </svg>
+            {isDeleting ? (
+              <span className="habits__delete-spinner" aria-hidden="true" />
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9z"
+                  fill="currentColor"
+                />
+              </svg>
+            )}
           </button>
         </div>
       </div>
@@ -165,11 +173,11 @@ export default function HabitListItem({
           <div className="habits__completion-actions">
             {isDoneToday ? (
               <button type="button" onClick={() => onUndoDoneToday(habit.id)} disabled={isPersisting}>
-                {isPersisting ? "Saving..." : "Undo today"}
+                {pendingHabitActionKey === `undo-done:${habit.id}` ? "Saving..." : "Undo today"}
               </button>
             ) : (
               <button type="button" onClick={() => onMarkDone(habit.id)} disabled={isPersisting}>
-                {isPersisting ? "Saving..." : "Mark done today"}
+                {pendingHabitActionKey === `mark-done:${habit.id}` ? "Saving..." : "Mark done today"}
               </button>
             )}
             <button type="button" onClick={() => onTogglePastCompletionForm(habit.id)} disabled={isPersisting}>
@@ -203,6 +211,7 @@ export default function HabitListItem({
             subtaskFeedback={subtaskFeedback}
             isSavingSubtask={isSavingSubtask}
             isPersisting={isPersisting}
+            pendingSubtaskActionKey={pendingSubtaskActionKey}
             formatLastCompleted={formatLastCompleted}
             onAddSubtask={onAddSubtask}
             onMarkSubtaskDoneToday={onMarkSubtaskDoneToday}

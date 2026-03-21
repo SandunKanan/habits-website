@@ -23,6 +23,7 @@ export default function HabitCard({
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
+  const [pendingAction, setPendingAction] = useState("");
 
   async function handleAddPastCompletion(e) {
     e.preventDefault();
@@ -38,6 +39,15 @@ export default function HabitCard({
     }
 
     setIsSavingPast(false);
+  }
+
+  async function runAction(actionKey, action) {
+    setPendingAction(actionKey);
+    try {
+      await action();
+    } finally {
+      setPendingAction("");
+    }
   }
 
   const sortedSubtasks = sortSubtasksByLastCompletion(habit.subtasks);
@@ -125,18 +135,26 @@ export default function HabitCard({
                     {isDoneToday ? (
                       <button
                         type="button"
-                        onClick={() => onUndoSubtaskDoneToday(habit.id, subtask.id)}
+                        onClick={() =>
+                          runAction(`subtask:${subtask.id}:undo`, () =>
+                            onUndoSubtaskDoneToday(habit.id, subtask.id)
+                          )
+                        }
                         disabled={isPersisting}
                       >
-                        Undo
+                        {pendingAction === `subtask:${subtask.id}:undo` ? "Saving..." : "Undo"}
                       </button>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onMarkSubtaskDoneToday(habit.id, subtask.id)}
+                        onClick={() =>
+                          runAction(`subtask:${subtask.id}:tick`, () =>
+                            onMarkSubtaskDoneToday(habit.id, subtask.id)
+                          )
+                        }
                         disabled={isPersisting}
                       >
-                        Tick
+                        {pendingAction === `subtask:${subtask.id}:tick` ? "Saving..." : "Tick"}
                       </button>
                     )}
                   </li>
@@ -151,18 +169,18 @@ export default function HabitCard({
         <button
           className="habitcard__btn"
           type="button"
-          onClick={() => onMarkDone(habit.id)}
+          onClick={() => runAction("mark-done", () => onMarkDone(habit.id))}
           disabled={isPersisting}
         >
-          {isPersisting ? "Saving..." : "Mark done"}
+          {pendingAction === "mark-done" ? "Saving..." : "Mark done"}
         </button>
         <button
           className="habitcard__skip-btn"
           type="button"
-          onClick={() => onSkipToday(habit.id)}
+          onClick={() => runAction("skip-today", () => onSkipToday(habit.id))}
           disabled={isPersisting}
         >
-          {isPersisting ? "Saving..." : "Skip today"}
+          {pendingAction === "skip-today" ? "Saving..." : "Skip today"}
         </button>
       </div>
     </div>

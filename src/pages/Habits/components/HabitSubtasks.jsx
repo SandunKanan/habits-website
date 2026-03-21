@@ -10,6 +10,7 @@ export default function HabitSubtasks({
   subtaskFeedback,
   isSavingSubtask,
   isPersisting,
+  pendingSubtaskActionKey,
   formatLastCompleted,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -62,7 +63,9 @@ export default function HabitSubtasks({
                     onClick={() => onUndoSubtaskDoneToday(habitId, subtask.id)}
                     disabled={isPersisting}
                   >
-                    {isPersisting ? "Saving..." : "Undo today"}
+                    {pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:undo`
+                      ? "Saving..."
+                      : "Undo today"}
                   </button>
                 ) : (
                   <button
@@ -70,7 +73,9 @@ export default function HabitSubtasks({
                     onClick={() => onMarkSubtaskDoneToday(habitId, subtask.id)}
                     disabled={isPersisting}
                   >
-                    {isPersisting ? "Saving..." : "Tick today"}
+                    {pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:tick`
+                      ? "Saving..."
+                      : "Tick today"}
                   </button>
                 )}
               </li>

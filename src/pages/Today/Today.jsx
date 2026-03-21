@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import HabitCard from "../../components/HabitCard/HabitCard.jsx";
 import { daysBetweenISO } from "../../lib/date.js";
@@ -22,6 +22,8 @@ export default function Today() {
     onUndoSkipToday,
     isPersisting
   } = useOutletContext();
+  const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
+  const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
 
   const todoItems = curatedTop5.filter((item) => {
     const habitId = item.habit.id;
@@ -59,6 +61,24 @@ export default function Today() {
   function formatUpcomingLabel(daysUntilDue) {
     if (daysUntilDue === 1) return "Due tomorrow";
     return `Due in ${daysUntilDue} days`;
+  }
+
+  async function handleUndoDone(habitId) {
+    setPendingCompletedHabitId(habitId);
+    try {
+      await onUndoDoneToday(habitId);
+    } finally {
+      setPendingCompletedHabitId("");
+    }
+  }
+
+  async function handleUndoSkip(habitId) {
+    setPendingSkippedHabitId(habitId);
+    try {
+      await onUndoSkipToday(habitId);
+    } finally {
+      setPendingSkippedHabitId("");
+    }
   }
 
   if (habits.length === 0) {
@@ -120,10 +140,10 @@ export default function Today() {
                 <button
                   className="today__undo-btn"
                   type="button"
-                  onClick={() => onUndoDoneToday(habit.id)}
+                  onClick={() => handleUndoDone(habit.id)}
                   disabled={isPersisting}
                 >
-                  {isPersisting ? "Saving..." : "Undo"}
+                  {pendingCompletedHabitId === habit.id ? "Saving..." : "Undo"}
                 </button>
               </li>
             ))}
@@ -146,10 +166,10 @@ export default function Today() {
                 <button
                   className="today__undo-btn"
                   type="button"
-                  onClick={() => onUndoSkipToday(habit.id)}
+                  onClick={() => handleUndoSkip(habit.id)}
                   disabled={isPersisting}
                 >
-                  {isPersisting ? "Saving..." : "Undo skip"}
+                  {pendingSkippedHabitId === habit.id ? "Saving..." : "Undo skip"}
                 </button>
               </li>
             ))}

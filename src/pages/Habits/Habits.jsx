@@ -56,6 +56,8 @@ export default function Habits() {
   const [isPastOpenById, setIsPastOpenById] = useState({});
   const [completionFeedbackById, setCompletionFeedbackById] = useState({});
   const [isSavingCompletionById, setIsSavingCompletionById] = useState({});
+  const [pendingHabitActionKey, setPendingHabitActionKey] = useState("");
+  const [pendingSubtaskActionKey, setPendingSubtaskActionKey] = useState("");
   const todayISO = contextTodayISO ?? startOfTodayLocalISO();
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredHabits = habits.filter((habit) => {
@@ -146,6 +148,7 @@ export default function Habits() {
     if (!confirmed) return;
 
     setFeedback("");
+    setPendingHabitActionKey(`delete:${habit.id}`);
     const result = await onDeleteHabit(habit.id);
 
     if (result?.ok) {
@@ -154,6 +157,8 @@ export default function Habits() {
     } else {
       setFeedback(result?.error ?? "Could not delete habit.");
     }
+
+    setPendingHabitActionKey("");
   }
 
   function toggleCompletionDates(habitId) {
@@ -216,6 +221,42 @@ export default function Habits() {
     }
 
     setIsSavingCompletionById((prev) => ({ ...prev, [habitId]: false }));
+  }
+
+  async function handleMarkDoneToday(habitId) {
+    setPendingHabitActionKey(`mark-done:${habitId}`);
+    try {
+      await onMarkDone(habitId);
+    } finally {
+      setPendingHabitActionKey("");
+    }
+  }
+
+  async function handleUndoDoneToday(habitId) {
+    setPendingHabitActionKey(`undo-done:${habitId}`);
+    try {
+      await onUndoDoneToday(habitId);
+    } finally {
+      setPendingHabitActionKey("");
+    }
+  }
+
+  async function handleMarkSubtaskDone(habitId, subtaskId) {
+    setPendingSubtaskActionKey(`subtask:${habitId}:${subtaskId}:tick`);
+    try {
+      await onMarkSubtaskDoneToday(habitId, subtaskId);
+    } finally {
+      setPendingSubtaskActionKey("");
+    }
+  }
+
+  async function handleUndoSubtaskDone(habitId, subtaskId) {
+    setPendingSubtaskActionKey(`subtask:${habitId}:${subtaskId}:undo`);
+    try {
+      await onUndoSubtaskDoneToday(habitId, subtaskId);
+    } finally {
+      setPendingSubtaskActionKey("");
+    }
   }
 
   return (
@@ -387,6 +428,8 @@ export default function Habits() {
             completionFeedback={completionFeedbackById[habit.id]}
             isSavingCompletion={Boolean(isSavingCompletionById[habit.id])}
             onAddPastCompletion={handleAddPastCompletion}
+            pendingHabitActionKey={pendingHabitActionKey}
+            pendingSubtaskActionKey={pendingSubtaskActionKey}
             subtaskName={subtaskNameByHabitId[habit.id] ?? ""}
             onSubtaskNameChange={(e) =>
               setSubtaskNameByHabitId((prev) => ({
@@ -397,10 +440,10 @@ export default function Habits() {
             subtaskFeedback={subtaskFeedbackByHabitId[habit.id]}
             isSavingSubtask={Boolean(isSavingSubtaskByHabitId[habit.id])}
             onAddSubtask={handleAddSubtask}
-            onMarkSubtaskDoneToday={onMarkSubtaskDoneToday}
-            onUndoSubtaskDoneToday={onUndoSubtaskDoneToday}
-            onMarkDone={onMarkDone}
-            onUndoDoneToday={onUndoDoneToday}
+            onMarkSubtaskDoneToday={handleMarkSubtaskDone}
+            onUndoSubtaskDoneToday={handleUndoSubtaskDone}
+            onMarkDone={handleMarkDoneToday}
+            onUndoDoneToday={handleUndoDoneToday}
             formatLastCompleted={(dateISO) => formatRecentDateLabel(dateISO, todayISO)}
           />
         ))}
