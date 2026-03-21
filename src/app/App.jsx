@@ -65,6 +65,7 @@ function getMostRecentDoneISO(habit) {
 export default function App() {
   const [habits, setHabits] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPersisting, setIsPersisting] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [session, setSession] = useState(null);
   const [authUser, setAuthUser] = useState(null);
@@ -235,6 +236,7 @@ export default function App() {
 
   async function persistHabits(nextHabits) {
     try {
+      setIsPersisting(true);
       const data = await saveHabitsForSession(session?.access_token, authUser?.id, nextHabits);
       if (Array.isArray(data)) {
         setHabits(data);
@@ -244,6 +246,8 @@ export default function App() {
     } catch (error) {
       console.error("Failed to persist habits", error);
       return { ok: false };
+    } finally {
+      setIsPersisting(false);
     }
   }
 
@@ -270,8 +274,6 @@ export default function App() {
     };
 
     const nextHabits = [...habits, newHabit];
-    setHabits(nextHabits);
-
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save habits." };
@@ -312,7 +314,6 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save habits." };
@@ -328,8 +329,6 @@ export default function App() {
     }
 
     const nextHabits = habits.filter((h) => h.id !== habitId);
-    setHabits(nextHabits);
-
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save habits." };
@@ -368,7 +367,6 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save subtasks." };
@@ -377,7 +375,7 @@ export default function App() {
     return { ok: true };
   }
 
-  function markSubtaskDoneToday(habitId, subtaskId) {
+  async function markSubtaskDoneToday(habitId, subtaskId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -402,11 +400,10 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
-  function undoSubtaskDoneToday(habitId, subtaskId) {
+  async function undoSubtaskDoneToday(habitId, subtaskId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -431,8 +428,7 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
   async function addCompletionDate(habitId, dateISO) {
@@ -467,7 +463,6 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
     const persisted = await persistHabits(nextHabits);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save habits." };
@@ -476,7 +471,7 @@ export default function App() {
     return { ok: true };
   }
 
-  function markDone(habitId) {
+  async function markDone(habitId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -494,11 +489,10 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
-  function undoDoneToday(habitId) {
+  async function undoDoneToday(habitId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -515,11 +509,10 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
-  function skipToday(habitId) {
+  async function skipToday(habitId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -535,11 +528,10 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
-  function undoSkipToday(habitId) {
+  async function undoSkipToday(habitId) {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
@@ -554,8 +546,7 @@ export default function App() {
       };
     });
 
-    setHabits(nextHabits);
-    void persistHabits(nextHabits);
+    await persistHabits(nextHabits);
   }
 
   async function handleSignIn({ email, password }) {
@@ -650,6 +641,7 @@ export default function App() {
             onUndoSkipToday={undoSkipToday}
             completionLog={completionLog}
             skippedTodayIds={skippedTodayIds}
+            isPersisting={isPersisting}
             authUser={authUser}
             isAdmin={isAdmin}
             session={session}

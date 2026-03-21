@@ -21,6 +21,7 @@ export default function Layout({
   onUndoSkipToday,
   completionLog,
   skippedTodayIds,
+  isPersisting,
   authUser,
   isAdmin,
   session,
@@ -106,6 +107,7 @@ export default function Layout({
               onUndoSkipToday,
               completionLog,
               skippedTodayIds,
+              isPersisting,
               authUser,
               isAdmin,
               session
