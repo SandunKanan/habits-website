@@ -12,7 +12,7 @@ export default function HabitFrequencyControls({
 }) {
   const numericValue = Math.max(1, Number(value) || 1);
 
-  if (mode === "quota") {
+  if (mode === "rate") {
     return (
       <div className="habits__frequency-row">
         <input

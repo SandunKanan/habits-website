@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { daysBetweenISO } from "../../lib/date.js";
+import {
+  formatRecentDateLabel,
+  sortSubtasksByLastCompletion
+} from "../../lib/habitUtils.js";
 import { getImportanceLabel } from "../../lib/importance.js";
 import "./HabitCard.scss";
 
@@ -14,25 +17,12 @@ export default function HabitCard({
   onUndoSubtaskDoneToday,
   onAddCompletionDate
 }) {
-  const { habit, parScore, due, frequencyLabel, importance, statusLabel } = item;
+  const { habit, trackingScore, due, frequencyLabel, importance, statusLabel } = item;
   const [isPastOpen, setIsPastOpen] = useState(false);
   const [isSubtasksOpen, setIsSubtasksOpen] = useState(false);
   const [pastDateISO, setPastDateISO] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
-
-  function formatLastDone(dateISO) {
-    if (!dateISO) return "never";
-
-    const daysAgo = daysBetweenISO(dateISO, todayISO);
-    if (daysAgo !== null && daysAgo >= 0 && daysAgo <= 7) {
-      if (daysAgo === 0) return "today";
-      if (daysAgo === 1) return "1 day ago";
-      return `${daysAgo} days ago`;
-    }
-
-    return dateISO;
-  }
 
   async function handleAddPastCompletion(e) {
     e.preventDefault();
@@ -50,12 +40,7 @@ export default function HabitCard({
     setIsSavingPast(false);
   }
 
-  const subtasks = Array.isArray(habit.subtasks) ? habit.subtasks : [];
-  const sortedSubtasks = [...subtasks].sort((a, b) => {
-    const aLast = [...(Array.isArray(a.doneDates) ? a.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
-    const bLast = [...(Array.isArray(b.doneDates) ? b.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
-    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
-  });
+  const sortedSubtasks = sortSubtasksByLastCompletion(habit.subtasks);
 
   return (
     <div className="habitcard card">
@@ -67,11 +52,11 @@ export default function HabitCard({
 
         <div className="habitcard__meta">
           {frequencyLabel} · Priority <b>{getImportanceLabel(importance)}</b> · Last done{" "}
-          <b>{formatLastDone(lastDoneISO)}</b> · {statusLabel}
+          <b>{formatRecentDateLabel(lastDoneISO, todayISO, "lower")}</b> · {statusLabel}
         </div>
 
         <div className="habitcard__score">
-          Tracking score: <b>{parScore.toFixed(2)}</b>
+          Tracking score: <b>{trackingScore.toFixed(2)}</b>
         </div>
 
         <div className="habitcard__inline-actions">
@@ -135,7 +120,7 @@ export default function HabitCard({
                   <li key={subtask.id} className="habitcard__subtask-item">
                     <div>
                       <strong>{subtask.name}</strong>
-                      <small>Last completed {formatLastDone(lastSubtaskDone)}</small>
+                      <small>Last completed {formatRecentDateLabel(lastSubtaskDone, todayISO, "lower")}</small>
                     </div>
                     {isDoneToday ? (
                       <button

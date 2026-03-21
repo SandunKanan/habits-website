@@ -1,12 +1,5 @@
 import React from "react";
-
-function sortSubtasks(subtasks) {
-  return [...subtasks].sort((a, b) => {
-    const aLast = [...(Array.isArray(a.doneDates) ? a.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
-    const bLast = [...(Array.isArray(b.doneDates) ? b.doneDates : [])].sort((x, y) => y.localeCompare(x))[0] ?? "";
-    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
-  });
-}
+import { getSortedDoneDates, sortSubtasksByLastCompletion } from "../../../lib/habitUtils.js";
 
 export default function HabitSubtasks({
   habitId,
@@ -22,7 +15,7 @@ export default function HabitSubtasks({
   onMarkSubtaskDoneToday,
   onUndoSubtaskDoneToday
 }) {
-  const sortedSubtasks = sortSubtasks(Array.isArray(subtasks) ? subtasks : []);
+  const sortedSubtasks = sortSubtasksByLastCompletion(subtasks);
 
   return (
     <div className="habits__subtasks">
@@ -51,9 +44,7 @@ export default function HabitSubtasks({
       ) : (
         <ul className="habits__subtask-list">
           {sortedSubtasks.map((subtask) => {
-            const subtaskDoneDates = Array.isArray(subtask.doneDates)
-              ? [...subtask.doneDates].sort((a, b) => b.localeCompare(a))
-              : [];
+            const subtaskDoneDates = getSortedDoneDates(subtask);
             const lastSubtaskDone = subtaskDoneDates[0];
             const isSubtaskDoneToday = lastSubtaskDone === todayISO;
 

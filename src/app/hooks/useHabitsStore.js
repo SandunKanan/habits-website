@@ -3,18 +3,12 @@ import { loadHabitsForSession, saveHabitsForSession } from "../../lib/habitsClie
 import { normalizeFrequency } from "../../lib/frequency.js";
 import { normalizeImportanceValue } from "../../lib/importance.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
-
-function getDoneDates(habit) {
-  return Array.isArray(habit.doneDates) ? habit.doneDates : [];
-}
-
-function getSkippedDates(habit) {
-  return Array.isArray(habit.skippedDates) ? habit.skippedDates : [];
-}
-
-function getSubtasks(habit) {
-  return Array.isArray(habit.subtasks) ? habit.subtasks : [];
-}
+import {
+  getDoneDates,
+  getMostRecentDoneISO,
+  getSkippedDates,
+  getSubtasks
+} from "../../lib/habitUtils.js";
 
 function buildHabitId(name, existingIds) {
   const base = name
@@ -31,15 +25,6 @@ function buildHabitId(name, existingIds) {
   }
 
   return candidate;
-}
-
-function getMostRecentDoneISO(habit) {
-  const doneDates = getDoneDates(habit);
-  if (doneDates.length > 0) {
-    return doneDates.reduce((latest, dateISO) => (dateISO > latest ? dateISO : latest));
-  }
-
-  return habit.initialLastDone ?? null;
 }
 
 export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, todayISO }) {

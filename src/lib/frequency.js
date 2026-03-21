@@ -2,7 +2,7 @@ import { addDaysISO, addMonthsISO } from "./date.js";
 
 export const FREQUENCY_MODES = [
   { value: "interval", label: "Every" },
-  { value: "quota", label: "Times per" }
+  { value: "rate", label: "Times per" }
 ];
 
 export const INTERVAL_UNITS = [
@@ -11,19 +11,19 @@ export const INTERVAL_UNITS = [
   { value: "month", label: "month" }
 ];
 
-export const QUOTA_UNITS = [
+export const RATE_UNITS = [
   { value: "week", label: "week" },
   { value: "month", label: "month" }
 ];
 
 export function getFrequencyUnitsForMode(mode) {
-  return mode === "quota" ? QUOTA_UNITS : INTERVAL_UNITS;
+  return mode === "rate" ? RATE_UNITS : INTERVAL_UNITS;
 }
 
 export function normalizeFrequency(habit) {
-  const mode = habit.frequencyMode === "quota" ? "quota" : "interval";
+  const mode = habit.frequencyMode === "quota" || habit.frequencyMode === "rate" ? "rate" : "interval";
   const allowedUnits = getFrequencyUnitsForMode(mode);
-  const fallbackUnit = mode === "quota" ? "week" : "day";
+  const fallbackUnit = mode === "rate" ? "week" : "day";
   const unit = allowedUnits.some((item) => item.value === habit.frequencyUnit)
     ? habit.frequencyUnit
     : fallbackUnit;
@@ -40,7 +40,7 @@ export function formatFrequencyLabel(habit) {
   const frequency = normalizeFrequency(habit);
   const plural = frequency.frequencyValue === 1 ? frequency.frequencyUnit : `${frequency.frequencyUnit}s`;
 
-  if (frequency.frequencyMode === "quota") {
+  if (frequency.frequencyMode === "rate") {
     return `${frequency.frequencyValue} time${frequency.frequencyValue === 1 ? "" : "s"} per ${frequency.frequencyUnit}`;
   }
 
@@ -54,7 +54,7 @@ export function getApproximateIntervalDays(frequency) {
 }
 
 export function getFrequencyRatePerDay(frequency) {
-  if (frequency.frequencyMode !== "quota") {
+  if (frequency.frequencyMode !== "rate") {
     return 1 / getApproximateIntervalDays(frequency);
   }
 

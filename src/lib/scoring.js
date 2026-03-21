@@ -19,7 +19,7 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
   const doneDates = Array.isArray(habit.doneDates) ? habit.doneDates : [];
   const createdDateISO = habit.createdAt?.slice?.(0, 10) ?? todayISO;
 
-  if (frequency.frequencyMode === "quota") {
+  if (frequency.frequencyMode === "rate") {
     const ratePerDay = getFrequencyRatePerDay(frequency);
     const expectedIntervalDays = 1 / ratePerDay;
     const windowDays = Math.min(21, Math.max(7, Math.round(expectedIntervalDays * 7)));
@@ -30,47 +30,47 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
       (dateISO) => dateISO >= windowStartISO && dateISO <= todayISO
     ).length;
     const expectedCompletions = Math.max(1, activeWindowDays * ratePerDay);
-    const parScore = Math.max(0, expectedCompletions - completionsInWindow);
-    const due = importance > 0 && parScore >= 1;
-    const priorityScore = importance * parScore;
+    const trackingScore = Math.max(0, expectedCompletions - completionsInWindow);
+    const due = importance > 0 && trackingScore >= 1;
+    const priorityScore = importance * trackingScore;
 
     return {
       intervalDays: null,
       nextDueISO: null,
       daysSinceLastDone: lastDoneISO ? daysBetweenISO(lastDoneISO, todayISO) : null,
       overdueDays: 0,
-      behindRatio: parScore,
+      trackingRatio: trackingScore,
       importance,
-      parScore,
+      trackingScore,
       priorityScore,
       due,
       frequencyLabel: formatFrequencyLabel(habit),
-      statusLabel: due ? (parScore > 1 ? "Behind par" : "Due today") : "On schedule"
+      statusLabel: due ? (trackingScore > 1 ? "Behind par" : "Due today") : "On schedule"
     };
   }
 
   const intervalDays = getApproximateIntervalDays(frequency);
   const daysSinceLastDone = lastDoneISO ? daysBetweenISO(lastDoneISO, todayISO) : intervalDays;
-  const behindRatio = daysSinceLastDone / intervalDays;
-  const parScore = behindRatio;
+  const trackingRatio = daysSinceLastDone / intervalDays;
+  const trackingScore = trackingRatio;
   const nextDueISO = getNextDueISO(lastDoneISO, frequency);
   const due = importance > 0 && (!lastDoneISO || todayISO >= nextDueISO);
   const overdueDays =
     due && nextDueISO ? Math.max(0, daysBetweenISO(nextDueISO, todayISO) ?? 0) : 0;
 
-  const priorityScore = parScore * importance;
+  const priorityScore = trackingScore * importance;
 
   return {
     intervalDays,
     nextDueISO,
     daysSinceLastDone,
     overdueDays,
-    behindRatio,
+    trackingRatio,
     importance,
-    parScore,
+    trackingScore,
     priorityScore,
     due,
     frequencyLabel: formatFrequencyLabel(habit),
-    statusLabel: due ? (parScore > 1 ? "Behind par" : "Due today") : "On schedule"
+    statusLabel: due ? (trackingScore > 1 ? "Behind par" : "Due today") : "On schedule"
   };
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { daysBetweenISO, startOfTodayLocalISO } from "../../lib/date.js";
+import { startOfTodayLocalISO } from "../../lib/date.js";
 import {
   normalizeFrequency
 } from "../../lib/frequency.js";
@@ -9,6 +9,7 @@ import {
   IMPORTANCE_LEVELS,
   normalizeImportanceValue
 } from "../../lib/importance.js";
+import { formatRecentDateLabel } from "../../lib/habitUtils.js";
 import HabitFrequencyControls from "./components/HabitFrequencyControls.jsx";
 import HabitListItem from "./components/HabitListItem.jsx";
 import "./Habits.scss";
@@ -68,19 +69,6 @@ export default function Habits() {
       String(value ?? "").toLowerCase().includes(normalizedSearchQuery)
     );
   });
-
-  function formatLastCompleted(dateISO) {
-    if (!dateISO) return "Never";
-
-    const daysAgo = daysBetweenISO(dateISO, todayISO);
-    if (daysAgo !== null && daysAgo >= 0 && daysAgo <= 7) {
-      if (daysAgo === 0) return "Today";
-      if (daysAgo === 1) return "1 day ago";
-      return `${daysAgo} days ago`;
-    }
-
-    return dateISO;
-  }
 
   async function handleAddHabit(e) {
     e.preventDefault();
@@ -286,7 +274,7 @@ export default function Habits() {
                 onModeChange={(e) => {
                   const nextMode = e.target.value;
                   setFrequencyMode(nextMode);
-                  setFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                  setFrequencyUnit(nextMode === "rate" ? "week" : "day");
                 }}
                 onValueChange={(e) => setFrequencyValue(e.target.value)}
                 onUnitChange={(e) => setFrequencyUnit(e.target.value)}
@@ -371,7 +359,7 @@ export default function Habits() {
               onFrequencyModeChange: (e) => {
                 const nextMode = e.target.value;
                 setEditFrequencyMode(nextMode);
-                setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
+                setEditFrequencyUnit(nextMode === "rate" ? "week" : "day");
               },
               onFrequencyValueChange: (e) => setEditFrequencyValue(e.target.value),
               onFrequencyUnitChange: (e) => setEditFrequencyUnit(e.target.value),
@@ -413,7 +401,7 @@ export default function Habits() {
             onUndoSubtaskDoneToday={onUndoSubtaskDoneToday}
             onMarkDone={onMarkDone}
             onUndoDoneToday={onUndoDoneToday}
-            formatLastCompleted={formatLastCompleted}
+            formatLastCompleted={(dateISO) => formatRecentDateLabel(dateISO, todayISO)}
           />
         ))}
       </div>

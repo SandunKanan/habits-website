@@ -119,7 +119,7 @@ function serializeHabitRow(habit, userId) {
     user_id: userId,
     slug: habit.id,
     name: habit.name,
-    frequency_mode: frequency.frequencyMode,
+    frequency_mode: frequency.frequencyMode === "rate" ? "quota" : frequency.frequencyMode,
     frequency_value: frequency.frequencyValue,
     frequency_unit: frequency.frequencyUnit,
     importance: normalizeImportanceValue(habit.importance),

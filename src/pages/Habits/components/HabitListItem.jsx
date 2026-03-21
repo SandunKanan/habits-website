@@ -1,6 +1,7 @@
 import React from "react";
 import { formatFrequencyLabel } from "../../../lib/frequency.js";
 import { getImportanceLabel } from "../../../lib/importance.js";
+import { getSortedDoneDates } from "../../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../../lib/scoring.js";
 import HabitEditor from "./HabitEditor.jsx";
 import HabitSubtasks from "./HabitSubtasks.jsx";
@@ -39,8 +40,7 @@ export default function HabitListItem({
   onUndoDoneToday,
   formatLastCompleted
 }) {
-  const doneDates = Array.isArray(habit.doneDates) ? habit.doneDates : [];
-  const sortedDoneDates = [...doneDates].sort((a, b) => b.localeCompare(a));
+  const sortedDoneDates = getSortedDoneDates(habit);
   const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
   const isDoneToday = sortedDoneDates[0] === todayISO;
   const score = scoreHabitForToday({
@@ -154,7 +154,7 @@ export default function HabitListItem({
             </div>
             <div>
               <dt>Tracking score</dt>
-              <dd>{score.parScore.toFixed(2)}</dd>
+              <dd>{score.trackingScore.toFixed(2)}</dd>
             </div>
             <div>
               <dt>Priority score</dt>
