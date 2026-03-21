@@ -9,7 +9,7 @@ import Help from "../pages/Help/Help.jsx";
 import Admin from "../pages/Admin/Admin.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
 
-import { isAuthEnabled } from "../lib/authClient.js";
+import { getDemoCredentials, isAuthEnabled } from "../lib/authClient.js";
 import { startOfTodayLocalISO } from "../lib/date.js";
 import { useAuthSession } from "./hooks/useAuthSession.js";
 import { useUserRole } from "./hooks/useUserRole.js";
@@ -19,6 +19,7 @@ import "./App.scss";
 export default function App() {
   const todayISO = startOfTodayLocalISO();
   const authEnabled = isAuthEnabled();
+  const isDemoEnabled = Boolean(getDemoCredentials());
 
   const auth = useAuthSession({ authEnabled });
   const role = useUserRole({
@@ -51,6 +52,14 @@ export default function App() {
     return result;
   }
 
+  async function handleDemoSignIn() {
+    const result = await auth.handleDemoSignIn();
+    if (result?.ok) {
+      habitsStore.beginLoadingHabits();
+    }
+    return result;
+  }
+
   async function handleSignOut() {
     await auth.handleSignOut();
     role.resetRoleState();
@@ -77,8 +86,10 @@ export default function App() {
     return (
       <Auth
         onSignIn={handleSignIn}
+        onDemoSignIn={handleDemoSignIn}
         onSignUp={handleSignUp}
         isLoading={auth.isAuthWorking}
+        isDemoEnabled={isDemoEnabled}
       />
     );
   }

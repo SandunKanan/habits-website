@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  getDemoCredentials,
   initializeAuth,
   signInWithPassword,
   signOutCurrentSession,
@@ -75,6 +76,15 @@ export function useAuthSession({ authEnabled }) {
     }
   }
 
+  async function handleDemoSignIn() {
+    const credentials = getDemoCredentials();
+    if (!credentials) {
+      return { ok: false, error: "Demo account is not configured." };
+    }
+
+    return handleSignIn(credentials);
+  }
+
   async function handleSignOut() {
     await signOutCurrentSession(session);
     setSession(null);
@@ -87,6 +97,7 @@ export function useAuthSession({ authEnabled }) {
     isAuthReady,
     isAuthWorking,
     handleSignIn,
+    handleDemoSignIn,
     handleSignUp,
     handleSignOut
   };

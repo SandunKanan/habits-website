@@ -78,6 +78,17 @@ export function isAuthEnabled() {
   return Boolean(getAuthConfig());
 }
 
+export function getDemoCredentials() {
+  const email = import.meta.env.VITE_DEMO_EMAIL;
+  const password = import.meta.env.VITE_DEMO_PASSWORD;
+
+  if (!email || !password) {
+    return null;
+  }
+
+  return { email, password };
+}
+
 export async function getUserForSession(accessToken) {
   return fetchAuth("/auth/v1/user", { accessToken });
 }

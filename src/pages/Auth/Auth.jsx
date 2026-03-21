@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Auth.scss";
 
-export default function Auth({ onSignIn, onSignUp, isLoading }) {
+export default function Auth({ onSignIn, onDemoSignIn, onSignUp, isLoading, isDemoEnabled }) {
   const [mode, setMode] = useState("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +21,16 @@ export default function Auth({ onSignIn, onSignUp, isLoading }) {
 
     if (result.message) {
       setMessage(result.message);
+    }
+  }
+
+  async function handleDemoClick() {
+    if (!onDemoSignIn) return;
+    setMessage("");
+    const result = await onDemoSignIn();
+
+    if (!result?.ok) {
+      setMessage(result?.error ?? "Could not sign in to the demo account.");
     }
   }
 
@@ -81,6 +91,19 @@ export default function Auth({ onSignIn, onSignUp, isLoading }) {
                 : "Create account"}
           </button>
         </form>
+
+        {mode === "sign-in" && isDemoEnabled ? (
+          <div className="auth__demo">
+            <div className="auth__demo-divider" aria-hidden="true">
+              <span />
+              <small>or</small>
+              <span />
+            </div>
+            <button className="auth__demo-btn" type="button" onClick={handleDemoClick} disabled={isLoading}>
+              {isLoading ? "Working..." : "Try demo account"}
+            </button>
+          </div>
+        ) : null}
 
         {message ? <p className="auth__message">{message}</p> : null}
       </div>

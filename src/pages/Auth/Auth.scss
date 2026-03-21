@@ -91,6 +91,40 @@
   cursor: pointer;
 }
 
+.auth__demo {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.auth__demo-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  color: $muted;
+
+  span {
+    height: 1px;
+    background: $border;
+  }
+
+  small {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.auth__demo-btn {
+  border: 1px solid $border;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+  cursor: pointer;
+}
+
 .auth__message {
   margin-top: 14px;
   color: $accent;
