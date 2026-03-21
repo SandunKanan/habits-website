@@ -74,7 +74,7 @@ export default function Help() {
         <p className="help__eyebrow">Guide</p>
         <h2>What this app does</h2>
         <p className="help__intro">
-          Habit Ledger is a recurring-task planner. It keeps a library of habits, calculates which
+          Habit Tracker is a recurring-task planner. It keeps a library of habits, calculates which
           ones are due, and helps you log completion dates over time instead of treating everything
           like a one-time checklist.
         </p>

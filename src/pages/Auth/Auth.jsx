@@ -44,7 +44,7 @@ export default function Auth({ onSignIn, onDemoSignIn, onSignUp, isLoading, isDe
   return (
     <div className="auth">
       <div className="auth__panel card">
-        <div className="auth__eyebrow">Habit Ledger</div>
+        <div className="auth__eyebrow">Habit Tracker</div>
         <h1 className="auth__title">Private habits, one account at a time.</h1>
         <p className="auth__subtitle">
           Sign in to reach your own schedule, history, and completions. Each account keeps a

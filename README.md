@@ -1,6 +1,6 @@
-# Habits Website
+# Habit Tracker
 
-React + Vite habits tracker with Vercel API routes, Supabase-backed storage, and Supabase Auth.
+React + Vite habit tracker with Supabase-backed storage, Supabase Auth, and a small admin surface.
 
 ## Local development
 
