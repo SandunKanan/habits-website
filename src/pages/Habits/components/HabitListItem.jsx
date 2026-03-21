@@ -1,7 +1,7 @@
 import React from "react";
 import { formatFrequencyLabel } from "../../../lib/frequency.js";
 import { getImportanceLabel } from "../../../lib/importance.js";
-import { getSortedDoneDates } from "../../../lib/habitUtils.js";
+import { getHabitSlug, getSortedDoneDates } from "../../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../../lib/scoring.js";
 import HabitEditor from "./HabitEditor.jsx";
 import HabitSubtasks from "./HabitSubtasks.jsx";
@@ -53,7 +53,7 @@ export default function HabitListItem({
     return (
       <article className="habits__item card">
         <HabitEditor
-          title={`Editing: ${habit.slug ?? habit.id}`}
+          title={`Editing: ${getHabitSlug(habit)}`}
           name={editState.name}
           onNameChange={editState.onNameChange}
           frequencyMode={editState.frequencyMode}

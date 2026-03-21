@@ -9,7 +9,7 @@ import {
   IMPORTANCE_LEVELS,
   normalizeImportanceValue
 } from "../../lib/importance.js";
-import { formatRecentDateLabel } from "../../lib/habitUtils.js";
+import { formatRecentDateLabel, getHabitSlug } from "../../lib/habitUtils.js";
 import HabitFrequencyControls from "./components/HabitFrequencyControls.jsx";
 import HabitListItem from "./components/HabitListItem.jsx";
 import "./Habits.scss";
@@ -65,7 +65,7 @@ export default function Habits() {
       ? habit.subtasks.map((subtask) => String(subtask.name ?? ""))
       : [];
 
-    return [habit.name, habit.slug, habit.id, ...subtaskNames].some((value) =>
+    return [habit.name, getHabitSlug(habit), ...subtaskNames].some((value) =>
       String(value ?? "").toLowerCase().includes(normalizedSearchQuery)
     );
   });

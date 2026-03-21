@@ -30,7 +30,7 @@ export async function executeHabitsSyncPlan({
     });
   }
 
-  await deleteHabits(fetchSupabase, accessToken, userId, syncPlan.habitSlugsToDelete);
+  await deleteHabits(fetchSupabase, accessToken, userId, syncPlan.habitIdsToDelete);
 }
 
 async function deleteCompletions(fetchSupabase, accessToken, completionIds) {
@@ -57,12 +57,12 @@ async function deleteSkips(fetchSupabase, accessToken, skipIds) {
   });
 }
 
-async function deleteHabits(fetchSupabase, accessToken, userId, slugs) {
-  if (slugs.length === 0) return;
+async function deleteHabits(fetchSupabase, accessToken, userId, habitIds) {
+  if (habitIds.length === 0) return;
 
-  const quotedSlugs = slugs.map((slug) => `"${slug}"`).join(",");
+  const quotedIds = habitIds.map((habitId) => `"${habitId}"`).join(",");
   await fetchSupabase(
-    `/rest/v1/habits?user_id=eq.${userId}&slug=in.(${quotedSlugs})`,
+    `/rest/v1/habits?user_id=eq.${userId}&id=in.(${quotedIds})`,
     accessToken,
     {
       method: "DELETE",

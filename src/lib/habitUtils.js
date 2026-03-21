@@ -4,6 +4,10 @@ export function getDoneDates(habit) {
   return Array.isArray(habit.doneDates) ? habit.doneDates : [];
 }
 
+export function getHabitSlug(habit) {
+  return String(habit?.slug ?? habit?.id ?? "");
+}
+
 export function getSkippedDates(habit) {
   return Array.isArray(habit.skippedDates) ? habit.skippedDates : [];
 }

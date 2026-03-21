@@ -122,10 +122,11 @@ function serializeHabitRow(habit, userId) {
   const frequency = normalizeFrequency(habit);
 
   return {
+    id: habit.id,
     user_id: userId,
     slug: habit.slug ?? habit.id,
     name: habit.name,
-    frequency_mode: frequency.frequencyMode === "rate" ? "quota" : frequency.frequencyMode,
+    frequency_mode: frequency.frequencyMode,
     frequency_value: frequency.frequencyValue,
     frequency_unit: frequency.frequencyUnit,
     importance: normalizeImportanceValue(habit.importance),
@@ -151,15 +152,10 @@ export async function loadHabitsForSession(accessToken, userId) {
 
 export async function saveHabitsForSession(accessToken, userId, habits) {
   const normalized = Array.isArray(habits) ? habits.map(normalizeHabit) : [];
-  const { habitRows: existingHabitRows } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken, {
-    habitSelect: "id,slug",
-    includeCompletions: false,
-    includeSkips: false
-  });
 
   if (normalized.length > 0) {
     const upsertRows = normalized.map((habit) => serializeHabitRow(habit, userId));
-    await fetchSupabase("/rest/v1/habits?on_conflict=user_id,slug", accessToken, {
+    await fetchSupabase("/rest/v1/habits?on_conflict=id", accessToken, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -170,11 +166,11 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
   }
 
   const {
-    habitRows: currentHabitRows,
+    habitRows: existingHabitRows,
     completionRows: existingCompletionRows,
     skipRows: existingSkipRows
   } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken, {
-    habitSelect: "*",
+    habitSelect: "id",
     completionSelect: "id,habit_id,completed_on",
     skipSelect: "id,habit_id,skipped_on"
   });
@@ -183,7 +179,6 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
     normalizedHabits: normalized,
     userId,
     existingHabitRows,
-    currentHabitRows,
     existingCompletionRows,
     existingSkipRows
   });

@@ -2,13 +2,11 @@ export function computeHabitsSyncPlan({
   normalizedHabits,
   userId,
   existingHabitRows,
-  currentHabitRows,
   existingCompletionRows,
   existingSkipRows
 }) {
-  const existingSlugSet = new Set(existingHabitRows.map((row) => row.slug));
-  const nextSlugSet = new Set(normalizedHabits.map((habit) => habit.slug ?? habit.id));
-  const habitIdBySlug = new Map(currentHabitRows.map((row) => [row.slug, row.id]));
+  const existingHabitIdSet = new Set(existingHabitRows.map((row) => row.id));
+  const nextHabitIdSet = new Set(normalizedHabits.map((habit) => habit.id));
 
   const existingCompletionMap = new Map(
     existingCompletionRows.map((row) => [`${row.habit_id}:${row.completed_on}`, row])
@@ -21,9 +19,7 @@ export function computeHabitsSyncPlan({
   const desiredSkipMap = new Map();
 
   for (const habit of normalizedHabits) {
-    const habitSlug = habit.slug ?? habit.id;
-    const habitId = habitIdBySlug.get(habitSlug);
-    if (!habitId) continue;
+    const habitId = habit.id;
 
     for (const completedOn of habit.doneDates) {
       desiredCompletionMap.set(`${habitId}:${completedOn}`, {
@@ -43,7 +39,7 @@ export function computeHabitsSyncPlan({
   }
 
   return {
-    habitSlugsToDelete: [...existingSlugSet].filter((slug) => !nextSlugSet.has(slug)),
+    habitIdsToDelete: [...existingHabitIdSet].filter((habitId) => !nextHabitIdSet.has(habitId)),
     completionIdsToDelete: existingCompletionRows
       .filter((row) => !desiredCompletionMap.has(`${row.habit_id}:${row.completed_on}`))
       .map((row) => row.id),
