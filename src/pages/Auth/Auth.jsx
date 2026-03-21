@@ -6,31 +6,38 @@ export default function Auth({ onSignIn, onDemoSignIn, onSignUp, isLoading, isDe
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
+    setPendingAction(mode);
 
     const action = mode === "sign-in" ? onSignIn : onSignUp;
     const result = await action({ email, password });
 
     if (!result?.ok) {
       setMessage(result?.error ?? "Authentication failed.");
+      setPendingAction("");
       return;
     }
 
     if (result.message) {
       setMessage(result.message);
     }
+
+    setPendingAction("");
   }
 
   async function handleDemoClick() {
     if (!onDemoSignIn) return;
     setMessage("");
+    setPendingAction("demo");
     const result = await onDemoSignIn();
 
     if (!result?.ok) {
       setMessage(result?.error ?? "Could not sign in to the demo account.");
+      setPendingAction("");
     }
   }
 
@@ -84,7 +91,7 @@ export default function Auth({ onSignIn, onDemoSignIn, onSignUp, isLoading, isDe
             />
           </label>
           <button className="auth__submit" type="submit" disabled={isLoading}>
-            {isLoading
+            {pendingAction === mode
               ? "Working..."
               : mode === "sign-in"
                 ? "Sign in"
@@ -100,7 +107,7 @@ export default function Auth({ onSignIn, onDemoSignIn, onSignUp, isLoading, isDe
               <span />
             </div>
             <button className="auth__demo-btn" type="button" onClick={handleDemoClick} disabled={isLoading}>
-              {isLoading ? "Working..." : "Try demo account"}
+              {pendingAction === "demo" ? "Working..." : "Try demo account"}
             </button>
           </div>
         ) : null}
