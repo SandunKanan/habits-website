@@ -2,18 +2,15 @@ import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { daysBetweenISO, startOfTodayLocalISO } from "../../lib/date.js";
 import {
-  formatFrequencyLabel,
-  FREQUENCY_MODES,
-  getFrequencyUnitsForMode,
   normalizeFrequency
 } from "../../lib/frequency.js";
 import {
   DEFAULT_IMPORTANCE_VALUE,
-  getImportanceLabel,
   IMPORTANCE_LEVELS,
   normalizeImportanceValue
 } from "../../lib/importance.js";
-import { scoreHabitForToday } from "../../lib/scoring.js";
+import HabitFrequencyControls from "./components/HabitFrequencyControls.jsx";
+import HabitListItem from "./components/HabitListItem.jsx";
 import "./Habits.scss";
 
 export default function Habits() {
@@ -233,78 +230,6 @@ export default function Habits() {
     setIsSavingCompletionById((prev) => ({ ...prev, [habitId]: false }));
   }
 
-  function renderFrequencyControls({
-    mode,
-    value,
-    unit,
-    disabled,
-    onModeChange,
-    onValueChange,
-    onUnitChange
-  }) {
-    const numericValue = Math.max(1, Number(value) || 1);
-
-    if (mode === "quota") {
-      return (
-        <div className="habits__frequency-row">
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={value}
-            onChange={onValueChange}
-            title="Frequency value"
-            disabled={disabled}
-            required
-          />
-          <select value={mode} onChange={onModeChange} title="Frequency type" disabled={disabled}>
-            {FREQUENCY_MODES.map((frequencyMode) => (
-              <option key={frequencyMode.value} value={frequencyMode.value}>
-                {frequencyMode.label}
-              </option>
-            ))}
-          </select>
-          <select value={unit} onChange={onUnitChange} title="Frequency unit" disabled={disabled}>
-            {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
-              <option key={frequencyUnit.value} value={frequencyUnit.value}>
-                {frequencyUnit.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    }
-
-    return (
-      <div className="habits__frequency-row">
-        <select value={mode} onChange={onModeChange} title="Frequency type" disabled={disabled}>
-          {FREQUENCY_MODES.map((frequencyMode) => (
-            <option key={frequencyMode.value} value={frequencyMode.value}>
-              {frequencyMode.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          min="1"
-          step="1"
-          value={value}
-          onChange={onValueChange}
-          title="Frequency value"
-          disabled={disabled}
-          required
-        />
-        <select value={unit} onChange={onUnitChange} title="Frequency unit" disabled={disabled}>
-          {getFrequencyUnitsForMode(mode).map((frequencyUnit) => (
-            <option key={frequencyUnit.value} value={frequencyUnit.value}>
-              {numericValue === 1 ? frequencyUnit.label : `${frequencyUnit.label}s`}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  }
-
   return (
     <div className="habits">
       <div className="habits__header card">
@@ -353,19 +278,19 @@ export default function Habits() {
 
             <div className="habits__form-group">
               <div className="habits__form-label">Frequency</div>
-              {renderFrequencyControls({
-                mode: frequencyMode,
-                value: frequencyValue,
-                unit: frequencyUnit,
-                onModeChange: (e) => {
+              <HabitFrequencyControls
+                mode={frequencyMode}
+                value={frequencyValue}
+                unit={frequencyUnit}
+                disabled={isSaving || isPersisting}
+                onModeChange={(e) => {
                   const nextMode = e.target.value;
                   setFrequencyMode(nextMode);
                   setFrequencyUnit(nextMode === "quota" ? "week" : "day");
-                },
-                disabled: isSaving || isPersisting,
-                onValueChange: (e) => setFrequencyValue(e.target.value),
-                onUnitChange: (e) => setFrequencyUnit(e.target.value)
-              })}
+                }}
+                onValueChange={(e) => setFrequencyValue(e.target.value)}
+                onUnitChange={(e) => setFrequencyUnit(e.target.value)}
+              />
             </div>
 
             <label className="habits__form-field habits__form-field--priority">
@@ -431,332 +356,65 @@ export default function Habits() {
         ) : null}
 
         {filteredHabits.map((habit) => (
-          <article key={habit.id} className="habits__item card">
-            {editingId === habit.id ? (
-              <form className="habits__edit-form" onSubmit={handleSaveEdit}>
-                <h3>Editing: {habit.id}</h3>
-                <label>
-                  Name
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    disabled={isSavingEdit || isPersisting}
-                    required
-                  />
-                </label>
-                <label>
-                  Frequency
-                  {renderFrequencyControls({
-                    mode: editFrequencyMode,
-                    value: editFrequencyValue,
-                    unit: editFrequencyUnit,
-                    onModeChange: (e) => {
-                      const nextMode = e.target.value;
-                      setEditFrequencyMode(nextMode);
-                      setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
-                    },
-                    disabled: isSavingEdit || isPersisting,
-                    onValueChange: (e) => setEditFrequencyValue(e.target.value),
-                    onUnitChange: (e) => setEditFrequencyUnit(e.target.value)
-                  })}
-                </label>
-                <label>
-                  Created at
-                  <input
-                    type="date"
-                    value={editCreatedAt}
-                    onChange={(e) => setEditCreatedAt(e.target.value)}
-                    max={todayISO}
-                    disabled={isSavingEdit || isPersisting}
-                    required
-                  />
-                </label>
-                <label>
-                  Priority
-                  <select
-                    value={editImportance}
-                    onChange={(e) => setEditImportance(e.target.value)}
-                    disabled={isSavingEdit || isPersisting}
-                    required
-                  >
-                    {IMPORTANCE_LEVELS.map((level) => (
-                      <option key={level.key} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="habits__item-actions">
-                  <button type="submit" disabled={isSavingEdit || isPersisting}>
-                    {isSavingEdit || isPersisting ? "Saving..." : "Save"}
-                  </button>
-                  <button type="button" onClick={cancelEdit} disabled={isSavingEdit || isPersisting}>
-                    Cancel
-                  </button>
-                </div>
-                {editFeedback ? <p className="habits__feedback">{editFeedback}</p> : null}
-              </form>
-            ) : (
-              <>
-                <div className="habits__item-head">
-                  <h3>{habit.name}</h3>
-                  <div className="habits__item-head-actions">
-                    <button
-                      type="button"
-                      className="habits__toggle"
-                      aria-expanded={Boolean(expandedDetailsById[habit.id])}
-                      onClick={() => toggleDetails(habit.id)}
-                      disabled={isPersisting}
-                    >
-                      <span>{Boolean(expandedDetailsById[habit.id]) ? "Hide details" : "Show details"}</span>
-                      <svg
-                        className={`habits__toggle-caret ${
-                          Boolean(expandedDetailsById[habit.id]) ? "habits__toggle-caret--up" : ""
-                        }`}
-                        viewBox="0 0 12 12"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path
-                          d="M2.25 4.25 6 8l3.75-3.75"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.75"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <button type="button" onClick={() => startEdit(habit)} disabled={isPersisting}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="habits__delete-btn"
-                      aria-label={`Delete ${habit.name}`}
-                      title="Delete habit"
-                      onClick={() => handleDeleteHabit(habit)}
-                      disabled={isPersisting}
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path
-                          d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {(() => {
-                  const doneDates = Array.isArray(habit.doneDates) ? habit.doneDates : [];
-                  const sortedDoneDates = [...doneDates].sort((a, b) => b.localeCompare(a));
-                  const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
-                  const isDetailsExpanded = Boolean(expandedDetailsById[habit.id]);
-                  const isExpanded = Boolean(expandedDatesById[habit.id]);
-                  const isPastOpen = Boolean(isPastOpenById[habit.id]);
-                  const completionFeedback = completionFeedbackById[habit.id];
-                  const isSavingCompletion = Boolean(isSavingCompletionById[habit.id]);
-                  const isDoneToday = sortedDoneDates[0] === todayISO;
-                  const subtasks = Array.isArray(habit.subtasks) ? habit.subtasks : [];
-                  const sortedSubtasks = [...subtasks].sort((a, b) => {
-                    const aLast = [...(Array.isArray(a.doneDates) ? a.doneDates : [])]
-                      .sort((x, y) => y.localeCompare(x))[0] ?? "";
-                    const bLast = [...(Array.isArray(b.doneDates) ? b.doneDates : [])]
-                      .sort((x, y) => y.localeCompare(x))[0] ?? "";
-                    return aLast.localeCompare(bLast) || a.name.localeCompare(b.name);
-                  });
-                  const score = scoreHabitForToday({
-                    habit,
-                    lastDoneISO: sortedDoneDates[0] ?? habit.initialLastDone ?? null,
-                    todayISO
-                  });
-
-                  return (
-                    <>
-                      <dl className="habits__details">
-                        <div>
-                          <dt>Frequency</dt>
-                          <dd>{formatFrequencyLabel(habit)}</dd>
-                        </div>
-                        <div>
-                          <dt>Priority</dt>
-                          <dd>{getImportanceLabel(habit.importance)}</dd>
-                        </div>
-                        <div>
-                          <dt>Last completed</dt>
-                          <dd>{lastCompleted}</dd>
-                        </div>
-                      </dl>
-
-                      {isDetailsExpanded ? (
-                        <>
-                          <dl className="habits__details habits__details--expanded">
-                            <div>
-                              <dt>Created at</dt>
-                              <dd>{habit.createdAt ? String(habit.createdAt).slice(0, 10) : "Unknown"}</dd>
-                            </div>
-                            <div>
-                              <dt>Times completed</dt>
-                              <dd>{sortedDoneDates.length}</dd>
-                            </div>
-                            <div>
-                              <dt>Tracking score</dt>
-                              <dd>{score.parScore.toFixed(2)}</dd>
-                            </div>
-                            <div>
-                              <dt>Priority score</dt>
-                              <dd>{score.priorityScore.toFixed(2)}</dd>
-                            </div>
-                          </dl>
-
-                          <div className="habits__completion-actions">
-                            {isDoneToday ? (
-                              <button type="button" onClick={() => onUndoDoneToday(habit.id)} disabled={isPersisting}>
-                                {isPersisting ? "Saving..." : "Undo today"}
-                              </button>
-                            ) : (
-                              <button type="button" onClick={() => onMarkDone(habit.id)} disabled={isPersisting}>
-                                {isPersisting ? "Saving..." : "Mark done today"}
-                              </button>
-                            )}
-                            <button type="button" onClick={() => togglePastCompletionForm(habit.id)} disabled={isPersisting}>
-                              {isPastOpen ? "Cancel past date" : "Add past completion"}
-                            </button>
-                          </div>
-
-                          {isPastOpen ? (
-                            <div className="habits__past-form">
-                              <input
-                                type="date"
-                                value={pastDateById[habit.id] ?? ""}
-                                max={todayISO}
-                                onChange={(e) =>
-                                  setPastDateById((prev) => ({ ...prev, [habit.id]: e.target.value }))
-                                }
-                                disabled={isSavingCompletion || isPersisting}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleAddPastCompletion(habit.id)}
-                                disabled={isSavingCompletion || isPersisting}
-                              >
-                                {isSavingCompletion || isPersisting ? "Saving..." : "Save past date"}
-                              </button>
-                            </div>
-                          ) : null}
-
-                          {completionFeedback ? (
-                            <p className="habits__feedback habits__feedback--inline">
-                              {completionFeedback}
-                            </p>
-                          ) : null}
-
-                          <div className="habits__subtasks">
-                            <div className="habits__subtasks-head">
-                              <h4>Subtasks</h4>
-                              <small>Track smaller parts separately from the main habit.</small>
-                            </div>
-
-                            <div className="habits__subtask-create">
-                              <input
-                                type="text"
-                                value={subtaskNameByHabitId[habit.id] ?? ""}
-                                onChange={(e) =>
-                                  setSubtaskNameByHabitId((prev) => ({
-                                    ...prev,
-                                    [habit.id]: e.target.value
-                                  }))
-                                }
-                                placeholder="Add subtask"
-                                disabled={Boolean(isSavingSubtaskByHabitId[habit.id]) || isPersisting}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleAddSubtask(habit.id)}
-                                disabled={Boolean(isSavingSubtaskByHabitId[habit.id]) || isPersisting}
-                              >
-                                {isSavingSubtaskByHabitId[habit.id] || isPersisting ? "Saving..." : "Add"}
-                              </button>
-                            </div>
-
-                            {subtaskFeedbackByHabitId[habit.id] ? (
-                              <p className="habits__feedback habits__feedback--inline">
-                                {subtaskFeedbackByHabitId[habit.id]}
-                              </p>
-                            ) : null}
-
-                            {sortedSubtasks.length === 0 ? (
-                              <p className="habits__subtasks-empty">No subtasks yet.</p>
-                            ) : (
-                              <ul className="habits__subtask-list">
-                                {sortedSubtasks.map((subtask) => {
-                                  const subtaskDoneDates = Array.isArray(subtask.doneDates)
-                                    ? [...subtask.doneDates].sort((a, b) => b.localeCompare(a))
-                                    : [];
-                                  const lastSubtaskDone = subtaskDoneDates[0];
-                                  const isSubtaskDoneToday = lastSubtaskDone === todayISO;
-
-                                  return (
-                                    <li key={subtask.id} className="habits__subtask-item">
-                                      <div>
-                                        <strong>{subtask.name}</strong>
-                                        <small>
-                                          Last completed {formatLastCompleted(lastSubtaskDone)} ·{" "}
-                                          {subtaskDoneDates.length} total
-                                        </small>
-                                      </div>
-                                      {isSubtaskDoneToday ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => onUndoSubtaskDoneToday(habit.id, subtask.id)}
-                                          disabled={isPersisting}
-                                        >
-                                          {isPersisting ? "Saving..." : "Undo today"}
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          onClick={() => onMarkSubtaskDoneToday(habit.id, subtask.id)}
-                                          disabled={isPersisting}
-                                        >
-                                          {isPersisting ? "Saving..." : "Tick today"}
-                                        </button>
-                                      )}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            )}
-                          </div>
-
-                          <div className="habits__dates">
-                            <button
-                              type="button"
-                              onClick={() => toggleCompletionDates(habit.id)}
-                              disabled={sortedDoneDates.length === 0 || isPersisting}
-                            >
-                              {isExpanded ? "Hide completion dates" : "View completion dates"}
-                            </button>
-
-                            {isExpanded && sortedDoneDates.length > 0 ? (
-                              <ul>
-                                {sortedDoneDates.map((dateISO) => (
-                                  <li key={dateISO}>{dateISO}</li>
-                                ))}
-                              </ul>
-                            ) : null}
-                          </div>
-
-                        </>
-                      ) : null}
-                    </>
-                  );
-                })()}
-              </>
-            )}
-          </article>
+          <HabitListItem
+            key={habit.id}
+            habit={habit}
+            todayISO={todayISO}
+            isPersisting={isPersisting}
+            isEditing={editingId === habit.id}
+            editState={{
+              name: editName,
+              onNameChange: (e) => setEditName(e.target.value),
+              frequencyMode: editFrequencyMode,
+              frequencyValue: editFrequencyValue,
+              frequencyUnit: editFrequencyUnit,
+              onFrequencyModeChange: (e) => {
+                const nextMode = e.target.value;
+                setEditFrequencyMode(nextMode);
+                setEditFrequencyUnit(nextMode === "quota" ? "week" : "day");
+              },
+              onFrequencyValueChange: (e) => setEditFrequencyValue(e.target.value),
+              onFrequencyUnitChange: (e) => setEditFrequencyUnit(e.target.value),
+              importance: editImportance,
+              onImportanceChange: (e) => setEditImportance(e.target.value),
+              createdAt: editCreatedAt,
+              onCreatedAtChange: (e) => setEditCreatedAt(e.target.value)
+            }}
+            editFeedback={editFeedback}
+            isSavingEdit={isSavingEdit}
+            onStartEdit={startEdit}
+            onCancelEdit={cancelEdit}
+            onSaveEdit={handleSaveEdit}
+            onDeleteHabit={handleDeleteHabit}
+            isDetailsExpanded={Boolean(expandedDetailsById[habit.id])}
+            onToggleDetails={toggleDetails}
+            isDatesExpanded={Boolean(expandedDatesById[habit.id])}
+            onToggleDates={toggleCompletionDates}
+            isPastOpen={Boolean(isPastOpenById[habit.id])}
+            onTogglePastCompletionForm={togglePastCompletionForm}
+            pastDateISO={pastDateById[habit.id] ?? ""}
+            onPastDateChange={(e) =>
+              setPastDateById((prev) => ({ ...prev, [habit.id]: e.target.value }))
+            }
+            completionFeedback={completionFeedbackById[habit.id]}
+            isSavingCompletion={Boolean(isSavingCompletionById[habit.id])}
+            onAddPastCompletion={handleAddPastCompletion}
+            subtaskName={subtaskNameByHabitId[habit.id] ?? ""}
+            onSubtaskNameChange={(e) =>
+              setSubtaskNameByHabitId((prev) => ({
+                ...prev,
+                [habit.id]: e.target.value
+              }))
+            }
+            subtaskFeedback={subtaskFeedbackByHabitId[habit.id]}
+            isSavingSubtask={Boolean(isSavingSubtaskByHabitId[habit.id])}
+            onAddSubtask={handleAddSubtask}
+            onMarkSubtaskDoneToday={onMarkSubtaskDoneToday}
+            onUndoSubtaskDoneToday={onUndoSubtaskDoneToday}
+            onMarkDone={onMarkDone}
+            onUndoDoneToday={onUndoDoneToday}
+            formatLastCompleted={formatLastCompleted}
+          />
         ))}
       </div>
     </div>
