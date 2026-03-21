@@ -53,7 +53,7 @@ export default function HabitListItem({
     return (
       <article className="habits__item card">
         <HabitEditor
-          title={`Editing: ${habit.id}`}
+          title={`Editing: ${habit.slug ?? habit.id}`}
           name={editState.name}
           onNameChange={editState.onNameChange}
           frequencyMode={editState.frequencyMode}

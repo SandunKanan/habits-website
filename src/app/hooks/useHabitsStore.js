@@ -10,7 +10,7 @@ import {
   getSubtasks
 } from "../../lib/habitUtils.js";
 
-function buildHabitId(name, existingIds) {
+function buildSlug(name, existingIds) {
   const base = name
     .toLowerCase()
     .trim()
@@ -144,10 +144,11 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
     const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
-    const id = buildHabitId(trimmedName, new Set(habits.map((habit) => habit.id)));
+    const slug = buildSlug(trimmedName, new Set(habits.map((habit) => habit.slug ?? habit.id)));
 
     const newHabit = {
-      id,
+      id: crypto.randomUUID(),
+      slug,
       name: trimmedName,
       ...frequency,
       importance: parsedImportance,
@@ -163,7 +164,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       return { ok: false, error: "Could not save habits." };
     }
 
-    return { ok: true, id };
+    return { ok: true, id: newHabit.id };
   }
 
   async function updateHabit(
@@ -233,7 +234,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     }
 
     const existingIds = new Set(getSubtasks(habit).map((subtask) => subtask.id));
-    const subtaskId = buildHabitId(trimmedName, existingIds);
+    const subtaskId = buildSlug(trimmedName, existingIds);
     const nextSubtasks = [
       ...getSubtasks(habit),
       {

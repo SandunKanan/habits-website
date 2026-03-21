@@ -1,5 +1,8 @@
 import { normalizeFrequency } from "./frequency.js";
 import { normalizeImportanceValue } from "./importance.js";
+import { loadHabitsSnapshot } from "./habitsSnapshot.js";
+import { computeHabitsSyncPlan } from "./habitsSyncPlan.js";
+import { executeHabitsSyncPlan } from "./executeHabitsSyncPlan.js";
 
 function getConfig() {
   const url = import.meta.env.VITE_SUPABASE_URL;
@@ -69,6 +72,8 @@ function normalizeHabit(habit) {
 
   return {
     ...habit,
+    id: String(habit.id ?? ""),
+    slug: String(habit.slug ?? habit.id ?? ""),
     ...frequency,
     importance: normalizeImportanceValue(habit.importance),
     createdAt: habit.createdAt ?? null,
@@ -97,7 +102,8 @@ function parseHabitRows(habitRows, completionRows, skipRows) {
 
   return habitRows.map((habitRow) =>
     normalizeHabit({
-      id: habitRow.slug,
+      id: habitRow.id,
+      slug: habitRow.slug,
       name: habitRow.name,
       frequencyMode: habitRow.frequency_mode,
       frequencyValue: habitRow.frequency_value,
@@ -117,7 +123,7 @@ function serializeHabitRow(habit, userId) {
 
   return {
     user_id: userId,
-    slug: habit.id,
+    slug: habit.slug ?? habit.id,
     name: habit.name,
     frequency_mode: frequency.frequencyMode === "rate" ? "quota" : frequency.frequencyMode,
     frequency_value: frequency.frequencyValue,
@@ -129,81 +135,27 @@ function serializeHabitRow(habit, userId) {
   };
 }
 
-async function deleteCompletions(accessToken, completionIds) {
-  if (completionIds.length === 0) return;
-
-  const quotedIds = completionIds.map((id) => `"${id}"`).join(",");
-  await fetchSupabase(`/rest/v1/habit_completions?id=in.(${quotedIds})`, accessToken, {
-    method: "DELETE",
-    headers: {
-      Prefer: "return=minimal"
-    }
-  });
-}
-
-async function deleteSkips(accessToken, skipIds) {
-  if (skipIds.length === 0) return;
-
-  const quotedIds = skipIds.map((id) => `"${id}"`).join(",");
-  await fetchSupabase(`/rest/v1/habit_skips?id=in.(${quotedIds})`, accessToken, {
-    method: "DELETE",
-    headers: {
-      Prefer: "return=minimal"
-    }
-  });
-}
-
-async function deleteHabits(accessToken, userId, slugs) {
-  if (slugs.length === 0) return;
-
-  const quotedSlugs = slugs.map((slug) => `"${slug}"`).join(",");
-  await fetchSupabase(
-    `/rest/v1/habits?user_id=eq.${userId}&slug=in.(${quotedSlugs})`,
-    accessToken,
-    {
-      method: "DELETE",
-      headers: {
-        Prefer: "return=minimal"
-      }
-    }
-  );
-}
-
 export async function loadHabitsForSession(accessToken, userId) {
-  const habitRows =
-    (await fetchSupabase(
-      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`,
-      accessToken
-    )) ?? [];
+  const { habitRows, completionRows, skipRows } = await loadHabitsSnapshot(
+    fetchSupabase,
+    userId,
+    accessToken
+  );
 
   if (habitRows.length === 0) {
     return [];
   }
-
-  const completionRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_completions?user_id=eq.${userId}&select=id,habit_id,completed_on&order=completed_on.asc`,
-      accessToken
-    )) ?? [];
-  const skipRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_skips?user_id=eq.${userId}&select=id,habit_id,skipped_on&order=skipped_on.asc`,
-      accessToken
-    )) ?? [];
 
   return parseHabitRows(habitRows, completionRows, skipRows);
 }
 
 export async function saveHabitsForSession(accessToken, userId, habits) {
   const normalized = Array.isArray(habits) ? habits.map(normalizeHabit) : [];
-  const existingHabitRows =
-    (await fetchSupabase(
-      `/rest/v1/habits?user_id=eq.${userId}&select=id,slug&order=created_at.asc`,
-      accessToken
-    )) ?? [];
-
-  const existingSlugSet = new Set(existingHabitRows.map((row) => row.slug));
-  const nextSlugSet = new Set(normalized.map((habit) => habit.id));
+  const { habitRows: existingHabitRows } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken, {
+    habitSelect: "id,slug",
+    includeCompletions: false,
+    includeSkips: false
+  });
 
   if (normalized.length > 0) {
     const upsertRows = normalized.map((habit) => serializeHabitRow(habit, userId));
@@ -217,114 +169,37 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
     });
   }
 
-  const currentHabitRows =
-    (await fetchSupabase(
-      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`,
-      accessToken
-    )) ?? [];
-  const habitIdBySlug = new Map(currentHabitRows.map((row) => [row.slug, row.id]));
+  const {
+    habitRows: currentHabitRows,
+    completionRows: existingCompletionRows,
+    skipRows: existingSkipRows
+  } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken, {
+    habitSelect: "*",
+    completionSelect: "id,habit_id,completed_on",
+    skipSelect: "id,habit_id,skipped_on"
+  });
 
-  const existingCompletionRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_completions?user_id=eq.${userId}&select=id,habit_id,completed_on`,
-      accessToken
-    )) ?? [];
-  const existingCompletionMap = new Map(
-    existingCompletionRows.map((row) => [`${row.habit_id}:${row.completed_on}`, row])
-  );
-  const existingSkipRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_skips?user_id=eq.${userId}&select=id,habit_id,skipped_on`,
-      accessToken
-    )) ?? [];
-  const existingSkipMap = new Map(
-    existingSkipRows.map((row) => [`${row.habit_id}:${row.skipped_on}`, row])
-  );
+  const syncPlan = computeHabitsSyncPlan({
+    normalizedHabits: normalized,
+    userId,
+    existingHabitRows,
+    currentHabitRows,
+    existingCompletionRows,
+    existingSkipRows
+  });
 
-  const desiredCompletionMap = new Map();
-  const desiredSkipMap = new Map();
-  for (const habit of normalized) {
-    const habitId = habitIdBySlug.get(habit.id);
-    if (!habitId) continue;
-
-    for (const completedOn of habit.doneDates) {
-      desiredCompletionMap.set(`${habitId}:${completedOn}`, {
-        user_id: userId,
-        habit_id: habitId,
-        completed_on: completedOn
-      });
-    }
-
-    for (const skippedOn of habit.skippedDates) {
-      desiredSkipMap.set(`${habitId}:${skippedOn}`, {
-        user_id: userId,
-        habit_id: habitId,
-        skipped_on: skippedOn
-      });
-    }
-  }
-
-  const completionIdsToDelete = existingCompletionRows
-    .filter((row) => !desiredCompletionMap.has(`${row.habit_id}:${row.completed_on}`))
-    .map((row) => row.id);
-  await deleteCompletions(accessToken, completionIdsToDelete);
-
-  const completionsToInsert = [...desiredCompletionMap.entries()]
-    .filter(([key]) => !existingCompletionMap.has(key))
-    .map(([, value]) => value);
-
-  if (completionsToInsert.length > 0) {
-    await fetchSupabase("/rest/v1/habit_completions?on_conflict=habit_id,completed_on", accessToken, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates, return=representation"
-      },
-      body: JSON.stringify(completionsToInsert)
-    });
-  }
-
-  const skipIdsToDelete = existingSkipRows
-    .filter((row) => !desiredSkipMap.has(`${row.habit_id}:${row.skipped_on}`))
-    .map((row) => row.id);
-  await deleteSkips(accessToken, skipIdsToDelete);
-
-  const skipsToInsert = [...desiredSkipMap.entries()]
-    .filter(([key]) => !existingSkipMap.has(key))
-    .map(([, value]) => value);
-
-  if (skipsToInsert.length > 0) {
-    await fetchSupabase("/rest/v1/habit_skips?on_conflict=habit_id,skipped_on", accessToken, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates, return=representation"
-      },
-      body: JSON.stringify(skipsToInsert)
-    });
-  }
-
-  await deleteHabits(
+  await executeHabitsSyncPlan({
+    fetchSupabase,
     accessToken,
     userId,
-    [...existingSlugSet].filter((slug) => !nextSlugSet.has(slug))
-  );
+    syncPlan
+  });
 
-  const finalHabitRows =
-    (await fetchSupabase(
-      `/rest/v1/habits?user_id=eq.${userId}&select=*&order=created_at.asc`,
-      accessToken
-    )) ?? [];
-  const finalCompletionRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_completions?user_id=eq.${userId}&select=id,habit_id,completed_on&order=completed_on.asc`,
-      accessToken
-    )) ?? [];
-  const finalSkipRows =
-    (await fetchSupabase(
-      `/rest/v1/habit_skips?user_id=eq.${userId}&select=id,habit_id,skipped_on&order=skipped_on.asc`,
-      accessToken
-    )) ?? [];
+  const {
+    habitRows: finalHabitRows,
+    completionRows: finalCompletionRows,
+    skipRows: finalSkipRows
+  } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken);
 
   return parseHabitRows(finalHabitRows, finalCompletionRows, finalSkipRows);
 }

@@ -65,7 +65,7 @@ export default function Habits() {
       ? habit.subtasks.map((subtask) => String(subtask.name ?? ""))
       : [];
 
-    return [habit.name, habit.id, ...subtaskNames].some((value) =>
+    return [habit.name, habit.slug, habit.id, ...subtaskNames].some((value) =>
       String(value ?? "").toLowerCase().includes(normalizedSearchQuery)
     );
   });
