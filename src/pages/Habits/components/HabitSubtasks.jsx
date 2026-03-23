@@ -18,6 +18,11 @@ export default function HabitSubtasks({
 }) {
   const sortedSubtasks = sortSubtasksByLastCompletion(subtasks);
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    void onAddSubtask(habitId);
+  }
+
   return (
     <div className="habits__subtasks">
       <div className="habits__subtasks-head">
@@ -25,7 +30,7 @@ export default function HabitSubtasks({
         <small>Track smaller parts separately from the main habit.</small>
       </div>
 
-      <div className="habits__subtask-create">
+      <form className="habits__subtask-create" onSubmit={handleSubmit}>
         <input
           type="text"
           value={subtaskName}
@@ -33,10 +38,10 @@ export default function HabitSubtasks({
           placeholder="Add subtask"
           disabled={isSavingSubtask || isPersisting}
         />
-        <button type="button" onClick={() => onAddSubtask(habitId)} disabled={isSavingSubtask || isPersisting}>
+        <button type="submit" disabled={isSavingSubtask || isPersisting}>
           {isSavingSubtask || isPersisting ? "Saving..." : "Add"}
         </button>
-      </div>
+      </form>
 
       {subtaskFeedback ? <p className="habits__feedback habits__feedback--inline">{subtaskFeedback}</p> : null}
 
