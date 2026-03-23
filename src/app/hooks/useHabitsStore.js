@@ -360,13 +360,31 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     return { ok: true };
   }
 
-  async function markDone(habitId) {
+  async function markDone(habitId, options = {}) {
     const habit = habits.find((item) => item.id === habitId);
     if (!habit) return;
 
     const currentDoneDates = getDoneDates(habit);
     const currentSkippedDates = getSkippedDates(habit);
     if (currentDoneDates.includes(todayISO)) return;
+    const subtaskIdsToMarkToday = Array.isArray(options.subtaskIds)
+      ? options.subtaskIds.map((value) => String(value))
+      : [];
+    const nextSubtasks = getSubtasks(habit).map((subtask) => {
+      if (!subtaskIdsToMarkToday.includes(subtask.id)) {
+        return subtask;
+      }
+
+      const currentSubtaskDoneDates = Array.isArray(subtask.doneDates) ? subtask.doneDates : [];
+      if (currentSubtaskDoneDates.includes(todayISO)) {
+        return subtask;
+      }
+
+      return {
+        ...subtask,
+        doneDates: [...currentSubtaskDoneDates, todayISO].sort((a, b) => a.localeCompare(b))
+      };
+    });
 
     const nextHabits = habits.map((item) =>
       item.id !== habitId
@@ -374,7 +392,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
         : {
             ...item,
             doneDates: [...currentDoneDates, todayISO],
-            skippedDates: currentSkippedDates.filter((value) => value !== todayISO)
+            skippedDates: currentSkippedDates.filter((value) => value !== todayISO),
+            subtasks: nextSubtasks
           }
     );
 

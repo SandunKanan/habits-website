@@ -13,8 +13,6 @@ export default function HabitCard({
   isPersisting,
   onMarkDone,
   onSkipToday,
-  onMarkSubtaskDoneToday,
-  onUndoSubtaskDoneToday,
   onAddCompletionDate
 }) {
   const { habit, trackingScore, due, frequencyLabel, importance, statusLabel } = item;
@@ -24,6 +22,7 @@ export default function HabitCard({
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
   const [pendingAction, setPendingAction] = useState("");
+  const [draftSubtaskIds, setDraftSubtaskIds] = useState([]);
 
   async function handleAddPastCompletion(e) {
     e.preventDefault();
@@ -48,6 +47,18 @@ export default function HabitCard({
     } finally {
       setPendingAction("");
     }
+  }
+
+  function toggleDraftSubtask(subtaskId, isPersistedDoneToday) {
+    if (isPersistedDoneToday) {
+      return;
+    }
+
+    setDraftSubtaskIds((current) =>
+      current.includes(subtaskId)
+        ? current.filter((id) => id !== subtaskId)
+        : [...current, subtaskId]
+    );
   }
 
   const sortedSubtasks = sortSubtasksByLastCompletion(habit.subtasks);
@@ -124,7 +135,9 @@ export default function HabitCard({
                   ? [...subtask.doneDates].sort((a, b) => b.localeCompare(a))
                   : [];
                 const lastSubtaskDone = doneDates[0];
-                const isDoneToday = lastSubtaskDone === todayISO;
+                const isPersistedDoneToday = lastSubtaskDone === todayISO;
+                const isDraftDoneToday = draftSubtaskIds.includes(subtask.id);
+                const isDoneToday = isPersistedDoneToday || isDraftDoneToday;
 
                 return (
                   <li key={subtask.id} className="habitcard__subtask-item">
@@ -134,36 +147,34 @@ export default function HabitCard({
                     </div>
                     <button
                       type="button"
-                      className={`habitcard__subtask-checkbox ${isDoneToday ? "habitcard__subtask-checkbox--checked" : ""}`}
-                      onClick={() =>
-                        runAction(
-                          `subtask:${subtask.id}:${isDoneToday ? "undo" : "tick"}`,
-                          () =>
-                            isDoneToday
-                              ? onUndoSubtaskDoneToday(habit.id, subtask.id)
-                              : onMarkSubtaskDoneToday(habit.id, subtask.id)
-                        )
-                      }
-                      disabled={isPersisting}
+                      className={[
+                        "habitcard__subtask-checkbox",
+                        isPersistedDoneToday ? "habitcard__subtask-checkbox--checked" : "",
+                        isDraftDoneToday ? "habitcard__subtask-checkbox--draft" : ""
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => toggleDraftSubtask(subtask.id, isPersistedDoneToday)}
+                      disabled={isPersisting || isPersistedDoneToday}
                       aria-pressed={isDoneToday}
                       aria-label={
-                        pendingAction === `subtask:${subtask.id}:undo` ||
-                        pendingAction === `subtask:${subtask.id}:tick`
-                          ? `Saving ${subtask.name}`
-                          : isDoneToday
-                            ? `Untick ${subtask.name} for today`
-                            : `Tick ${subtask.name} for today`
+                        isPersistedDoneToday
+                          ? `${subtask.name} already submitted for today`
+                          : isDraftDoneToday
+                            ? `Untick ${subtask.name} before submitting`
+                            : `Tick ${subtask.name} before submitting`
                       }
-                      title={isDoneToday ? "Done today" : "Not done today"}
+                      title={
+                        isPersistedDoneToday
+                          ? "Already submitted today"
+                          : isDraftDoneToday
+                            ? "Selected, but not submitted yet"
+                            : "Not selected"
+                      }
                     >
-                      {pendingAction === `subtask:${subtask.id}:undo` ||
-                      pendingAction === `subtask:${subtask.id}:tick` ? (
-                        <span className="habitcard__subtask-checkbox-spinner" aria-hidden="true" />
-                      ) : (
-                        <span className="habitcard__subtask-checkbox-mark" aria-hidden="true">
-                          {isDoneToday ? "✓" : ""}
-                        </span>
-                      )}
+                      <span className="habitcard__subtask-checkbox-mark" aria-hidden="true">
+                        {isDoneToday ? "✓" : ""}
+                      </span>
                     </button>
                   </li>
                 );
@@ -177,7 +188,7 @@ export default function HabitCard({
         <button
           className="habitcard__btn"
           type="button"
-          onClick={() => runAction("mark-done", () => onMarkDone(habit.id))}
+          onClick={() => runAction("mark-done", () => onMarkDone(habit.id, { subtaskIds: draftSubtaskIds }))}
           disabled={isPersisting}
         >
           {pendingAction === "mark-done" ? "Saving..." : "Mark done"}

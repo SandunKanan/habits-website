@@ -179,21 +179,18 @@
     background: linear-gradient(135deg, rgba(82, 214, 195, 0.22), rgba(143, 211, 255, 0.16));
     border-color: $border-strong;
   }
+
+  &--draft {
+    background: rgba(143, 211, 255, 0.1);
+    border-color: rgba(143, 211, 255, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(143, 211, 255, 0.14);
+  }
 }
 
 .habitcard__subtask-checkbox-mark {
   font-size: 0.95rem;
   line-height: 1;
   font-weight: 700;
-}
-
-.habitcard__subtask-checkbox-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 999px;
-  animation: habitcard-subtask-spin 0.8s linear infinite;
 }
 
 .habitcard__badge {
@@ -273,15 +270,5 @@
 
   .habitcard__actions {
     flex-direction: row;
-  }
-}
-
-@keyframes habitcard-subtask-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
   }
 }
