@@ -62,27 +62,35 @@ export default function HabitSubtasks({
                     Last completed {formatLastCompleted(lastSubtaskDone)} · {subtaskDoneDates.length} total
                   </small>
                 </div>
-                {isSubtaskDoneToday ? (
-                  <button
-                    type="button"
-                    onClick={() => onUndoSubtaskDoneToday(habitId, subtask.id)}
-                    disabled={isPersisting}
-                  >
-                    {pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:undo`
-                      ? "Saving..."
-                      : "Undo today"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onMarkSubtaskDoneToday(habitId, subtask.id)}
-                    disabled={isPersisting}
-                  >
-                    {pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:tick`
-                      ? "Saving..."
-                      : "Tick today"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className={`habits__subtask-checkbox ${isSubtaskDoneToday ? "habits__subtask-checkbox--checked" : ""}`}
+                  onClick={() =>
+                    isSubtaskDoneToday
+                      ? onUndoSubtaskDoneToday(habitId, subtask.id)
+                      : onMarkSubtaskDoneToday(habitId, subtask.id)
+                  }
+                  disabled={isPersisting}
+                  aria-pressed={isSubtaskDoneToday}
+                  aria-label={
+                    pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:undo` ||
+                    pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:tick`
+                      ? `Saving ${subtask.name}`
+                      : isSubtaskDoneToday
+                        ? `Untick ${subtask.name} for today`
+                        : `Tick ${subtask.name} for today`
+                  }
+                  title={isSubtaskDoneToday ? "Done today" : "Not done today"}
+                >
+                  {pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:undo` ||
+                  pendingSubtaskActionKey === `subtask:${habitId}:${subtask.id}:tick` ? (
+                    <span className="habits__subtask-checkbox-spinner" aria-hidden="true" />
+                  ) : (
+                    <span className="habits__subtask-checkbox-mark" aria-hidden="true">
+                      {isSubtaskDoneToday ? "✓" : ""}
+                    </span>
+                  )}
+                </button>
               </li>
             );
           })}

@@ -146,28 +146,54 @@
     color: $muted;
   }
 
-  button {
-    border: 1px solid $border;
-    border-radius: 999px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.03);
-    color: $text;
-    font: inherit;
-    cursor: pointer;
-    transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: $border-strong;
-      transform: translateY(-1px);
-    }
+.habitcard__subtask-checkbox {
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: $border-strong;
+    transform: translateY(-1px);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &--checked {
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.22), rgba(143, 211, 255, 0.16));
+    border-color: $border-strong;
+  }
+}
+
+.habitcard__subtask-checkbox-mark {
+  font-size: 0.95rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.habitcard__subtask-checkbox-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: habitcard-subtask-spin 0.8s linear infinite;
 }
 
 .habitcard__badge {
@@ -247,5 +273,15 @@
 
   .habitcard__actions {
     flex-direction: row;
+  }
+}
+
+@keyframes habitcard-subtask-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
