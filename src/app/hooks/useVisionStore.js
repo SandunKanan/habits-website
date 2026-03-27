@@ -11,6 +11,7 @@ function buildEmptyVision(userId) {
     idealLife: "",
     currentFocus: "",
     focusIntention: "",
+    focusViewEnabled: true,
     focusAttributeIds: [],
     createdAt: null,
     updatedAt: null

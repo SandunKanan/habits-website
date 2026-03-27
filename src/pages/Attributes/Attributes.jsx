@@ -9,6 +9,7 @@ export default function Attributes() {
     attributes,
     habits,
     vision,
+    settings,
     onAddAttribute,
     onUpdateAttribute,
     onDeleteAttribute,
@@ -27,9 +28,12 @@ export default function Attributes() {
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
-  const attributeSummaries = buildAttributeSummaries(attributes, habits, todayISO);
+  const attributeSummaries = buildAttributeSummaries(attributes, habits, todayISO, {
+    useAttributeDecay: settings?.useAttributeDecay
+  });
+  const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const focusAttributeIds = new Set(
-    Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
+    isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
   );
   const focusedSummaries = attributeSummaries.filter(({ attribute }) => focusAttributeIds.has(attribute.id));
   const otherSummaries = attributeSummaries.filter(({ attribute }) => !focusAttributeIds.has(attribute.id));

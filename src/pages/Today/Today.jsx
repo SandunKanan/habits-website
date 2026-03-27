@@ -18,6 +18,7 @@ export default function Today() {
     lastDoneById,
     attributes,
     vision,
+    settings,
     skippedTodayIds,
     onMarkDone,
     onSkipToday,
@@ -29,8 +30,9 @@ export default function Today() {
   const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
   const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
   const [pendingUpcomingHabitId, setPendingUpcomingHabitId] = useState("");
+  const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const focusAttributeIds = new Set(
-    Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
+    isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
   );
 
   const todoItems = curatedTop5.filter((item) => {

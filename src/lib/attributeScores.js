@@ -46,9 +46,10 @@ export function buildTodayAttributeGainSummary(habits, attributes) {
   );
 }
 
-export function buildAttributeSummaries(attributes, habits, todayISO) {
+export function buildAttributeSummaries(attributes, habits, todayISO, options = {}) {
   const safeAttributes = Array.isArray(attributes) ? attributes : [];
   const safeHabits = Array.isArray(habits) ? habits : [];
+  const useAttributeDecay = options.useAttributeDecay !== false;
 
   return safeAttributes.map((attribute) => {
     const decayRate = Number(attribute.decayRate ?? 0);
@@ -63,7 +64,7 @@ export function buildAttributeSummaries(attributes, habits, todayISO) {
         const contribution = completionDates.reduce((sum, completedOn) => {
           const ageInDays = Math.max(0, daysBetweenISO(completedOn, todayISO) ?? 0);
           const decayedContribution =
-            decayRate > 0 ? Math.max(0, weight - decayRate * ageInDays) : weight;
+            useAttributeDecay && decayRate > 0 ? Math.max(0, weight - decayRate * ageInDays) : weight;
           return sum + decayedContribution;
         }, 0);
 

@@ -21,6 +21,12 @@ export default function TopNav({ authUser, onSignOut }) {
             <NavLink to="/vision" className={({ isActive }) => (isActive ? "active" : "")}>
               Vision
             </NavLink>
+            <NavLink to="/focus" className={({ isActive }) => (isActive ? "active" : "")}>
+              Focus
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")}>
+              Settings
+            </NavLink>
             <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
               History
             </NavLink>

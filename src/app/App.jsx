@@ -6,6 +6,8 @@ import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
 import Vision from "../pages/Vision/Vision.jsx";
+import Focus from "../pages/Focus/Focus.jsx";
+import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
 import Admin from "../pages/Admin/Admin.jsx";
@@ -18,6 +20,8 @@ import { useUserRole } from "./hooks/useUserRole.js";
 import { useHabitsStore } from "./hooks/useHabitsStore.js";
 import { useAttributesStore } from "./hooks/useAttributesStore.js";
 import { useVisionStore } from "./hooks/useVisionStore.js";
+import { useFocusStore } from "./hooks/useFocusStore.js";
+import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
 
 export default function App() {
@@ -51,6 +55,18 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const focusStore = useFocusStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
+  const settingsStore = useSettingsStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
 
   async function handleSignIn(credentials) {
     const result = await auth.handleSignIn(credentials);
@@ -58,6 +74,8 @@ export default function App() {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
+      focusStore.beginLoadingFocus();
+      settingsStore.beginLoadingSettings();
     }
     return result;
   }
@@ -68,6 +86,8 @@ export default function App() {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
+      focusStore.beginLoadingFocus();
+      settingsStore.beginLoadingSettings();
     }
     return result;
   }
@@ -78,6 +98,8 @@ export default function App() {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
+      focusStore.beginLoadingFocus();
+      settingsStore.beginLoadingSettings();
     }
     return result;
   }
@@ -88,6 +110,8 @@ export default function App() {
     habitsStore.resetHabitsState();
     attributesStore.resetAttributesState();
     visionStore.resetVisionState();
+    focusStore.resetFocusState();
+    settingsStore.resetSettingsState();
   }
 
   if (authEnabled && !auth.isAuthReady) {
@@ -98,14 +122,30 @@ export default function App() {
     return <div className="appstatus card">Loading account access...</div>;
   }
 
-  if (habitsStore.isLoading || attributesStore.isLoading || visionStore.isLoading) {
+  if (
+    habitsStore.isLoading ||
+    attributesStore.isLoading ||
+    visionStore.isLoading ||
+    focusStore.isLoading ||
+    settingsStore.isLoading
+  ) {
     return <div className="appstatus card">Loading habits...</div>;
   }
 
-  if (habitsStore.loadError || attributesStore.loadError || visionStore.loadError) {
+  if (
+    habitsStore.loadError ||
+    attributesStore.loadError ||
+    visionStore.loadError ||
+    focusStore.loadError ||
+    settingsStore.loadError
+  ) {
     return (
       <div className="appstatus card">
-        {habitsStore.loadError || attributesStore.loadError || visionStore.loadError}
+        {habitsStore.loadError ||
+          attributesStore.loadError ||
+          visionStore.loadError ||
+          focusStore.loadError ||
+          settingsStore.loadError}
       </div>
     );
   }
@@ -133,6 +173,8 @@ export default function App() {
             lastDoneById={habitsStore.lastDoneById}
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
+            focus={focusStore.focus}
+            settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
             onDeleteHabit={habitsStore.deleteHabit}
@@ -140,6 +182,8 @@ export default function App() {
             onUpdateAttribute={attributesStore.updateAttribute}
             onDeleteAttribute={attributesStore.deleteAttribute}
             onSaveVision={visionStore.saveVision}
+            onSaveFocus={focusStore.saveFocus}
+            onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
             onUndoSubtaskDoneToday={habitsStore.undoSubtaskDoneToday}
@@ -151,7 +195,11 @@ export default function App() {
             completionLog={habitsStore.completionLog}
             skippedTodayIds={habitsStore.skippedTodayIds}
             isPersisting={
-              habitsStore.isPersisting || attributesStore.isPersisting || visionStore.isPersisting
+              habitsStore.isPersisting ||
+              attributesStore.isPersisting ||
+              visionStore.isPersisting ||
+              focusStore.isPersisting ||
+              settingsStore.isPersisting
             }
             authUser={auth.authUser}
             isAdmin={role.isAdmin}
@@ -165,6 +213,8 @@ export default function App() {
         <Route path="/habits" element={<Habits />} />
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/vision" element={<Vision />} />
+        <Route path="/focus" element={<Focus />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />
         <Route path="/admin" element={<Admin />} />

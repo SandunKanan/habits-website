@@ -10,6 +10,8 @@ export default function Layout({
   lastDoneById,
   attributes,
   vision,
+  focus,
+  settings,
   onAddHabit,
   onUpdateHabit,
   onDeleteHabit,
@@ -17,6 +19,8 @@ export default function Layout({
   onUpdateAttribute,
   onDeleteAttribute,
   onSaveVision,
+  onSaveFocus,
+  onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
   onUndoSubtaskDoneToday,
@@ -81,6 +85,24 @@ export default function Layout({
         </>
       )
     },
+    "/focus": {
+      title: "Focus",
+      subtitle: "The current period you are shaping",
+      meta: (
+        <>
+          Active focus: <b>{focus?.title || "Not set"}</b>
+        </>
+      )
+    },
+    "/settings": {
+      title: "Settings",
+      subtitle: "Display and behavior preferences",
+      meta: (
+        <>
+          Focus highlight: <b>{settings?.highlightFocusAttributes ? "On" : "Off"}</b>
+        </>
+      )
+    },
     "/help": {
       title: "Help",
       subtitle: "How the app works",
@@ -124,6 +146,8 @@ export default function Layout({
               lastDoneById,
               attributes,
               vision,
+              focus,
+              settings,
               onAddHabit,
               onUpdateHabit,
               onDeleteHabit,
@@ -131,6 +155,8 @@ export default function Layout({
               onUpdateAttribute,
               onDeleteAttribute,
               onSaveVision,
+              onSaveFocus,
+              onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,
               onUndoSubtaskDoneToday,

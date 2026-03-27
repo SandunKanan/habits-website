@@ -53,6 +53,7 @@ function normalizeVision(vision) {
     idealLife: String(vision.idealLife ?? vision.ideal_life ?? "").trim(),
     currentFocus: String(vision.currentFocus ?? vision.current_season ?? "").trim(),
     focusIntention: String(vision.focusIntention ?? vision.season_intention ?? "").trim(),
+    focusViewEnabled: Boolean(vision.focusViewEnabled ?? vision.focus_view_enabled ?? true),
     focusAttributeIds: Array.isArray(vision.focusAttributeIds ?? vision.focus_attribute_ids)
       ? [...new Set((vision.focusAttributeIds ?? vision.focus_attribute_ids).map(String))]
       : [],
@@ -68,6 +69,7 @@ function buildEmptyVision(userId) {
     idealLife: "",
     currentFocus: "",
     focusIntention: "",
+    focusViewEnabled: true,
     focusAttributeIds: [],
     createdAt: null,
     updatedAt: null
@@ -80,14 +82,15 @@ function serializeVisionRow(vision, userId) {
     ideal_self: vision.idealSelf,
     ideal_life: vision.idealLife,
     current_season: vision.currentFocus,
-    season_intention: vision.focusIntention
+    season_intention: vision.focusIntention,
+    focus_view_enabled: vision.focusViewEnabled
   };
 }
 
 export async function loadVisionForSession(accessToken, userId) {
   const [rows, focusRows] = await Promise.all([
     fetchSupabase(
-    `/rest/v1/visions?user_id=eq.${userId}&select=user_id,ideal_self,ideal_life,current_season,season_intention,created_at,updated_at&limit=1`,
+    `/rest/v1/visions?user_id=eq.${userId}&select=user_id,ideal_self,ideal_life,current_season,season_intention,focus_view_enabled,created_at,updated_at&limit=1`,
     accessToken
     ),
     fetchSupabase(

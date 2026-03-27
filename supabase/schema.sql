@@ -62,6 +62,7 @@ create table if not exists public.visions (
   ideal_life text not null default '',
   current_season text not null default '',
   season_intention text not null default '',
+  focus_view_enabled boolean not null default true,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -73,6 +74,26 @@ create table if not exists public.vision_focus_attributes (
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, attribute_id)
+);
+
+create table if not exists public.focus_periods (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  title text not null default '',
+  start_date date,
+  end_date date,
+  why_now text not null default '',
+  end_state text not null default '',
+  current_obstacles text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.user_settings (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  highlight_focus_attributes boolean not null default true,
+  use_attribute_decay boolean not null default true,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
 );
 
 create table if not exists public.user_roles (
@@ -94,6 +115,8 @@ create index if not exists habit_attribute_links_attribute_id_idx on public.habi
 create index if not exists visions_user_id_idx on public.visions (user_id);
 create index if not exists vision_focus_attributes_user_id_idx on public.vision_focus_attributes (user_id);
 create index if not exists vision_focus_attributes_attribute_id_idx on public.vision_focus_attributes (attribute_id);
+create index if not exists focus_periods_user_id_idx on public.focus_periods (user_id);
+create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
@@ -102,6 +125,8 @@ alter table public.attributes enable row level security;
 alter table public.habit_attribute_links enable row level security;
 alter table public.visions enable row level security;
 alter table public.vision_focus_attributes enable row level security;
+alter table public.focus_periods enable row level security;
+alter table public.user_settings enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -181,6 +206,18 @@ create policy "Users can read own vision focus attributes"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own focus period" on public.focus_periods;
+create policy "Users can read own focus period"
+  on public.focus_periods
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own settings" on public.user_settings;
+create policy "Users can read own settings"
+  on public.user_settings
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can insert own vision" on public.visions;
 create policy "Users can insert own vision"
   on public.visions
@@ -200,6 +237,18 @@ create policy "Users can insert own vision focus attributes"
         and public.attributes.user_id = auth.uid()
     )
   );
+
+drop policy if exists "Users can insert own focus period" on public.focus_periods;
+create policy "Users can insert own focus period"
+  on public.focus_periods
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own settings" on public.user_settings;
+create policy "Users can insert own settings"
+  on public.user_settings
+  for insert
+  with check (auth.uid() = user_id);
 
 drop policy if exists "Users can update own vision" on public.visions;
 create policy "Users can update own vision"
@@ -223,6 +272,20 @@ create policy "Users can update own vision focus attributes"
     )
   );
 
+drop policy if exists "Users can update own focus period" on public.focus_periods;
+create policy "Users can update own focus period"
+  on public.focus_periods
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own settings" on public.user_settings;
+create policy "Users can update own settings"
+  on public.user_settings
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 drop policy if exists "Users can delete own vision" on public.visions;
 create policy "Users can delete own vision"
   on public.visions
@@ -232,6 +295,18 @@ create policy "Users can delete own vision"
 drop policy if exists "Users can delete own vision focus attributes" on public.vision_focus_attributes;
 create policy "Users can delete own vision focus attributes"
   on public.vision_focus_attributes
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own focus period" on public.focus_periods;
+create policy "Users can delete own focus period"
+  on public.focus_periods
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own settings" on public.user_settings;
+create policy "Users can delete own settings"
+  on public.user_settings
   for delete
   using (auth.uid() = user_id);
 

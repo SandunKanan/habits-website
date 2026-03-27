@@ -1,0 +1,148 @@
+@use "../../styles/variables" as *;
+
+.settingspage {
+  display: grid;
+  gap: 18px;
+}
+
+.settingspage__hero,
+.settingspage__section {
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.settingspage__hero {
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.settingspage__eyebrow {
+  margin: 0 0 10px;
+  color: $accent;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.settingspage__intro {
+  margin: 12px 0 0;
+  max-width: 44rem;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.settingspage__form {
+  display: grid;
+  gap: 14px;
+}
+
+.settingspage__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid $border;
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.02);
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.6;
+  }
+}
+
+.settingspage__switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+
+  input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+  }
+
+  input:checked + .settingspage__switch-track {
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.9), rgba(143, 211, 255, 0.82));
+    border-color: rgba(143, 211, 255, 0.5);
+  }
+
+  input:checked + .settingspage__switch-track::after {
+    transform: translateX(22px);
+  }
+
+  input:disabled + .settingspage__switch-track {
+    opacity: 0.6;
+  }
+}
+
+.settingspage__switch-track {
+  width: 50px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.18s ease, border-color 0.18s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: $text;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.24);
+    transition: transform 0.18s ease;
+  }
+}
+
+.settingspage__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(143, 211, 255, 0.16), rgba(82, 214, 195, 0.12));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.settingspage__feedback {
+  margin: 0;
+  color: $accent;
+}
+
+@media (max-width: 720px) {
+  .settingspage__toggle {
+    align-items: flex-start;
+  }
+}
