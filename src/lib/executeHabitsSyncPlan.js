@@ -30,6 +30,23 @@ export async function executeHabitsSyncPlan({
     });
   }
 
+  await deleteAttributeLinks(fetchSupabase, accessToken, syncPlan.attributeLinkIdsToDelete);
+
+  if (syncPlan.attributeLinkRowsToInsert.length > 0) {
+    await fetchSupabase(
+      "/rest/v1/habit_attribute_links?on_conflict=habit_id,attribute_id",
+      accessToken,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates, return=representation"
+        },
+        body: JSON.stringify(syncPlan.attributeLinkRowsToInsert)
+      }
+    );
+  }
+
   await deleteHabits(fetchSupabase, accessToken, userId, syncPlan.habitIdsToDelete);
 }
 
@@ -50,6 +67,18 @@ async function deleteSkips(fetchSupabase, accessToken, skipIds) {
 
   const quotedIds = skipIds.map((id) => `"${id}"`).join(",");
   await fetchSupabase(`/rest/v1/habit_skips?id=in.(${quotedIds})`, accessToken, {
+    method: "DELETE",
+    headers: {
+      Prefer: "return=minimal"
+    }
+  });
+}
+
+async function deleteAttributeLinks(fetchSupabase, accessToken, linkIds) {
+  if (linkIds.length === 0) return;
+
+  const quotedIds = linkIds.map((id) => `"${id}"`).join(",");
+  await fetchSupabase(`/rest/v1/habit_attribute_links?id=in.(${quotedIds})`, accessToken, {
     method: "DELETE",
     headers: {
       Prefer: "return=minimal"

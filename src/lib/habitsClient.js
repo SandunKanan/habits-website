@@ -68,6 +68,14 @@ function normalizeHabit(habit) {
           : []
       }))
     : [];
+  const attributeLinks = Array.isArray(habit.attributeLinks)
+    ? habit.attributeLinks
+        .map((link) => ({
+          attributeId: String(link.attributeId ?? ""),
+          weight: Number(link.weight)
+        }))
+        .filter((link) => link.attributeId && Number.isFinite(link.weight) && link.weight > 0)
+    : [];
   const frequency = normalizeFrequency(habit);
 
   return {
@@ -80,13 +88,15 @@ function normalizeHabit(habit) {
     initialLastDone: habit.initialLastDone ?? null,
     doneDates,
     skippedDates,
-    subtasks
+    subtasks,
+    attributeLinks
   };
 }
 
-function parseHabitRows(habitRows, completionRows, skipRows) {
+function parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows) {
   const completionsByHabitId = new Map();
   const skipsByHabitId = new Map();
+  const linksByHabitId = new Map();
 
   for (const completion of completionRows) {
     const dates = completionsByHabitId.get(completion.habit_id) ?? [];
@@ -98,6 +108,15 @@ function parseHabitRows(habitRows, completionRows, skipRows) {
     const dates = skipsByHabitId.get(skip.habit_id) ?? [];
     dates.push(skip.skipped_on);
     skipsByHabitId.set(skip.habit_id, dates);
+  }
+
+  for (const link of attributeLinkRows) {
+    const links = linksByHabitId.get(link.habit_id) ?? [];
+    links.push({
+      attributeId: link.attribute_id,
+      weight: Number(link.weight)
+    });
+    linksByHabitId.set(link.habit_id, links);
   }
 
   return habitRows.map((habitRow) =>
@@ -113,7 +132,8 @@ function parseHabitRows(habitRows, completionRows, skipRows) {
       initialLastDone: habitRow.initial_last_done,
       doneDates: completionsByHabitId.get(habitRow.id) ?? [],
       skippedDates: skipsByHabitId.get(habitRow.id) ?? [],
-      subtasks: habitRow.subtasks ?? []
+      subtasks: habitRow.subtasks ?? [],
+      attributeLinks: linksByHabitId.get(habitRow.id) ?? []
     })
   );
 }
@@ -137,7 +157,7 @@ function serializeHabitRow(habit, userId) {
 }
 
 export async function loadHabitsForSession(accessToken, userId) {
-  const { habitRows, completionRows, skipRows } = await loadHabitsSnapshot(
+  const { habitRows, completionRows, skipRows, attributeLinkRows } = await loadHabitsSnapshot(
     fetchSupabase,
     userId,
     accessToken
@@ -147,7 +167,7 @@ export async function loadHabitsForSession(accessToken, userId) {
     return [];
   }
 
-  return parseHabitRows(habitRows, completionRows, skipRows);
+  return parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows);
 }
 
 export async function saveHabitsForSession(accessToken, userId, habits) {
@@ -168,11 +188,13 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
   const {
     habitRows: existingHabitRows,
     completionRows: existingCompletionRows,
-    skipRows: existingSkipRows
+    skipRows: existingSkipRows,
+    attributeLinkRows: existingAttributeLinkRows
   } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken, {
     habitSelect: "id",
     completionSelect: "id,habit_id,completed_on",
-    skipSelect: "id,habit_id,skipped_on"
+    skipSelect: "id,habit_id,skipped_on",
+    linkSelect: "id,habit_id,attribute_id,weight"
   });
 
   const syncPlan = computeHabitsSyncPlan({
@@ -180,7 +202,8 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
     userId,
     existingHabitRows,
     existingCompletionRows,
-    existingSkipRows
+    existingSkipRows,
+    existingAttributeLinkRows
   });
 
   await executeHabitsSyncPlan({
@@ -193,8 +216,9 @@ export async function saveHabitsForSession(accessToken, userId, habits) {
   const {
     habitRows: finalHabitRows,
     completionRows: finalCompletionRows,
-    skipRows: finalSkipRows
+    skipRows: finalSkipRows,
+    attributeLinkRows: finalAttributeLinkRows
   } = await loadHabitsSnapshot(fetchSupabase, userId, accessToken);
 
-  return parseHabitRows(finalHabitRows, finalCompletionRows, finalSkipRows);
+  return parseHabitRows(finalHabitRows, finalCompletionRows, finalSkipRows, finalAttributeLinkRows);
 }

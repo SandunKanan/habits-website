@@ -44,6 +44,17 @@ create table if not exists public.attributes (
   unique (user_id, slug)
 );
 
+create table if not exists public.habit_attribute_links (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  habit_id uuid not null references public.habits (id) on delete cascade,
+  attribute_id uuid not null references public.attributes (id) on delete cascade,
+  weight numeric not null check (weight > 0),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (habit_id, attribute_id)
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -57,11 +68,15 @@ create index if not exists habit_completions_habit_id_idx on public.habit_comple
 create index if not exists habit_skips_user_id_idx on public.habit_skips (user_id);
 create index if not exists habit_skips_habit_id_idx on public.habit_skips (habit_id);
 create index if not exists attributes_user_id_idx on public.attributes (user_id);
+create index if not exists habit_attribute_links_user_id_idx on public.habit_attribute_links (user_id);
+create index if not exists habit_attribute_links_habit_id_idx on public.habit_attribute_links (habit_id);
+create index if not exists habit_attribute_links_attribute_id_idx on public.habit_attribute_links (attribute_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
 alter table public.habit_skips enable row level security;
 alter table public.attributes enable row level security;
+alter table public.habit_attribute_links enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -120,6 +135,59 @@ create policy "Users can update own attributes"
 drop policy if exists "Users can delete own attributes" on public.attributes;
 create policy "Users can delete own attributes"
   on public.attributes
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own habit attribute links" on public.habit_attribute_links;
+create policy "Users can read own habit attribute links"
+  on public.habit_attribute_links
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own habit attribute links" on public.habit_attribute_links;
+create policy "Users can insert own habit attribute links"
+  on public.habit_attribute_links
+  for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.habits
+      where public.habits.id = habit_id
+        and public.habits.user_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.attributes
+      where public.attributes.id = attribute_id
+        and public.attributes.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "Users can update own habit attribute links" on public.habit_attribute_links;
+create policy "Users can update own habit attribute links"
+  on public.habit_attribute_links
+  for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.habits
+      where public.habits.id = habit_id
+        and public.habits.user_id = auth.uid()
+    )
+    and exists (
+      select 1
+      from public.attributes
+      where public.attributes.id = attribute_id
+        and public.attributes.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "Users can delete own habit attribute links" on public.habit_attribute_links;
+create policy "Users can delete own habit attribute links"
+  on public.habit_attribute_links
   for delete
   using (auth.uid() = user_id);
 

@@ -17,6 +17,7 @@ import "./Habits.scss";
 export default function Habits() {
   const {
     habits,
+    attributes,
     todayISO: contextTodayISO,
     onAddHabit,
     onUpdateHabit,
@@ -35,6 +36,7 @@ export default function Habits() {
   const [frequencyValue, setFrequencyValue] = useState("1");
   const [frequencyUnit, setFrequencyUnit] = useState("day");
   const [importance, setImportance] = useState(String(IMPORTANCE_LEVELS[0].value));
+  const [attributeLinks, setAttributeLinks] = useState([]);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -45,6 +47,7 @@ export default function Habits() {
   const [editFrequencyUnit, setEditFrequencyUnit] = useState("day");
   const [editImportance, setEditImportance] = useState(String(DEFAULT_IMPORTANCE_VALUE));
   const [editCreatedAt, setEditCreatedAt] = useState("");
+  const [editAttributeLinks, setEditAttributeLinks] = useState([]);
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDetailsById, setExpandedDetailsById] = useState({});
@@ -72,6 +75,35 @@ export default function Habits() {
     );
   });
 
+  function makeEmptyAttributeLink() {
+    return {
+      id: crypto.randomUUID(),
+      attributeId: "",
+      weight: "1"
+    };
+  }
+
+  function normalizeAttributeLinksForSave(links) {
+    const seen = new Set();
+
+    return links
+      .map((link) => ({
+        attributeId: String(link.attributeId ?? "").trim(),
+        weight: String(link.weight ?? "").trim()
+      }))
+      .filter((link) => link.attributeId && link.weight)
+      .map((link) => ({
+        attributeId: link.attributeId,
+        weight: Number(link.weight)
+      }))
+      .filter((link) => Number.isFinite(link.weight) && link.weight > 0)
+      .filter((link) => {
+        if (seen.has(link.attributeId)) return false;
+        seen.add(link.attributeId);
+        return true;
+      });
+  }
+
   async function handleAddHabit(e) {
     e.preventDefault();
     setFeedback("");
@@ -82,7 +114,8 @@ export default function Habits() {
       frequencyMode,
       frequencyValue,
       frequencyUnit,
-      importance
+      importance,
+      attributeLinks: normalizeAttributeLinksForSave(attributeLinks)
     });
 
     if (result?.ok) {
@@ -91,6 +124,7 @@ export default function Habits() {
       setFrequencyValue("1");
       setFrequencyUnit("day");
       setImportance(String(IMPORTANCE_LEVELS[0].value));
+      setAttributeLinks([]);
       setFeedback("Habit added.");
       setIsAddOpen(false);
     } else {
@@ -109,12 +143,22 @@ export default function Habits() {
     setEditFrequencyUnit(frequency.frequencyUnit);
     setEditImportance(String(normalizeImportanceValue(habit.importance)));
     setEditCreatedAt(habit.createdAt ? String(habit.createdAt).slice(0, 10) : todayISO);
+    setEditAttributeLinks(
+      Array.isArray(habit.attributeLinks)
+        ? habit.attributeLinks.map((link) => ({
+            id: crypto.randomUUID(),
+            attributeId: String(link.attributeId ?? ""),
+            weight: String(link.weight ?? "1")
+          }))
+        : []
+    );
     setEditFeedback("");
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditFeedback("");
+    setEditAttributeLinks([]);
   }
 
   async function handleSaveEdit(e) {
@@ -130,7 +174,8 @@ export default function Habits() {
       frequencyValue: editFrequencyValue,
       frequencyUnit: editFrequencyUnit,
       importance: editImportance,
-      createdAt: editCreatedAt
+      createdAt: editCreatedAt,
+      attributeLinks: normalizeAttributeLinksForSave(editAttributeLinks)
     });
 
     if (result?.ok) {
@@ -339,6 +384,86 @@ export default function Habits() {
               </select>
             </label>
 
+            <div className="habits__form-group">
+              <div className="habits__form-label">Attributes</div>
+              <div className="habits__attribute-links">
+                <div className="habits__attribute-links-head">
+                  <h4>Attributes</h4>
+                  <small>Connect this habit to the areas it helps build.</small>
+                </div>
+                {attributes.length === 0 ? (
+                  <p className="habits__attribute-links-empty">
+                    Create attributes first on the Attributes page before linking them here.
+                  </p>
+                ) : (
+                  <>
+                    <div className="habits__attribute-link-list">
+                      {attributeLinks.map((link, index) => (
+                        <div key={link.id} className="habits__attribute-link-row">
+                          <select
+                            value={link.attributeId}
+                            onChange={(e) =>
+                              setAttributeLinks((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex !== index
+                                    ? item
+                                    : { ...item, attributeId: e.target.value }
+                                )
+                              )
+                            }
+                            disabled={isSaving || isPersisting}
+                          >
+                            <option value="">Select attribute</option>
+                            {attributes.map((attribute) => (
+                              <option key={attribute.id} value={attribute.id}>
+                                {attribute.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={link.weight}
+                            onChange={(e) =>
+                              setAttributeLinks((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex !== index ? item : { ...item, weight: e.target.value }
+                                )
+                              )
+                            }
+                            disabled={isSaving || isPersisting}
+                            placeholder="Weight"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAttributeLinks((current) =>
+                                current.filter((_, itemIndex) => itemIndex !== index)
+                              )
+                            }
+                            disabled={isSaving || isPersisting}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="habits__attribute-link-add"
+                      onClick={() =>
+                        setAttributeLinks((current) => [...current, makeEmptyAttributeLink()])
+                      }
+                      disabled={isSaving || isPersisting}
+                    >
+                      Add attribute link
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="habits__form-actions">
               <button type="submit" className="habits__save-btn" disabled={isSaving || isPersisting}>
                 {isSaving || isPersisting ? "Saving..." : "Save Habit"}
@@ -407,8 +532,28 @@ export default function Habits() {
               importance: editImportance,
               onImportanceChange: (e) => setEditImportance(e.target.value),
               createdAt: editCreatedAt,
-              onCreatedAtChange: (e) => setEditCreatedAt(e.target.value)
+              onCreatedAtChange: (e) => setEditCreatedAt(e.target.value),
+              attributeLinks: editAttributeLinks,
+              onAddAttributeLink: () =>
+                setEditAttributeLinks((current) => [...current, makeEmptyAttributeLink()]),
+              onRemoveAttributeLink: (index) =>
+                setEditAttributeLinks((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index)
+                ),
+              onAttributeLinkAttributeChange: (index, value) =>
+                setEditAttributeLinks((current) =>
+                  current.map((item, itemIndex) =>
+                    itemIndex !== index ? item : { ...item, attributeId: value }
+                  )
+                ),
+              onAttributeLinkWeightChange: (index, value) =>
+                setEditAttributeLinks((current) =>
+                  current.map((item, itemIndex) =>
+                    itemIndex !== index ? item : { ...item, weight: value }
+                  )
+                )
             }}
+            attributes={attributes}
             editFeedback={editFeedback}
             isSavingEdit={isSavingEdit}
             onStartEdit={startEdit}

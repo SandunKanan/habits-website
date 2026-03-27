@@ -3,8 +3,10 @@ export async function loadHabitsSnapshot(fetchSupabase, userId, accessToken, opt
     habitSelect = "*",
     completionSelect = "id,habit_id,completed_on",
     skipSelect = "id,habit_id,skipped_on",
+    linkSelect = "id,habit_id,attribute_id,weight",
     includeCompletions = true,
-    includeSkips = true
+    includeSkips = true,
+    includeAttributeLinks = true
   } = options;
 
   const habitRows =
@@ -27,9 +29,17 @@ export async function loadHabitsSnapshot(fetchSupabase, userId, accessToken, opt
       )) ?? []
     : [];
 
+  const attributeLinkRows = includeAttributeLinks
+    ? (await fetchSupabase(
+        `/rest/v1/habit_attribute_links?user_id=eq.${userId}&select=${linkSelect}&order=created_at.asc`,
+        accessToken
+      )) ?? []
+    : [];
+
   return {
     habitRows,
     completionRows,
-    skipRows
+    skipRows,
+    attributeLinkRows
   };
 }

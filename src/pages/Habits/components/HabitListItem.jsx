@@ -40,7 +40,8 @@ export default function HabitListItem({
   onUndoSubtaskDoneToday,
   onMarkDone,
   onUndoDoneToday,
-  formatLastCompleted
+  formatLastCompleted,
+  attributes
 }) {
   const sortedDoneDates = getSortedDoneDates(habit);
   const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
@@ -69,6 +70,12 @@ export default function HabitListItem({
           onImportanceChange={editState.onImportanceChange}
           createdAt={editState.createdAt}
           onCreatedAtChange={editState.onCreatedAtChange}
+          attributes={attributes}
+          attributeLinks={editState.attributeLinks}
+          onAddAttributeLink={editState.onAddAttributeLink}
+          onRemoveAttributeLink={editState.onRemoveAttributeLink}
+          onAttributeLinkAttributeChange={editState.onAttributeLinkAttributeChange}
+          onAttributeLinkWeightChange={editState.onAttributeLinkWeightChange}
           todayISO={todayISO}
           onSubmit={onSaveEdit}
           onCancel={onCancelEdit}
@@ -167,6 +174,14 @@ export default function HabitListItem({
             <div>
               <dt>Priority score</dt>
               <dd>{score.priorityScore.toFixed(2)}</dd>
+            </div>
+            <div>
+              <dt>Attributes</dt>
+              <dd>
+                {Array.isArray(habit.attributeLinks) && habit.attributeLinks.length > 0
+                  ? habit.attributeLinks.length
+                  : "None"}
+              </dd>
             </div>
           </dl>
 

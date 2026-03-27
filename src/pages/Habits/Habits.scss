@@ -363,6 +363,67 @@
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
+  &__attribute-links {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__attribute-links-head {
+    display: grid;
+    gap: 4px;
+
+    h4 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    small {
+      color: $muted;
+    }
+  }
+
+  &__attribute-links-empty {
+    margin: 0;
+    color: $muted;
+    font-style: italic;
+  }
+
+  &__attribute-link-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  &__attribute-link-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(110px, 0.7fr) auto;
+    gap: 8px;
+
+    input,
+    select,
+    button {
+      border: 1px solid $border;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: $text;
+      font: inherit;
+    }
+
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__attribute-link-add {
+    justify-self: start;
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    cursor: pointer;
+  }
+
   &__subtasks-head {
     display: grid;
     gap: 4px;

@@ -136,7 +136,14 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     }
   }
 
-  async function addHabit({ name, frequencyMode, frequencyValue, frequencyUnit, importance }) {
+  async function addHabit({
+    name,
+    frequencyMode,
+    frequencyValue,
+    frequencyUnit,
+    importance,
+    attributeLinks
+  }) {
     const trimmedName = String(name ?? "").trim();
     if (!trimmedName) {
       return { ok: false, error: "Habit name is required." };
@@ -156,7 +163,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       initialLastDone: null,
       doneDates: [],
       skippedDates: [],
-      subtasks: []
+      subtasks: [],
+      attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : []
     };
 
     const persisted = await persistHabits([...habits, newHabit]);
@@ -169,7 +177,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   async function updateHabit(
     habitId,
-    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt }
+    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks }
   ) {
     const habit = habits.find((item) => item.id === habitId);
     if (!habit) {
@@ -196,7 +204,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
             name: trimmedName,
             ...frequency,
             importance: parsedImportance,
-            createdAt: normalizedCreatedAt
+            createdAt: normalizedCreatedAt,
+            attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : []
           }
     );
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { IMPORTANCE_LEVELS } from "../../../lib/importance.js";
 import HabitFrequencyControls from "./HabitFrequencyControls.jsx";
+import HabitAttributeLinksEditor from "./HabitAttributeLinksEditor.jsx";
 
 export default function HabitEditor({
   title,
@@ -16,6 +17,12 @@ export default function HabitEditor({
   onImportanceChange,
   createdAt,
   onCreatedAtChange,
+  attributes,
+  attributeLinks,
+  onAddAttributeLink,
+  onRemoveAttributeLink,
+  onAttributeLinkAttributeChange,
+  onAttributeLinkWeightChange,
   todayISO,
   onSubmit,
   onCancel,
@@ -64,6 +71,15 @@ export default function HabitEditor({
           ))}
         </select>
       </label>
+      <HabitAttributeLinksEditor
+        attributes={attributes}
+        links={attributeLinks}
+        disabled={isSaving}
+        onAddLink={onAddAttributeLink}
+        onRemoveLink={onRemoveAttributeLink}
+        onAttributeChange={onAttributeLinkAttributeChange}
+        onWeightChange={onAttributeLinkWeightChange}
+      />
       <div className="habits__item-actions">
         <button type="submit" disabled={isSaving}>
           {isSaving ? "Saving..." : "Save"}
