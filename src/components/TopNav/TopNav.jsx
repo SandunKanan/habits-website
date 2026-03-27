@@ -15,6 +15,9 @@ export default function TopNav({ authUser, onSignOut }) {
             <NavLink to="/habits" className={({ isActive }) => (isActive ? "active" : "")}>
               Habits
             </NavLink>
+            <NavLink to="/attributes" className={({ isActive }) => (isActive ? "active" : "")}>
+              Attributes
+            </NavLink>
             <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
               History
             </NavLink>

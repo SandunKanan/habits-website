@@ -8,9 +8,13 @@ export default function Layout({
   habits,
   curatedTop5,
   lastDoneById,
+  attributes,
   onAddHabit,
   onUpdateHabit,
   onDeleteHabit,
+  onAddAttribute,
+  onUpdateAttribute,
+  onDeleteAttribute,
   onAddSubtask,
   onMarkSubtaskDoneToday,
   onUndoSubtaskDoneToday,
@@ -57,6 +61,15 @@ export default function Layout({
         </>
       )
     },
+    "/attributes": {
+      title: "Attributes",
+      subtitle: "Areas your habits will strengthen",
+      meta: (
+        <>
+          Total attributes: <b>{attributes.length}</b>
+        </>
+      )
+    },
     "/help": {
       title: "Help",
       subtitle: "How the app works",
@@ -98,9 +111,13 @@ export default function Layout({
               habits,
               curatedTop5,
               lastDoneById,
+              attributes,
               onAddHabit,
               onUpdateHabit,
               onDeleteHabit,
+              onAddAttribute,
+              onUpdateAttribute,
+              onDeleteAttribute,
               onAddSubtask,
               onMarkSubtaskDoneToday,
               onUndoSubtaskDoneToday,

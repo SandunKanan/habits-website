@@ -1,0 +1,191 @@
+@use "../../styles/variables" as *;
+
+.attributes {
+  display: grid;
+  gap: 18px;
+}
+
+.attributes__intro {
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(240, 191, 85, 0.12), transparent 28%),
+    linear-gradient(135deg, rgba(143, 211, 255, 0.06), transparent 55%),
+    $panel;
+
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.attributes__eyebrow {
+  margin: 0;
+  color: $warn;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.attributes__copy {
+  margin: 0;
+  max-width: 42rem;
+  color: $muted;
+  line-height: 1.65;
+}
+
+.attributes__form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  input,
+  button {
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+  }
+
+  input {
+    flex: 1 1 240px;
+  }
+
+  button {
+    border-color: $border-strong;
+    background: linear-gradient(135deg, rgba(240, 191, 85, 0.16), rgba(143, 211, 255, 0.12));
+    cursor: pointer;
+  }
+}
+
+.attributes__feedback {
+  margin: 0;
+  color: $accent;
+  font-size: 0.92rem;
+}
+
+.attributes__list {
+  display: grid;
+  gap: 14px;
+}
+
+.attributes__empty {
+  padding: 24px;
+}
+
+.attributes__empty-eyebrow {
+  margin: 0 0 8px;
+  color: $accent;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.attributes__empty h3 {
+  margin: 0 0 8px;
+}
+
+.attributes__empty-copy {
+  margin: 0;
+  color: $muted;
+}
+
+.attributes__item {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.attributes__item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+
+  h3 {
+    margin: 0;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: $muted;
+    font-size: 0.88rem;
+    text-transform: lowercase;
+  }
+}
+
+.attributes__item-actions,
+.attributes__edit-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    cursor: pointer;
+  }
+}
+
+.attributes__delete-btn {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: rgb(248, 113, 113) !important;
+}
+
+.attributes__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  div {
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  dt {
+    color: $muted;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  dd {
+    margin: 8px 0 0;
+    font-weight: 650;
+  }
+}
+
+.attributes__edit {
+  display: grid;
+  gap: 10px;
+
+  input {
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+  }
+}
+
+@media (max-width: 720px) {
+  .attributes__item-head {
+    flex-direction: column;
+  }
+
+  .attributes__details {
+    grid-template-columns: 1fr;
+  }
+}

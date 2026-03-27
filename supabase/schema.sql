@@ -34,6 +34,16 @@ create table if not exists public.habit_skips (
   unique (habit_id, skipped_on)
 );
 
+create table if not exists public.attributes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  slug text not null,
+  name text not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id, slug)
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -46,10 +56,12 @@ create index if not exists habit_completions_user_id_idx on public.habit_complet
 create index if not exists habit_completions_habit_id_idx on public.habit_completions (habit_id);
 create index if not exists habit_skips_user_id_idx on public.habit_skips (user_id);
 create index if not exists habit_skips_habit_id_idx on public.habit_skips (habit_id);
+create index if not exists attributes_user_id_idx on public.attributes (user_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
 alter table public.habit_skips enable row level security;
+alter table public.attributes enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -84,6 +96,31 @@ drop policy if exists "Users can read own role" on public.user_roles;
 create policy "Users can read own role"
   on public.user_roles
   for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own attributes" on public.attributes;
+create policy "Users can read own attributes"
+  on public.attributes
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own attributes" on public.attributes;
+create policy "Users can insert own attributes"
+  on public.attributes
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own attributes" on public.attributes;
+create policy "Users can update own attributes"
+  on public.attributes
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own attributes" on public.attributes;
+create policy "Users can delete own attributes"
+  on public.attributes
+  for delete
   using (auth.uid() = user_id);
 
 drop policy if exists "Users can read own skips" on public.habit_skips;
