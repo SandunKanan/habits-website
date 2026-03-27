@@ -22,6 +22,7 @@ export default function Today() {
   } = useOutletContext();
   const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
   const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
+  const [pendingUpcomingHabitId, setPendingUpcomingHabitId] = useState("");
 
   const todoItems = curatedTop5.filter((item) => {
     const habitId = item.habit.id;
@@ -76,6 +77,15 @@ export default function Today() {
       await onUndoSkipToday(habitId);
     } finally {
       setPendingSkippedHabitId("");
+    }
+  }
+
+  async function handleDoToday(habitId) {
+    setPendingUpcomingHabitId(habitId);
+    try {
+      await onMarkDone(habitId);
+    } finally {
+      setPendingUpcomingHabitId("");
     }
   }
 
@@ -187,6 +197,14 @@ export default function Today() {
                     {item.frequencyLabel} · {formatUpcomingLabel(daysUntilDue)}
                   </small>
                 </div>
+                <button
+                  className="today__do-btn"
+                  type="button"
+                  onClick={() => handleDoToday(habit.id)}
+                  disabled={isPersisting}
+                >
+                  {pendingUpcomingHabitId === habit.id ? "Saving..." : "Do today"}
+                </button>
               </li>
             ))}
           </ul>
