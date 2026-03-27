@@ -51,6 +51,7 @@ function normalizeAttribute(attribute) {
     id: String(attribute.id ?? ""),
     slug: String(attribute.slug ?? attribute.id ?? ""),
     name: String(attribute.name ?? "").trim(),
+    decayRate: Number(attribute.decayRate ?? attribute.decay_rate ?? 0),
     createdAt: attribute.createdAt ?? attribute.created_at ?? null,
     updatedAt: attribute.updatedAt ?? attribute.updated_at ?? null
   };
@@ -62,6 +63,7 @@ function parseAttributeRows(rows) {
       id: row.id,
       slug: row.slug,
       name: row.name,
+      decayRate: row.decay_rate,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })
@@ -73,13 +75,14 @@ function serializeAttributeRow(attribute, userId) {
     id: attribute.id,
     user_id: userId,
     slug: attribute.slug ?? attribute.id,
-    name: attribute.name
+    name: attribute.name,
+    decay_rate: Number(attribute.decayRate ?? 0)
   };
 }
 
 export async function loadAttributesForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/attributes?user_id=eq.${userId}&select=id,slug,name,created_at,updated_at&order=created_at.asc`,
+    `/rest/v1/attributes?user_id=eq.${userId}&select=id,slug,name,decay_rate,created_at,updated_at&order=created_at.asc`,
     accessToken
   );
 

@@ -38,6 +38,52 @@
   line-height: 1.65;
 }
 
+.attributes__help {
+  display: grid;
+  gap: 10px;
+}
+
+.attributes__help-toggle {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+  font: inherit;
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+}
+
+.attributes__help-panel {
+  max-width: 44rem;
+  display: grid;
+  gap: 10px;
+  border: 1px solid $border;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.6;
+  }
+
+  code {
+    color: $text;
+    font-size: 0.92em;
+  }
+}
+
 .attributes__form {
   display: flex;
   gap: 10px;
@@ -61,6 +107,22 @@
     border-color: $border-strong;
     background: linear-gradient(135deg, rgba(240, 191, 85, 0.16), rgba(143, 211, 255, 0.12));
     cursor: pointer;
+  }
+}
+
+.attributes__decay-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid $border;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+
+  input {
+    margin: 0;
+    flex: 0 0 auto;
   }
 }
 
@@ -143,7 +205,7 @@
 
 .attributes__details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 
   div {
@@ -177,6 +239,47 @@
     background: rgba(255, 255, 255, 0.03);
     color: $text;
     font: inherit;
+  }
+}
+
+.attributes__contributors {
+  display: grid;
+  gap: 10px;
+
+  h4 {
+    margin: 0;
+    font-size: 0.96rem;
+  }
+}
+
+.attributes__contributors-empty {
+  margin: 0;
+  color: $muted;
+  font-style: italic;
+}
+
+.attributes__contributors-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+
+  li {
+    display: grid;
+    gap: 4px;
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  span {
+    font-weight: 650;
+  }
+
+  small {
+    color: $muted;
   }
 }
 

@@ -39,6 +39,7 @@ create table if not exists public.attributes (
   user_id uuid not null references auth.users (id) on delete cascade,
   slug text not null,
   name text not null,
+  decay_rate numeric not null default 0 check (decay_rate >= 0),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, slug)

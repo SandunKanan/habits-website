@@ -1,32 +1,46 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { buildAttributeSummaries } from "../../lib/attributeScores.js";
 import "./Attributes.scss";
 
 export default function Attributes() {
   const {
+    todayISO,
     attributes,
+    habits,
     onAddAttribute,
     onUpdateAttribute,
     onDeleteAttribute,
     isPersisting
   } = useOutletContext();
   const [name, setName] = useState("");
+  const [hasDecay, setHasDecay] = useState(false);
+  const [decayRate, setDecayRate] = useState("1");
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editHasDecay, setEditHasDecay] = useState(false);
+  const [editDecayRate, setEditDecayRate] = useState("1");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
+  const attributeSummaries = buildAttributeSummaries(attributes, habits, todayISO);
 
   async function handleAddAttribute(e) {
     e.preventDefault();
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddAttribute({ name });
+    const result = await onAddAttribute({
+      name,
+      decayRate: hasDecay ? decayRate : 0
+    });
     if (result?.ok) {
       setName("");
+      setHasDecay(false);
+      setDecayRate("1");
       setFeedback("Attribute added.");
     } else {
       setFeedback(result?.error ?? "Could not add attribute.");
@@ -38,12 +52,16 @@ export default function Attributes() {
   function startEdit(attribute) {
     setEditingId(attribute.id);
     setEditName(attribute.name);
+    setEditHasDecay(Number(attribute.decayRate ?? 0) > 0);
+    setEditDecayRate(String(attribute.decayRate ?? 1));
     setEditFeedback("");
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditName("");
+    setEditHasDecay(false);
+    setEditDecayRate("1");
     setEditFeedback("");
   }
 
@@ -54,7 +72,10 @@ export default function Attributes() {
     setIsSavingEdit(true);
     setEditFeedback("");
 
-    const result = await onUpdateAttribute(editingId, { name: editName });
+    const result = await onUpdateAttribute(editingId, {
+      name: editName,
+      decayRate: editHasDecay ? editDecayRate : 0
+    });
     if (result?.ok) {
       setEditingId(null);
       setFeedback("Attribute updated.");
@@ -96,6 +117,43 @@ export default function Attributes() {
           weights, and decay.
         </p>
 
+        <div className="attributes__help">
+          <button
+            type="button"
+            className="attributes__help-toggle"
+            aria-expanded={isHelpOpen}
+            onClick={() => setIsHelpOpen((current) => !current)}
+          >
+            <span>How scoring works</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d={isHelpOpen ? "M5 12l5-5 5 5" : "M5 8l5 5 5-5"}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {isHelpOpen ? (
+            <div className="attributes__help-panel">
+              <p>
+                Score is your current attribute score. Each habit completion adds its linked
+                contribution weight to the attribute.
+              </p>
+              <p>
+                If decay is turned on, each completion fades linearly over time using:
+                <code> max(0, weight - daily decay × days old)</code>
+              </p>
+              <p>
+                If decay is off, each completion keeps its full weight forever.
+              </p>
+            </div>
+          ) : null}
+        </div>
+
         <form className="attributes__form" onSubmit={handleAddAttribute}>
           <input
             type="text"
@@ -105,6 +163,27 @@ export default function Attributes() {
             disabled={isSaving || isPersisting}
             required
           />
+          <label className="attributes__decay-toggle">
+            <input
+              type="checkbox"
+              checked={hasDecay}
+              onChange={(e) => setHasDecay(e.target.checked)}
+              disabled={isSaving || isPersisting}
+            />
+            <span>Use decay</span>
+          </label>
+          {hasDecay ? (
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              value={decayRate}
+              onChange={(e) => setDecayRate(e.target.value)}
+              placeholder="Daily decay"
+              disabled={isSaving || isPersisting}
+              required
+            />
+          ) : null}
           <button type="submit" disabled={isSaving || isPersisting}>
             {isSaving || isPersisting ? "Saving..." : "Add attribute"}
           </button>
@@ -123,7 +202,7 @@ export default function Attributes() {
             </p>
           </article>
         ) : (
-          attributes.map((attribute) => {
+          attributeSummaries.map(({ attribute, score, decayRate, linkedHabitCount, contributors }) => {
             const isEditing = editingId === attribute.id;
 
             return (
@@ -137,6 +216,27 @@ export default function Attributes() {
                       disabled={isSavingEdit || isPersisting}
                       required
                     />
+                    <label className="attributes__decay-toggle">
+                      <input
+                        type="checkbox"
+                        checked={editHasDecay}
+                        onChange={(e) => setEditHasDecay(e.target.checked)}
+                        disabled={isSavingEdit || isPersisting}
+                      />
+                      <span>Use decay</span>
+                    </label>
+                    {editHasDecay ? (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={editDecayRate}
+                        onChange={(e) => setEditDecayRate(e.target.value)}
+                        disabled={isSavingEdit || isPersisting}
+                        placeholder="Daily decay"
+                        required
+                      />
+                    ) : null}
                     <div className="attributes__edit-actions">
                       <button type="submit" disabled={isSavingEdit || isPersisting}>
                         {isSavingEdit || isPersisting ? "Saving..." : "Save"}
@@ -172,13 +272,42 @@ export default function Attributes() {
                     <dl className="attributes__details">
                       <div>
                         <dt>Score</dt>
-                        <dd>0.00</dd>
+                        <dd>{score.toFixed(2)}</dd>
+                      </div>
+                      <div>
+                        <dt>Linked habits</dt>
+                        <dd>{linkedHabitCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Daily decay</dt>
+                        <dd>{decayRate > 0 ? decayRate.toFixed(2) : "Off"}</dd>
                       </div>
                       <div>
                         <dt>Created at</dt>
                         <dd>{attribute.createdAt ? String(attribute.createdAt).slice(0, 10) : "Unknown"}</dd>
                       </div>
                     </dl>
+
+                    <div className="attributes__contributors">
+                      <h4>Top contributors</h4>
+                      {contributors.length === 0 ? (
+                        <p className="attributes__contributors-empty">
+                          No habits linked yet.
+                        </p>
+                      ) : (
+                        <ul className="attributes__contributors-list">
+                          {contributors.slice(0, 3).map((contributor) => (
+                            <li key={contributor.habitId}>
+                              <span>{contributor.habitName}</span>
+                              <small>
+                                {contributor.completionCount} completions × {contributor.weight} ={" "}
+                                {contributor.contribution.toFixed(2)}
+                              </small>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </>
                 )}
               </article>

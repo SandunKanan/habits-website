@@ -86,10 +86,14 @@ export function useAttributesStore({ authEnabled, isAuthReady, session, authUser
     }
   }
 
-  async function addAttribute({ name }) {
+  async function addAttribute({ name, decayRate }) {
     const trimmedName = String(name ?? "").trim();
     if (!trimmedName) {
       return { ok: false, error: "Attribute name is required." };
+    }
+    const parsedDecayRate = Number(decayRate ?? 0);
+    if (!Number.isFinite(parsedDecayRate) || parsedDecayRate < 0) {
+      return { ok: false, error: "Decay rate must be 0 or greater." };
     }
 
     const slug = buildSlug(trimmedName, new Set(attributes.map((attribute) => attribute.slug ?? attribute.id)));
@@ -97,6 +101,7 @@ export function useAttributesStore({ authEnabled, isAuthReady, session, authUser
       id: crypto.randomUUID(),
       slug,
       name: trimmedName,
+      decayRate: parsedDecayRate,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -109,7 +114,7 @@ export function useAttributesStore({ authEnabled, isAuthReady, session, authUser
     return { ok: true, id: newAttribute.id };
   }
 
-  async function updateAttribute(attributeId, { name }) {
+  async function updateAttribute(attributeId, { name, decayRate }) {
     const attribute = attributes.find((item) => item.id === attributeId);
     if (!attribute) {
       return { ok: false, error: "Attribute not found." };
@@ -119,6 +124,10 @@ export function useAttributesStore({ authEnabled, isAuthReady, session, authUser
     if (!trimmedName) {
       return { ok: false, error: "Attribute name is required." };
     }
+    const parsedDecayRate = Number(decayRate ?? 0);
+    if (!Number.isFinite(parsedDecayRate) || parsedDecayRate < 0) {
+      return { ok: false, error: "Decay rate must be 0 or greater." };
+    }
 
     const nextAttributes = attributes.map((item) =>
       item.id !== attributeId
@@ -126,6 +135,7 @@ export function useAttributesStore({ authEnabled, isAuthReady, session, authUser
         : {
             ...item,
             name: trimmedName,
+            decayRate: parsedDecayRate,
             updatedAt: new Date().toISOString()
           }
     );
