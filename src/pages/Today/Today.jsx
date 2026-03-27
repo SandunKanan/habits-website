@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import HabitCard from "../../components/HabitCard/HabitCard.jsx";
+import {
+  buildTodayAttributeGainSummary,
+  getHabitAttributeGains
+} from "../../lib/attributeScores.js";
 import { daysBetweenISO } from "../../lib/date.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import "./Today.scss";
@@ -12,6 +16,7 @@ export default function Today() {
     habits,
     curatedTop5,
     lastDoneById,
+    attributes,
     skippedTodayIds,
     onMarkDone,
     onSkipToday,
@@ -32,6 +37,7 @@ export default function Today() {
     const importance = Number(habit.importance);
     return importance > 0 && lastDoneById[habit.id] === todayISO;
   });
+  const todayAttributeGains = buildTodayAttributeGainSummary(completedToday, attributes);
   const skippedToday = habits.filter((habit) => skippedTodayIds.has(habit.id));
   const upcomingItems = habits
     .map((habit) => {
@@ -60,6 +66,10 @@ export default function Today() {
   function formatUpcomingLabel(daysUntilDue) {
     if (daysUntilDue === 1) return "Due tomorrow";
     return `Due in ${daysUntilDue} days`;
+  }
+
+  function formatGain(value) {
+    return Number(value).toFixed(2).replace(/\.00$/, "");
   }
 
   async function handleUndoDone(habitId) {
@@ -133,26 +143,54 @@ export default function Today() {
 
       <section className="today__section card">
         <h2>Completed</h2>
+        {todayAttributeGains.length > 0 ? (
+          <div className="today__attribute-summary">
+            <span className="today__attribute-summary-label">Attributes increased today</span>
+            <div className="today__attribute-chips">
+              {todayAttributeGains.map((gain) => (
+                <span key={gain.attributeId} className="today__attribute-chip">
+                  {gain.attributeName} +{gain.weight.toFixed(2).replace(/\.00$/, "")}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {completedToday.length === 0 ? (
           <p className="today__empty">No tasks completed yet today.</p>
         ) : (
           <ul className="today__completed-list">
-            {completedToday.map((habit) => (
-              <li key={habit.id} className="today__completed-item">
-                <div>
-                  <span>{habit.name}</span>
-                  <small>Done on {todayISO}</small>
-                </div>
-                <button
-                  className="today__undo-btn"
-                  type="button"
-                  onClick={() => handleUndoDone(habit.id)}
-                  disabled={isPersisting}
-                >
-                  {pendingCompletedHabitId === habit.id ? "Saving..." : "Undo"}
-                </button>
-              </li>
-            ))}
+            {completedToday.map((habit) => {
+              const attributeGains = getHabitAttributeGains(habit, attributes);
+
+              return (
+                <li key={habit.id} className="today__completed-item">
+                  <div>
+                    <span>{habit.name}</span>
+                    <small>Done on {todayISO}</small>
+                    {attributeGains.length > 0 ? (
+                      <div className="today__completed-attributes">
+                        {attributeGains.map((gain) => (
+                          <span
+                            key={gain.attributeId}
+                            className="today__attribute-chip today__attribute-chip--inline"
+                          >
+                            {gain.attributeName} +{formatGain(gain.weight)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <button
+                    className="today__undo-btn"
+                    type="button"
+                    onClick={() => handleUndoDone(habit.id)}
+                    disabled={isPersisting}
+                  >
+                    {pendingCompletedHabitId === habit.id ? "Saving..." : "Undo"}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
