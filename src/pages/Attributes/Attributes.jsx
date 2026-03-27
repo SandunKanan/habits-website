@@ -8,6 +8,7 @@ export default function Attributes() {
     todayISO,
     attributes,
     habits,
+    vision,
     onAddAttribute,
     onUpdateAttribute,
     onDeleteAttribute,
@@ -27,6 +28,11 @@ export default function Attributes() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
   const attributeSummaries = buildAttributeSummaries(attributes, habits, todayISO);
+  const focusAttributeIds = new Set(
+    Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
+  );
+  const focusedSummaries = attributeSummaries.filter(({ attribute }) => focusAttributeIds.has(attribute.id));
+  const otherSummaries = attributeSummaries.filter(({ attribute }) => !focusAttributeIds.has(attribute.id));
 
   async function handleAddAttribute(e) {
     e.preventDefault();
@@ -104,6 +110,127 @@ export default function Attributes() {
     }
 
     setPendingDeleteId("");
+  }
+
+  function renderAttributeCard(
+    { attribute, score, decayRate, linkedHabitCount, contributors },
+    { isFocused = false } = {}
+  ) {
+    const isEditing = editingId === attribute.id;
+
+    return (
+      <article
+        key={attribute.id}
+        className={["attributes__item card", isFocused ? "attributes__item--focus" : ""]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {isEditing ? (
+          <form className="attributes__edit" onSubmit={handleSaveEdit}>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              disabled={isSavingEdit || isPersisting}
+              required
+            />
+            <label className="attributes__decay-toggle">
+              <input
+                type="checkbox"
+                checked={editHasDecay}
+                onChange={(e) => setEditHasDecay(e.target.checked)}
+                disabled={isSavingEdit || isPersisting}
+              />
+              <span>Use decay</span>
+            </label>
+            {editHasDecay ? (
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={editDecayRate}
+                onChange={(e) => setEditDecayRate(e.target.value)}
+                disabled={isSavingEdit || isPersisting}
+                placeholder="Daily decay"
+                required
+              />
+            ) : null}
+            <div className="attributes__edit-actions">
+              <button type="submit" disabled={isSavingEdit || isPersisting}>
+                {isSavingEdit || isPersisting ? "Saving..." : "Save"}
+              </button>
+              <button type="button" onClick={cancelEdit} disabled={isSavingEdit || isPersisting}>
+                Cancel
+              </button>
+            </div>
+            {editFeedback ? <p className="attributes__feedback">{editFeedback}</p> : null}
+          </form>
+        ) : (
+          <>
+            <div className="attributes__item-head">
+              <div>
+                <h3>
+                  {attribute.name}
+                  {isFocused ? <span className="attributes__focus-badge">Focus</span> : null}
+                </h3>
+                <p>{attribute.slug}</p>
+              </div>
+              <div className="attributes__item-actions">
+                <button type="button" onClick={() => startEdit(attribute)} disabled={isPersisting}>
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="attributes__delete-btn"
+                  onClick={() => handleDeleteAttribute(attribute)}
+                  disabled={isPersisting}
+                >
+                  {pendingDeleteId === attribute.id ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+
+            <dl className="attributes__details">
+              <div>
+                <dt>Score</dt>
+                <dd>{score.toFixed(2)}</dd>
+              </div>
+              <div>
+                <dt>Linked habits</dt>
+                <dd>{linkedHabitCount}</dd>
+              </div>
+              <div>
+                <dt>Daily decay</dt>
+                <dd>{decayRate > 0 ? decayRate.toFixed(2) : "Off"}</dd>
+              </div>
+              <div>
+                <dt>Created at</dt>
+                <dd>{attribute.createdAt ? String(attribute.createdAt).slice(0, 10) : "Unknown"}</dd>
+              </div>
+            </dl>
+
+            <div className="attributes__contributors">
+              <h4>Top contributors</h4>
+              {contributors.length === 0 ? (
+                <p className="attributes__contributors-empty">No habits linked yet.</p>
+              ) : (
+                <ul className="attributes__contributors-list">
+                  {contributors.slice(0, 3).map((contributor) => (
+                    <li key={contributor.habitId}>
+                      <span>{contributor.habitName}</span>
+                      <small>
+                        {contributor.completionCount} completions × {contributor.weight} ={" "}
+                        {contributor.contribution.toFixed(2)}
+                      </small>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+      </article>
+    );
   }
 
   return (
@@ -202,117 +329,33 @@ export default function Attributes() {
             </p>
           </article>
         ) : (
-          attributeSummaries.map(({ attribute, score, decayRate, linkedHabitCount, contributors }) => {
-            const isEditing = editingId === attribute.id;
+          <>
+            {focusedSummaries.length > 0 ? (
+              <div className="attributes__group">
+                <div className="attributes__group-head">
+                  <h3>Current focus</h3>
+                  <p>These attributes are currently emphasized on your Vision page.</p>
+                </div>
+                <div className="attributes__group-list">
+                  {focusedSummaries.map((summary) => renderAttributeCard(summary, { isFocused: true }))}
+                </div>
+              </div>
+            ) : null}
 
-            return (
-              <article key={attribute.id} className="attributes__item card">
-                {isEditing ? (
-                  <form className="attributes__edit" onSubmit={handleSaveEdit}>
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      disabled={isSavingEdit || isPersisting}
-                      required
-                    />
-                    <label className="attributes__decay-toggle">
-                      <input
-                        type="checkbox"
-                        checked={editHasDecay}
-                        onChange={(e) => setEditHasDecay(e.target.checked)}
-                        disabled={isSavingEdit || isPersisting}
-                      />
-                      <span>Use decay</span>
-                    </label>
-                    {editHasDecay ? (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={editDecayRate}
-                        onChange={(e) => setEditDecayRate(e.target.value)}
-                        disabled={isSavingEdit || isPersisting}
-                        placeholder="Daily decay"
-                        required
-                      />
-                    ) : null}
-                    <div className="attributes__edit-actions">
-                      <button type="submit" disabled={isSavingEdit || isPersisting}>
-                        {isSavingEdit || isPersisting ? "Saving..." : "Save"}
-                      </button>
-                      <button type="button" onClick={cancelEdit} disabled={isSavingEdit || isPersisting}>
-                        Cancel
-                      </button>
-                    </div>
-                    {editFeedback ? <p className="attributes__feedback">{editFeedback}</p> : null}
-                  </form>
-                ) : (
-                  <>
-                    <div className="attributes__item-head">
-                      <div>
-                        <h3>{attribute.name}</h3>
-                        <p>{attribute.slug}</p>
-                      </div>
-                      <div className="attributes__item-actions">
-                        <button type="button" onClick={() => startEdit(attribute)} disabled={isPersisting}>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="attributes__delete-btn"
-                          onClick={() => handleDeleteAttribute(attribute)}
-                          disabled={isPersisting}
-                        >
-                          {pendingDeleteId === attribute.id ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <dl className="attributes__details">
-                      <div>
-                        <dt>Score</dt>
-                        <dd>{score.toFixed(2)}</dd>
-                      </div>
-                      <div>
-                        <dt>Linked habits</dt>
-                        <dd>{linkedHabitCount}</dd>
-                      </div>
-                      <div>
-                        <dt>Daily decay</dt>
-                        <dd>{decayRate > 0 ? decayRate.toFixed(2) : "Off"}</dd>
-                      </div>
-                      <div>
-                        <dt>Created at</dt>
-                        <dd>{attribute.createdAt ? String(attribute.createdAt).slice(0, 10) : "Unknown"}</dd>
-                      </div>
-                    </dl>
-
-                    <div className="attributes__contributors">
-                      <h4>Top contributors</h4>
-                      {contributors.length === 0 ? (
-                        <p className="attributes__contributors-empty">
-                          No habits linked yet.
-                        </p>
-                      ) : (
-                        <ul className="attributes__contributors-list">
-                          {contributors.slice(0, 3).map((contributor) => (
-                            <li key={contributor.habitId}>
-                              <span>{contributor.habitName}</span>
-                              <small>
-                                {contributor.completionCount} completions × {contributor.weight} ={" "}
-                                {contributor.contribution.toFixed(2)}
-                              </small>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </>
-                )}
-              </article>
-            );
-          })
+            {otherSummaries.length > 0 ? (
+              <div className="attributes__group">
+                {focusedSummaries.length > 0 ? (
+                  <div className="attributes__group-head">
+                    <h3>All attributes</h3>
+                    <p>The rest of your attribute library.</p>
+                  </div>
+                ) : null}
+                <div className="attributes__group-list">
+                  {otherSummaries.map((summary) => renderAttributeCard(summary))}
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </section>
     </div>

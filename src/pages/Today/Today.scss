@@ -127,6 +127,12 @@
   line-height: 1;
 }
 
+.today__attribute-chip--focus {
+  border-color: rgba(225, 97, 97, 0.45);
+  background: rgba(225, 97, 97, 0.14);
+  color: rgb(252, 163, 163);
+}
+
 .today__attribute-chip--inline {
   padding: 5px 9px;
   font-size: 0.8rem;

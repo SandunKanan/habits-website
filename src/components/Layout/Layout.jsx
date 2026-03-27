@@ -77,7 +77,7 @@ export default function Layout({
       subtitle: "The life this system is meant to support",
       meta: (
         <>
-          Current season: <b>{vision?.currentSeason || "Not set"}</b>
+          Focus attributes: <b>{Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds.length : 0}</b>
         </>
       )
     },

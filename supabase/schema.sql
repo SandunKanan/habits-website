@@ -66,6 +66,15 @@ create table if not exists public.visions (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.vision_focus_attributes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  attribute_id uuid not null references public.attributes (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id, attribute_id)
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -83,6 +92,8 @@ create index if not exists habit_attribute_links_user_id_idx on public.habit_att
 create index if not exists habit_attribute_links_habit_id_idx on public.habit_attribute_links (habit_id);
 create index if not exists habit_attribute_links_attribute_id_idx on public.habit_attribute_links (attribute_id);
 create index if not exists visions_user_id_idx on public.visions (user_id);
+create index if not exists vision_focus_attributes_user_id_idx on public.vision_focus_attributes (user_id);
+create index if not exists vision_focus_attributes_attribute_id_idx on public.vision_focus_attributes (attribute_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
@@ -90,6 +101,7 @@ alter table public.habit_skips enable row level security;
 alter table public.attributes enable row level security;
 alter table public.habit_attribute_links enable row level security;
 alter table public.visions enable row level security;
+alter table public.vision_focus_attributes enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -163,11 +175,31 @@ create policy "Users can read own vision"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own vision focus attributes" on public.vision_focus_attributes;
+create policy "Users can read own vision focus attributes"
+  on public.vision_focus_attributes
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can insert own vision" on public.visions;
 create policy "Users can insert own vision"
   on public.visions
   for insert
   with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own vision focus attributes" on public.vision_focus_attributes;
+create policy "Users can insert own vision focus attributes"
+  on public.vision_focus_attributes
+  for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.attributes
+      where public.attributes.id = attribute_id
+        and public.attributes.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can update own vision" on public.visions;
 create policy "Users can update own vision"
@@ -176,9 +208,30 @@ create policy "Users can update own vision"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own vision focus attributes" on public.vision_focus_attributes;
+create policy "Users can update own vision focus attributes"
+  on public.vision_focus_attributes
+  for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.attributes
+      where public.attributes.id = attribute_id
+        and public.attributes.user_id = auth.uid()
+    )
+  );
+
 drop policy if exists "Users can delete own vision" on public.visions;
 create policy "Users can delete own vision"
   on public.visions
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own vision focus attributes" on public.vision_focus_attributes;
+create policy "Users can delete own vision focus attributes"
+  on public.vision_focus_attributes
   for delete
   using (auth.uid() = user_id);
 

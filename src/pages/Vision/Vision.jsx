@@ -3,20 +3,30 @@ import { useOutletContext } from "react-router-dom";
 import "./Vision.scss";
 
 export default function Vision() {
-  const { vision, onSaveVision, isPersisting } = useOutletContext();
+  const { vision, attributes, onSaveVision, isPersisting } = useOutletContext();
   const [idealSelf, setIdealSelf] = useState("");
   const [idealLife, setIdealLife] = useState("");
-  const [currentSeason, setCurrentSeason] = useState("");
-  const [seasonIntention, setSeasonIntention] = useState("");
+  const [currentFocus, setCurrentFocus] = useState("");
+  const [focusIntention, setFocusIntention] = useState("");
+  const [focusAttributeIds, setFocusAttributeIds] = useState([]);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setIdealSelf(vision?.idealSelf ?? "");
     setIdealLife(vision?.idealLife ?? "");
-    setCurrentSeason(vision?.currentSeason ?? "");
-    setSeasonIntention(vision?.seasonIntention ?? "");
+    setCurrentFocus(vision?.currentFocus ?? "");
+    setFocusIntention(vision?.focusIntention ?? "");
+    setFocusAttributeIds(Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []);
   }, [vision]);
+
+  function toggleFocusAttribute(attributeId) {
+    setFocusAttributeIds((current) =>
+      current.includes(attributeId)
+        ? current.filter((id) => id !== attributeId)
+        : [...current, attributeId]
+    );
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,8 +37,9 @@ export default function Vision() {
       ...vision,
       idealSelf,
       idealLife,
-      currentSeason,
-      seasonIntention
+      currentFocus,
+      focusIntention,
+      focusAttributeIds
     });
 
     if (result?.ok) {
@@ -80,29 +91,63 @@ export default function Vision() {
 
           <div className="vision__split">
             <div className="vision__field">
-              <label htmlFor="vision-current-season">Current season</label>
-              <p>What season are you in right now?</p>
+              <label htmlFor="vision-current-focus">Current focus</label>
+              <p>What are you most focused on right now?</p>
               <input
-                id="vision-current-season"
+                id="vision-current-focus"
                 type="text"
-                value={currentSeason}
-                onChange={(e) => setCurrentSeason(e.target.value)}
+                value={currentFocus}
+                onChange={(e) => setCurrentFocus(e.target.value)}
                 placeholder="Example: Rebuilding energy"
                 disabled={isSaving || isPersisting}
               />
             </div>
 
             <div className="vision__field">
-              <label htmlFor="vision-season-intention">What matters most right now</label>
-              <p>What are you trying to prioritize in this season?</p>
+              <label htmlFor="vision-focus-intention">What matters most right now</label>
+              <p>What are you trying to prioritize at the moment?</p>
               <textarea
-                id="vision-season-intention"
-                value={seasonIntention}
-                onChange={(e) => setSeasonIntention(e.target.value)}
+                id="vision-focus-intention"
+                value={focusIntention}
+                onChange={(e) => setFocusIntention(e.target.value)}
                 rows={4}
                 disabled={isSaving || isPersisting}
               />
             </div>
+          </div>
+
+          <div className="vision__field">
+            <label>Focus attributes</label>
+            <p>Choose the attributes you want this period of life to emphasize.</p>
+            {attributes.length === 0 ? (
+              <div className="vision__empty-note">
+                Create attributes first on the Attributes page before selecting focus attributes here.
+              </div>
+            ) : (
+              <div className="vision__attribute-picks">
+                {attributes.map((attribute) => {
+                  const isSelected = focusAttributeIds.includes(attribute.id);
+
+                  return (
+                    <button
+                      key={attribute.id}
+                      type="button"
+                      className={[
+                        "vision__attribute-pick",
+                        isSelected ? "vision__attribute-pick--selected" : ""
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => toggleFocusAttribute(attribute.id)}
+                      disabled={isSaving || isPersisting}
+                      aria-pressed={isSelected}
+                    >
+                      {attribute.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="vision__actions">

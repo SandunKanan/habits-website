@@ -86,6 +86,41 @@
   }
 }
 
+.vision__empty-note {
+  border: 1px dashed $border;
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: $muted;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.vision__attribute-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.vision__attribute-pick {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: $border-strong;
+  }
+}
+
+.vision__attribute-pick--selected {
+  border-color: $border-strong;
+  background: linear-gradient(135deg, rgba(240, 191, 85, 0.16), rgba(143, 211, 255, 0.12));
+}
+
 .vision__actions {
   display: flex;
   align-items: center;

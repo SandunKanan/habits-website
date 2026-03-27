@@ -137,6 +137,32 @@
   gap: 14px;
 }
 
+.attributes__group {
+  display: grid;
+  gap: 14px;
+}
+
+.attributes__group-head {
+  display: grid;
+  gap: 6px;
+
+  h3 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.35rem;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+}
+
+.attributes__group-list {
+  display: grid;
+  gap: 14px;
+}
+
 .attributes__empty {
   padding: 24px;
 }
@@ -164,6 +190,16 @@
   gap: 14px;
 }
 
+.attributes__item--focus {
+  border-color: rgba(225, 97, 97, 0.5);
+  background:
+    radial-gradient(circle at top right, rgba(255, 138, 138, 0.13), transparent 32%),
+    linear-gradient(135deg, rgba(76, 30, 40, 0.65), rgba(35, 24, 32, 0.92)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 28px rgba(79, 19, 29, 0.22);
+}
+
 .attributes__item-head {
   display: flex;
   justify-content: space-between;
@@ -172,6 +208,9 @@
 
   h3 {
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
   }
 
   p {
@@ -180,6 +219,20 @@
     font-size: 0.88rem;
     text-transform: lowercase;
   }
+}
+
+.attributes__focus-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(225, 97, 97, 0.45);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(225, 97, 97, 0.14);
+  color: rgb(252, 163, 163);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .attributes__item-actions,

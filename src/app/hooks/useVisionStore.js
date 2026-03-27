@@ -9,8 +9,9 @@ function buildEmptyVision(userId) {
     userId: userId ?? "",
     idealSelf: "",
     idealLife: "",
-    currentSeason: "",
-    seasonIntention: "",
+    currentFocus: "",
+    focusIntention: "",
+    focusAttributeIds: [],
     createdAt: null,
     updatedAt: null
   };

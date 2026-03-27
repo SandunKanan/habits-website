@@ -17,6 +17,7 @@ export default function Today() {
     curatedTop5,
     lastDoneById,
     attributes,
+    vision,
     skippedTodayIds,
     onMarkDone,
     onSkipToday,
@@ -28,6 +29,9 @@ export default function Today() {
   const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
   const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
   const [pendingUpcomingHabitId, setPendingUpcomingHabitId] = useState("");
+  const focusAttributeIds = new Set(
+    Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
+  );
 
   const todoItems = curatedTop5.filter((item) => {
     const habitId = item.habit.id;
@@ -148,7 +152,15 @@ export default function Today() {
             <span className="today__attribute-summary-label">Attributes increased today</span>
             <div className="today__attribute-chips">
               {todayAttributeGains.map((gain) => (
-                <span key={gain.attributeId} className="today__attribute-chip">
+                <span
+                  key={gain.attributeId}
+                  className={[
+                    "today__attribute-chip",
+                    focusAttributeIds.has(gain.attributeId) ? "today__attribute-chip--focus" : ""
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
                   {gain.attributeName} +{gain.weight.toFixed(2).replace(/\.00$/, "")}
                 </span>
               ))}
@@ -172,7 +184,15 @@ export default function Today() {
                         {attributeGains.map((gain) => (
                           <span
                             key={gain.attributeId}
-                            className="today__attribute-chip today__attribute-chip--inline"
+                            className={[
+                              "today__attribute-chip",
+                              "today__attribute-chip--inline",
+                              focusAttributeIds.has(gain.attributeId)
+                                ? "today__attribute-chip--focus"
+                                : ""
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
                           >
                             {gain.attributeName} +{formatGain(gain.weight)}
                           </span>

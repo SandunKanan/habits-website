@@ -51,8 +51,11 @@ function normalizeVision(vision) {
     userId: String(vision.userId ?? vision.user_id ?? ""),
     idealSelf: String(vision.idealSelf ?? vision.ideal_self ?? "").trim(),
     idealLife: String(vision.idealLife ?? vision.ideal_life ?? "").trim(),
-    currentSeason: String(vision.currentSeason ?? vision.current_season ?? "").trim(),
-    seasonIntention: String(vision.seasonIntention ?? vision.season_intention ?? "").trim(),
+    currentFocus: String(vision.currentFocus ?? vision.current_season ?? "").trim(),
+    focusIntention: String(vision.focusIntention ?? vision.season_intention ?? "").trim(),
+    focusAttributeIds: Array.isArray(vision.focusAttributeIds ?? vision.focus_attribute_ids)
+      ? [...new Set((vision.focusAttributeIds ?? vision.focus_attribute_ids).map(String))]
+      : [],
     createdAt: vision.createdAt ?? vision.created_at ?? null,
     updatedAt: vision.updatedAt ?? vision.updated_at ?? null
   };
@@ -63,8 +66,9 @@ function buildEmptyVision(userId) {
     userId,
     idealSelf: "",
     idealLife: "",
-    currentSeason: "",
-    seasonIntention: "",
+    currentFocus: "",
+    focusIntention: "",
+    focusAttributeIds: [],
     createdAt: null,
     updatedAt: null
   });
@@ -75,22 +79,31 @@ function serializeVisionRow(vision, userId) {
     user_id: userId,
     ideal_self: vision.idealSelf,
     ideal_life: vision.idealLife,
-    current_season: vision.currentSeason,
-    season_intention: vision.seasonIntention
+    current_season: vision.currentFocus,
+    season_intention: vision.focusIntention
   };
 }
 
 export async function loadVisionForSession(accessToken, userId) {
-  const rows = await fetchSupabase(
+  const [rows, focusRows] = await Promise.all([
+    fetchSupabase(
     `/rest/v1/visions?user_id=eq.${userId}&select=user_id,ideal_self,ideal_life,current_season,season_intention,created_at,updated_at&limit=1`,
     accessToken
-  );
+    ),
+    fetchSupabase(
+      `/rest/v1/vision_focus_attributes?user_id=eq.${userId}&select=attribute_id`,
+      accessToken
+    )
+  ]);
 
   if (!Array.isArray(rows) || rows.length === 0) {
     return buildEmptyVision(userId);
   }
 
-  return normalizeVision(rows[0]);
+  return normalizeVision({
+    ...rows[0],
+    focusAttributeIds: Array.isArray(focusRows) ? focusRows.map((row) => row.attribute_id) : []
+  });
 }
 
 export async function saveVisionForSession(accessToken, userId, vision) {
@@ -104,6 +117,41 @@ export async function saveVisionForSession(accessToken, userId, vision) {
     },
     body: JSON.stringify([serializeVisionRow(normalized, userId)])
   });
+
+  const existingFocusRows = await fetchSupabase(
+    `/rest/v1/vision_focus_attributes?user_id=eq.${userId}&select=id,attribute_id`,
+    accessToken
+  );
+  const existingByAttributeId = new Map(
+    (Array.isArray(existingFocusRows) ? existingFocusRows : []).map((row) => [row.attribute_id, row])
+  );
+  const nextAttributeIds = new Set(normalized.focusAttributeIds);
+  const idsToDelete = (Array.isArray(existingFocusRows) ? existingFocusRows : [])
+    .filter((row) => !nextAttributeIds.has(row.attribute_id))
+    .map((row) => row.id);
+  const rowsToInsert = normalized.focusAttributeIds
+    .filter((attributeId) => !existingByAttributeId.has(attributeId))
+    .map((attributeId) => ({
+      user_id: userId,
+      attribute_id: attributeId
+    }));
+
+  if (idsToDelete.length > 0) {
+    await fetchSupabase(`/rest/v1/vision_focus_attributes?id=in.(${idsToDelete.join(",")})`, accessToken, {
+      method: "DELETE"
+    });
+  }
+
+  if (rowsToInsert.length > 0) {
+    await fetchSupabase("/rest/v1/vision_focus_attributes", accessToken, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates, return=representation"
+      },
+      body: JSON.stringify(rowsToInsert)
+    });
+  }
 
   return loadVisionForSession(accessToken, userId);
 }
