@@ -1,0 +1,109 @@
+@use "../../styles/variables" as *;
+
+.vision {
+  display: grid;
+  gap: 18px;
+}
+
+.vision__hero,
+.vision__section {
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(240, 191, 85, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.vision__hero {
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.vision__eyebrow {
+  margin: 0 0 10px;
+  color: $warn;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.vision__intro {
+  margin: 12px 0 0;
+  max-width: 46rem;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.vision__form {
+  display: grid;
+  gap: 18px;
+}
+
+.vision__field {
+  display: grid;
+  gap: 8px;
+
+  label {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+
+  input,
+  textarea {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    line-height: 1.6;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+.vision__split {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr 1.35fr;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vision__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(240, 191, 85, 0.16), rgba(143, 211, 255, 0.12));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.vision__feedback {
+  margin: 0;
+  color: $accent;
+}

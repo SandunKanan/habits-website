@@ -5,6 +5,7 @@ import Layout from "../components/Layout/Layout.jsx";
 import Today from "../pages/Today/Today.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
+import Vision from "../pages/Vision/Vision.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
 import Admin from "../pages/Admin/Admin.jsx";
@@ -16,6 +17,7 @@ import { useAuthSession } from "./hooks/useAuthSession.js";
 import { useUserRole } from "./hooks/useUserRole.js";
 import { useHabitsStore } from "./hooks/useHabitsStore.js";
 import { useAttributesStore } from "./hooks/useAttributesStore.js";
+import { useVisionStore } from "./hooks/useVisionStore.js";
 import "./App.scss";
 
 export default function App() {
@@ -43,12 +45,19 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const visionStore = useVisionStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
 
   async function handleSignIn(credentials) {
     const result = await auth.handleSignIn(credentials);
     if (result?.ok) {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
+      visionStore.beginLoadingVision();
     }
     return result;
   }
@@ -58,6 +67,7 @@ export default function App() {
     if (result?.ok && !result?.message) {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
+      visionStore.beginLoadingVision();
     }
     return result;
   }
@@ -67,6 +77,7 @@ export default function App() {
     if (result?.ok) {
       habitsStore.beginLoadingHabits();
       attributesStore.beginLoadingAttributes();
+      visionStore.beginLoadingVision();
     }
     return result;
   }
@@ -76,6 +87,7 @@ export default function App() {
     role.resetRoleState();
     habitsStore.resetHabitsState();
     attributesStore.resetAttributesState();
+    visionStore.resetVisionState();
   }
 
   if (authEnabled && !auth.isAuthReady) {
@@ -86,12 +98,16 @@ export default function App() {
     return <div className="appstatus card">Loading account access...</div>;
   }
 
-  if (habitsStore.isLoading || attributesStore.isLoading) {
+  if (habitsStore.isLoading || attributesStore.isLoading || visionStore.isLoading) {
     return <div className="appstatus card">Loading habits...</div>;
   }
 
-  if (habitsStore.loadError || attributesStore.loadError) {
-    return <div className="appstatus card">{habitsStore.loadError || attributesStore.loadError}</div>;
+  if (habitsStore.loadError || attributesStore.loadError || visionStore.loadError) {
+    return (
+      <div className="appstatus card">
+        {habitsStore.loadError || attributesStore.loadError || visionStore.loadError}
+      </div>
+    );
   }
 
   if (authEnabled && !auth.session) {
@@ -116,12 +132,14 @@ export default function App() {
             curatedTop5={habitsStore.curatedTop5}
             lastDoneById={habitsStore.lastDoneById}
             attributes={attributesStore.attributes}
+            vision={visionStore.vision}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
             onDeleteHabit={habitsStore.deleteHabit}
             onAddAttribute={attributesStore.addAttribute}
             onUpdateAttribute={attributesStore.updateAttribute}
             onDeleteAttribute={attributesStore.deleteAttribute}
+            onSaveVision={visionStore.saveVision}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
             onUndoSubtaskDoneToday={habitsStore.undoSubtaskDoneToday}
@@ -132,7 +150,9 @@ export default function App() {
             onUndoSkipToday={habitsStore.undoSkipToday}
             completionLog={habitsStore.completionLog}
             skippedTodayIds={habitsStore.skippedTodayIds}
-            isPersisting={habitsStore.isPersisting || attributesStore.isPersisting}
+            isPersisting={
+              habitsStore.isPersisting || attributesStore.isPersisting || visionStore.isPersisting
+            }
             authUser={auth.authUser}
             isAdmin={role.isAdmin}
             session={auth.session}
@@ -144,6 +164,7 @@ export default function App() {
         <Route path="/today" element={<Today />} />
         <Route path="/habits" element={<Habits />} />
         <Route path="/attributes" element={<Attributes />} />
+        <Route path="/vision" element={<Vision />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />
         <Route path="/admin" element={<Admin />} />

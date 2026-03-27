@@ -56,6 +56,16 @@ create table if not exists public.habit_attribute_links (
   unique (habit_id, attribute_id)
 );
 
+create table if not exists public.visions (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  ideal_self text not null default '',
+  ideal_life text not null default '',
+  current_season text not null default '',
+  season_intention text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -72,12 +82,14 @@ create index if not exists attributes_user_id_idx on public.attributes (user_id)
 create index if not exists habit_attribute_links_user_id_idx on public.habit_attribute_links (user_id);
 create index if not exists habit_attribute_links_habit_id_idx on public.habit_attribute_links (habit_id);
 create index if not exists habit_attribute_links_attribute_id_idx on public.habit_attribute_links (attribute_id);
+create index if not exists visions_user_id_idx on public.visions (user_id);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
 alter table public.habit_skips enable row level security;
 alter table public.attributes enable row level security;
 alter table public.habit_attribute_links enable row level security;
+alter table public.visions enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -143,6 +155,31 @@ drop policy if exists "Users can read own habit attribute links" on public.habit
 create policy "Users can read own habit attribute links"
   on public.habit_attribute_links
   for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own vision" on public.visions;
+create policy "Users can read own vision"
+  on public.visions
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own vision" on public.visions;
+create policy "Users can insert own vision"
+  on public.visions
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own vision" on public.visions;
+create policy "Users can update own vision"
+  on public.visions
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own vision" on public.visions;
+create policy "Users can delete own vision"
+  on public.visions
+  for delete
   using (auth.uid() = user_id);
 
 drop policy if exists "Users can insert own habit attribute links" on public.habit_attribute_links;

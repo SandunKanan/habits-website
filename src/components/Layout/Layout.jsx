@@ -9,12 +9,14 @@ export default function Layout({
   curatedTop5,
   lastDoneById,
   attributes,
+  vision,
   onAddHabit,
   onUpdateHabit,
   onDeleteHabit,
   onAddAttribute,
   onUpdateAttribute,
   onDeleteAttribute,
+  onSaveVision,
   onAddSubtask,
   onMarkSubtaskDoneToday,
   onUndoSubtaskDoneToday,
@@ -70,6 +72,15 @@ export default function Layout({
         </>
       )
     },
+    "/vision": {
+      title: "Vision",
+      subtitle: "The life this system is meant to support",
+      meta: (
+        <>
+          Current season: <b>{vision?.currentSeason || "Not set"}</b>
+        </>
+      )
+    },
     "/help": {
       title: "Help",
       subtitle: "How the app works",
@@ -112,12 +123,14 @@ export default function Layout({
               curatedTop5,
               lastDoneById,
               attributes,
+              vision,
               onAddHabit,
               onUpdateHabit,
               onDeleteHabit,
               onAddAttribute,
               onUpdateAttribute,
               onDeleteAttribute,
+              onSaveVision,
               onAddSubtask,
               onMarkSubtaskDoneToday,
               onUndoSubtaskDoneToday,
