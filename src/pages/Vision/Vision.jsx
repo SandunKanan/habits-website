@@ -55,19 +55,19 @@ export default function Vision() {
     <div className="vision">
       <section className="vision__hero card">
         <p className="vision__eyebrow">Direction</p>
-        <h2>Define where this is all pointing</h2>
+        <h2>Your Ideal Self</h2>
         <p className="vision__intro">
-          This page is the top layer of the system. Habits shape attributes, and attributes help
-          build the kind of person and life you want. For now, use this page to describe that
-          direction in your own words.
+          This page is about the person you want to become. Let it stay reflective and honest.
+          Habits and attributes can support this vision, but this page is where you define the
+          deeper direction underneath them.
         </p>
       </section>
 
       <section className="vision__section card">
         <form className="vision__form" onSubmit={handleSubmit}>
           <div className="vision__field">
-            <label htmlFor="vision-ideal-self">Ideal self</label>
-            <p>Who are you trying to become?</p>
+            <label htmlFor="vision-ideal-self">Envision</label>
+            <p>What does the biggest, brightest, most content version of yourself look like?</p>
             <textarea
               id="vision-ideal-self"
               value={idealSelf}
@@ -78,8 +78,8 @@ export default function Vision() {
           </div>
 
           <div className="vision__field">
-            <label htmlFor="vision-ideal-life">Ideal life</label>
-            <p>What does a good life look and feel like for you?</p>
+            <label htmlFor="vision-ideal-life">Feel</label>
+            <p>How does life feel when you are living as this version of yourself?</p>
             <textarea
               id="vision-ideal-life"
               value={idealLife}
@@ -91,21 +91,24 @@ export default function Vision() {
 
           <div className="vision__split">
             <div className="vision__field">
-              <label htmlFor="vision-current-focus">Current focus</label>
-              <p>What are you most focused on right now?</p>
+              <label htmlFor="vision-current-focus">Identify</label>
+              <p>What patterns currently block you from becoming this version of yourself?</p>
               <input
                 id="vision-current-focus"
                 type="text"
                 value={currentFocus}
                 onChange={(e) => setCurrentFocus(e.target.value)}
-                placeholder="Example: Rebuilding energy"
+                placeholder="Example: Avoidance, overcommitting, self-doubt"
                 disabled={isSaving || isPersisting}
               />
             </div>
 
             <div className="vision__field">
-              <label htmlFor="vision-focus-intention">What matters most right now</label>
-              <p>What are you trying to prioritize at the moment?</p>
+              <label htmlFor="vision-focus-intention">Create</label>
+              <p>
+                What new patterns in your thoughts, words, and actions would move you closer to
+                this version of yourself?
+              </p>
               <textarea
                 id="vision-focus-intention"
                 value={focusIntention}

@@ -50,11 +50,10 @@ export default function Focus() {
     <div className="focuspage">
       <section className="focuspage__hero card">
         <p className="focuspage__eyebrow">Current period</p>
-        <h2>Define your current focus</h2>
+        <h2>Current Focus</h2>
         <p className="focuspage__intro">
-          This page is about the stretch of life you are in right now. Use it to define what this
-          focus period is, why it matters, what you want to be true by the end, and what is likely
-          to get in the way.
+          This page is for the block you are in right now. Keep it simple: define what this block
+          is about, who you want to be by the end of it, and what is most likely to get in the way.
         </p>
       </section>
 
@@ -62,7 +61,7 @@ export default function Focus() {
         <form className="focuspage__form" onSubmit={handleSubmit}>
           <div className="focuspage__field">
             <label htmlFor="focus-title">Focus title</label>
-            <p>Give this period a short name.</p>
+            <p>Give this block a short name.</p>
             <input
               id="focus-title"
               type="text"
@@ -98,8 +97,8 @@ export default function Focus() {
           </div>
 
           <div className="focuspage__field">
-            <label htmlFor="focus-why-now">Why this matters now</label>
-            <p>Why is this the right thing to focus on at the moment?</p>
+            <label htmlFor="focus-why-now">What is your main focus for this block?</label>
+            <p>What is this block really about?</p>
             <textarea
               id="focus-why-now"
               value={whyNow}
@@ -110,8 +109,8 @@ export default function Focus() {
           </div>
 
           <div className="focuspage__field">
-            <label htmlFor="focus-end-state">How you want to be by the end</label>
-            <p>Describe the version of yourself you want to reach by the end of this focus period.</p>
+            <label htmlFor="focus-end-state">Who do you want to be by the end of this block?</label>
+            <p>Describe how you want to see yourself after this.</p>
             <textarea
               id="focus-end-state"
               value={endState}
@@ -122,8 +121,8 @@ export default function Focus() {
           </div>
 
           <div className="focuspage__field">
-            <label htmlFor="focus-obstacles">Current obstacles</label>
-            <p>What is most likely to get in the way right now?</p>
+            <label htmlFor="focus-obstacles">What is getting in the way, or likely to get in the way?</label>
+            <p>Name the obstacles clearly so this block stays realistic.</p>
             <textarea
               id="focus-obstacles"
               value={currentObstacles}
