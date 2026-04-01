@@ -11,6 +11,7 @@ export default function Layout({
   attributes,
   vision,
   focus,
+  learnings,
   settings,
   onAddHabit,
   onUpdateHabit,
@@ -20,6 +21,9 @@ export default function Layout({
   onDeleteAttribute,
   onSaveVision,
   onSaveFocus,
+  onAddLearningItem,
+  onUpdateLearningItem,
+  onDeleteLearningItem,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -94,6 +98,15 @@ export default function Layout({
         </>
       )
     },
+    "/learnings": {
+      title: "Learnings",
+      subtitle: "Courses, projects, and things you want to work on",
+      meta: (
+        <>
+          Active items: <b>{learnings.filter((item) => item.status === "active").length}</b>
+        </>
+      )
+    },
     "/settings": {
       title: "Settings",
       subtitle: "Display and behavior preferences",
@@ -147,6 +160,7 @@ export default function Layout({
               attributes,
               vision,
               focus,
+              learnings,
               settings,
               onAddHabit,
               onUpdateHabit,
@@ -156,6 +170,9 @@ export default function Layout({
               onDeleteAttribute,
               onSaveVision,
               onSaveFocus,
+              onAddLearningItem,
+              onUpdateLearningItem,
+              onDeleteLearningItem,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,

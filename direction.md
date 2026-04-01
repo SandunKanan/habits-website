@@ -34,4 +34,4 @@ This page list all the things the user might like to learn or work on. Courses t
 ---
 
 Overall Website Comments:
-The website is starting to look more complete. However, the addition of all these pages is starting to clutter the space
+The website is starting to look more complete. However, the addition of all these pages is starting to clutter the header with too many page, and overall the many pages can feel overwhelming for users.

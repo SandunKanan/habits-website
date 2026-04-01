@@ -7,6 +7,7 @@ import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
 import Vision from "../pages/Vision/Vision.jsx";
 import Focus from "../pages/Focus/Focus.jsx";
+import Learnings from "../pages/Learnings/Learnings.jsx";
 import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
@@ -21,6 +22,7 @@ import { useHabitsStore } from "./hooks/useHabitsStore.js";
 import { useAttributesStore } from "./hooks/useAttributesStore.js";
 import { useVisionStore } from "./hooks/useVisionStore.js";
 import { useFocusStore } from "./hooks/useFocusStore.js";
+import { useLearningsStore } from "./hooks/useLearningsStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
 
@@ -61,6 +63,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const learningsStore = useLearningsStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const settingsStore = useSettingsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -75,6 +83,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -87,6 +96,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -99,6 +109,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -111,6 +122,7 @@ export default function App() {
     attributesStore.resetAttributesState();
     visionStore.resetVisionState();
     focusStore.resetFocusState();
+    learningsStore.resetLearningsState();
     settingsStore.resetSettingsState();
   }
 
@@ -127,6 +139,7 @@ export default function App() {
     attributesStore.isLoading ||
     visionStore.isLoading ||
     focusStore.isLoading ||
+    learningsStore.isLoading ||
     settingsStore.isLoading
   ) {
     return <div className="appstatus card">Loading habits...</div>;
@@ -137,6 +150,7 @@ export default function App() {
     attributesStore.loadError ||
     visionStore.loadError ||
     focusStore.loadError ||
+    learningsStore.loadError ||
     settingsStore.loadError
   ) {
     return (
@@ -145,6 +159,7 @@ export default function App() {
           attributesStore.loadError ||
           visionStore.loadError ||
           focusStore.loadError ||
+          learningsStore.loadError ||
           settingsStore.loadError}
       </div>
     );
@@ -174,6 +189,7 @@ export default function App() {
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
             focus={focusStore.focus}
+            learnings={learningsStore.learnings}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
@@ -183,6 +199,9 @@ export default function App() {
             onDeleteAttribute={attributesStore.deleteAttribute}
             onSaveVision={visionStore.saveVision}
             onSaveFocus={focusStore.saveFocus}
+            onAddLearningItem={learningsStore.addLearningItem}
+            onUpdateLearningItem={learningsStore.updateLearningItem}
+            onDeleteLearningItem={learningsStore.deleteLearningItem}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
@@ -199,6 +218,7 @@ export default function App() {
               attributesStore.isPersisting ||
               visionStore.isPersisting ||
               focusStore.isPersisting ||
+              learningsStore.isPersisting ||
               settingsStore.isPersisting
             }
             authUser={auth.authUser}
@@ -214,6 +234,7 @@ export default function App() {
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/vision" element={<Vision />} />
         <Route path="/focus" element={<Focus />} />
+        <Route path="/learnings" element={<Learnings />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />

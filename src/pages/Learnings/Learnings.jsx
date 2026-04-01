@@ -1,0 +1,426 @@
+import React, { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import "./Learnings.scss";
+
+const TYPE_OPTIONS = [
+  { value: "learning", label: "Learning" },
+  { value: "course", label: "Course" },
+  { value: "project", label: "Project" }
+];
+
+const STATUS_OPTIONS = [
+  { value: "idea", label: "Idea" },
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+  { value: "completed", label: "Completed" }
+];
+
+const STATUS_ORDER = {
+  active: 0,
+  idea: 1,
+  paused: 2,
+  completed: 3
+};
+
+function formatItemType(itemType) {
+  return TYPE_OPTIONS.find((option) => option.value === itemType)?.label ?? "Learning";
+}
+
+function formatStatus(status) {
+  return STATUS_OPTIONS.find((option) => option.value === status)?.label ?? "Idea";
+}
+
+export default function Learnings() {
+  const { learnings, onAddLearningItem, onUpdateLearningItem, onDeleteLearningItem, isPersisting } =
+    useOutletContext();
+  const [title, setTitle] = useState("");
+  const [itemType, setItemType] = useState("learning");
+  const [priority, setPriority] = useState("3");
+  const [status, setStatus] = useState("idea");
+  const [notes, setNotes] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingId, setEditingId] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editItemType, setEditItemType] = useState("learning");
+  const [editPriority, setEditPriority] = useState("3");
+  const [editStatus, setEditStatus] = useState("idea");
+  const [editNotes, setEditNotes] = useState("");
+  const [editFeedback, setEditFeedback] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState("");
+
+  const sortedLearnings = useMemo(() => {
+    return [...learnings].sort((a, b) => {
+      const statusDifference = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+      if (statusDifference !== 0) {
+        return statusDifference;
+      }
+
+      const priorityDifference = Number(b.priority ?? 0) - Number(a.priority ?? 0);
+      if (priorityDifference !== 0) {
+        return priorityDifference;
+      }
+
+      return String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? ""));
+    });
+  }, [learnings]);
+
+  const activeCount = sortedLearnings.filter((item) => item.status === "active").length;
+  const projectCount = sortedLearnings.filter((item) => item.itemType === "project").length;
+
+  async function handleAddItem(e) {
+    e.preventDefault();
+    setFeedback("");
+    setIsSaving(true);
+
+    const result = await onAddLearningItem({
+      title,
+      itemType,
+      priority,
+      status,
+      notes
+    });
+
+    if (result?.ok) {
+      setTitle("");
+      setItemType("learning");
+      setPriority("3");
+      setStatus("idea");
+      setNotes("");
+      setFeedback("Item added.");
+    } else {
+      setFeedback(result?.error ?? "Could not add item.");
+    }
+
+    setIsSaving(false);
+  }
+
+  function startEdit(item) {
+    setEditingId(item.id);
+    setEditTitle(item.title);
+    setEditItemType(item.itemType);
+    setEditPriority(String(item.priority ?? 3));
+    setEditStatus(item.status);
+    setEditNotes(item.notes ?? "");
+    setEditFeedback("");
+  }
+
+  function cancelEdit() {
+    setEditingId("");
+    setEditTitle("");
+    setEditItemType("learning");
+    setEditPriority("3");
+    setEditStatus("idea");
+    setEditNotes("");
+    setEditFeedback("");
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    if (!editingId) return;
+
+    setIsSavingEdit(true);
+    setEditFeedback("");
+
+    const result = await onUpdateLearningItem(editingId, {
+      title: editTitle,
+      itemType: editItemType,
+      priority: editPriority,
+      status: editStatus,
+      notes: editNotes
+    });
+
+    if (result?.ok) {
+      setEditingId("");
+      setFeedback("Item updated.");
+    } else {
+      setEditFeedback(result?.error ?? "Could not update item.");
+    }
+
+    setIsSavingEdit(false);
+  }
+
+  async function handleDeleteItem(item) {
+    const confirmed = window.confirm(`Delete "${item.title}"?`);
+    if (!confirmed) return;
+
+    setFeedback("");
+    setPendingDeleteId(item.id);
+    const result = await onDeleteLearningItem(item.id);
+
+    if (result?.ok) {
+      if (editingId === item.id) {
+        cancelEdit();
+      }
+      setFeedback("Item deleted.");
+    } else {
+      setFeedback(result?.error ?? "Could not delete item.");
+    }
+
+    setPendingDeleteId("");
+  }
+
+  return (
+    <div className="learningspage">
+      <section className="learningspage__hero card">
+        <p className="learningspage__eyebrow">Learning stack</p>
+        <h2>Keep your learnings and projects in one place</h2>
+        <p className="learningspage__intro">
+          Use this page for courses you want to finish, topics you want to learn, and projects you
+          want to build. The point is not to do everything at once. It is to see the whole field,
+          set priorities, and make it easier to choose what deserves focus now.
+        </p>
+      </section>
+
+      <section className="learningspage__section card">
+        <form className="learningspage__form" onSubmit={handleAddItem}>
+          <div className="learningspage__field">
+            <label htmlFor="learning-title">Title</label>
+            <p>Give the course, learning goal, or project a clear name.</p>
+            <input
+              id="learning-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Example: Learn SQL joins"
+              disabled={isSaving || isPersisting}
+              required
+            />
+          </div>
+
+          <div className="learningspage__grid">
+            <div className="learningspage__field">
+              <label htmlFor="learning-type">Type</label>
+              <select
+                id="learning-type"
+                value={itemType}
+                onChange={(e) => setItemType(e.target.value)}
+                disabled={isSaving || isPersisting}
+              >
+                {TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="learningspage__field">
+              <label htmlFor="learning-priority">Priority</label>
+              <select
+                id="learning-priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                disabled={isSaving || isPersisting}
+              >
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <option key={value} value={String(value)}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="learningspage__field">
+              <label htmlFor="learning-status">Status</label>
+              <select
+                id="learning-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                disabled={isSaving || isPersisting}
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="learningspage__field">
+            <label htmlFor="learning-notes">Notes</label>
+            <p>Add why it matters, what success looks like, or where to pick it back up.</p>
+            <textarea
+              id="learning-notes"
+              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={isSaving || isPersisting}
+              placeholder="Example: Finish the first three modules and build a small practice project."
+            />
+          </div>
+
+          <div className="learningspage__actions">
+            <button type="submit" disabled={isSaving || isPersisting}>
+              {isSaving || isPersisting ? "Saving..." : "Add item"}
+            </button>
+            {feedback ? <p className="learningspage__feedback">{feedback}</p> : null}
+          </div>
+        </form>
+      </section>
+
+      <section className="learningspage__summary">
+        <article className="learningspage__summary-card card">
+          <span>Total items</span>
+          <strong>{sortedLearnings.length}</strong>
+        </article>
+        <article className="learningspage__summary-card card">
+          <span>Active now</span>
+          <strong>{activeCount}</strong>
+        </article>
+        <article className="learningspage__summary-card card">
+          <span>Projects</span>
+          <strong>{projectCount}</strong>
+        </article>
+      </section>
+
+      <section className="learningspage__list">
+        {sortedLearnings.length === 0 ? (
+          <article className="learningspage__empty card">
+            <h3>Nothing here yet</h3>
+            <p>
+              Add the things you want to learn, complete, or build so they stop living in scattered
+              notes and mental tabs.
+            </p>
+          </article>
+        ) : (
+          sortedLearnings.map((item) => {
+            const isEditing = editingId === item.id;
+
+            return (
+              <article key={item.id} className="learningspage__item card">
+                {isEditing ? (
+                  <form className="learningspage__edit" onSubmit={handleSaveEdit}>
+                    <div className="learningspage__field">
+                      <label htmlFor={`edit-learning-title-${item.id}`}>Title</label>
+                      <input
+                        id={`edit-learning-title-${item.id}`}
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        disabled={isSavingEdit || isPersisting}
+                        required
+                      />
+                    </div>
+
+                    <div className="learningspage__grid">
+                      <div className="learningspage__field">
+                        <label htmlFor={`edit-learning-type-${item.id}`}>Type</label>
+                        <select
+                          id={`edit-learning-type-${item.id}`}
+                          value={editItemType}
+                          onChange={(e) => setEditItemType(e.target.value)}
+                          disabled={isSavingEdit || isPersisting}
+                        >
+                          {TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="learningspage__field">
+                        <label htmlFor={`edit-learning-priority-${item.id}`}>Priority</label>
+                        <select
+                          id={`edit-learning-priority-${item.id}`}
+                          value={editPriority}
+                          onChange={(e) => setEditPriority(e.target.value)}
+                          disabled={isSavingEdit || isPersisting}
+                        >
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <option key={value} value={String(value)}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="learningspage__field">
+                        <label htmlFor={`edit-learning-status-${item.id}`}>Status</label>
+                        <select
+                          id={`edit-learning-status-${item.id}`}
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value)}
+                          disabled={isSavingEdit || isPersisting}
+                        >
+                          {STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="learningspage__field">
+                      <label htmlFor={`edit-learning-notes-${item.id}`}>Notes</label>
+                      <textarea
+                        id={`edit-learning-notes-${item.id}`}
+                        rows={4}
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        disabled={isSavingEdit || isPersisting}
+                      />
+                    </div>
+
+                    <div className="learningspage__actions">
+                      <button type="submit" disabled={isSavingEdit || isPersisting}>
+                        {isSavingEdit || isPersisting ? "Saving..." : "Save"}
+                      </button>
+                      <button type="button" onClick={cancelEdit} disabled={isSavingEdit || isPersisting}>
+                        Cancel
+                      </button>
+                      {editFeedback ? <p className="learningspage__feedback">{editFeedback}</p> : null}
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <div className="learningspage__item-head">
+                      <div>
+                        <div className="learningspage__badges">
+                          <span className="learningspage__badge learningspage__badge--type">
+                            {formatItemType(item.itemType)}
+                          </span>
+                          <span className={`learningspage__badge learningspage__badge--${item.status}`}>
+                            {formatStatus(item.status)}
+                          </span>
+                          <span className="learningspage__badge learningspage__badge--priority">
+                            Priority {item.priority}
+                          </span>
+                        </div>
+                        <h3>{item.title}</h3>
+                      </div>
+                      <div className="learningspage__item-actions">
+                        <button type="button" onClick={() => startEdit(item)} disabled={isPersisting}>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="learningspage__delete-btn"
+                          onClick={() => handleDeleteItem(item)}
+                          disabled={isPersisting}
+                        >
+                          {pendingDeleteId === item.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {item.notes ? <p className="learningspage__notes">{item.notes}</p> : null}
+
+                    <div className="learningspage__meta">
+                      <span>Slug: {item.slug}</span>
+                      <span>Updated: {item.updatedAt ? String(item.updatedAt).slice(0, 10) : "Unknown"}</span>
+                    </div>
+                  </>
+                )}
+              </article>
+            );
+          })
+        )}
+      </section>
+    </div>
+  );
+}

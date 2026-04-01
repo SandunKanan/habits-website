@@ -88,6 +88,20 @@ create table if not exists public.focus_periods (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.learning_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  slug text not null,
+  title text not null,
+  item_type text not null check (item_type in ('learning', 'course', 'project')),
+  priority integer not null default 3 check (priority >= 1 and priority <= 5),
+  status text not null default 'idea' check (status in ('idea', 'active', 'paused', 'completed')),
+  notes text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id, slug)
+);
+
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   highlight_focus_attributes boolean not null default true,
@@ -116,6 +130,7 @@ create index if not exists visions_user_id_idx on public.visions (user_id);
 create index if not exists vision_focus_attributes_user_id_idx on public.vision_focus_attributes (user_id);
 create index if not exists vision_focus_attributes_attribute_id_idx on public.vision_focus_attributes (attribute_id);
 create index if not exists focus_periods_user_id_idx on public.focus_periods (user_id);
+create index if not exists learning_items_user_id_idx on public.learning_items (user_id);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
 alter table public.habits enable row level security;
@@ -126,6 +141,7 @@ alter table public.habit_attribute_links enable row level security;
 alter table public.visions enable row level security;
 alter table public.vision_focus_attributes enable row level security;
 alter table public.focus_periods enable row level security;
+alter table public.learning_items enable row level security;
 alter table public.user_settings enable row level security;
 alter table public.user_roles enable row level security;
 
@@ -212,6 +228,12 @@ create policy "Users can read own focus period"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own learning items" on public.learning_items;
+create policy "Users can read own learning items"
+  on public.learning_items
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can read own settings" on public.user_settings;
 create policy "Users can read own settings"
   on public.user_settings
@@ -241,6 +263,12 @@ create policy "Users can insert own vision focus attributes"
 drop policy if exists "Users can insert own focus period" on public.focus_periods;
 create policy "Users can insert own focus period"
   on public.focus_periods
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own learning items" on public.learning_items;
+create policy "Users can insert own learning items"
+  on public.learning_items
   for insert
   with check (auth.uid() = user_id);
 
@@ -279,6 +307,13 @@ create policy "Users can update own focus period"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own learning items" on public.learning_items;
+create policy "Users can update own learning items"
+  on public.learning_items
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 drop policy if exists "Users can update own settings" on public.user_settings;
 create policy "Users can update own settings"
   on public.user_settings
@@ -301,6 +336,12 @@ create policy "Users can delete own vision focus attributes"
 drop policy if exists "Users can delete own focus period" on public.focus_periods;
 create policy "Users can delete own focus period"
   on public.focus_periods
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own learning items" on public.learning_items;
+create policy "Users can delete own learning items"
+  on public.learning_items
   for delete
   using (auth.uid() = user_id);
 

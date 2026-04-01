@@ -1,0 +1,264 @@
+@use "../../styles/variables" as *;
+
+.learningspage {
+  display: grid;
+  gap: 18px;
+}
+
+.learningspage__hero,
+.learningspage__section,
+.learningspage__summary-card,
+.learningspage__item,
+.learningspage__empty {
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.learningspage__hero,
+.learningspage__section,
+.learningspage__item,
+.learningspage__empty {
+  padding: 24px;
+}
+
+.learningspage__hero {
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.learningspage__eyebrow {
+  margin: 0 0 10px;
+  color: $accent;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.learningspage__intro {
+  margin: 12px 0 0;
+  max-width: 48rem;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.learningspage__form,
+.learningspage__edit {
+  display: grid;
+  gap: 18px;
+}
+
+.learningspage__field {
+  display: grid;
+  gap: 8px;
+
+  label {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    line-height: 1.6;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+  }
+}
+
+.learningspage__grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.learningspage__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.learningspage__feedback {
+  margin: 0;
+  color: $accent;
+}
+
+.learningspage__summary {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.learningspage__summary-card {
+  padding: 18px 20px;
+
+  span {
+    display: block;
+    margin-bottom: 10px;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+  }
+
+  strong {
+    font-size: 2rem;
+    line-height: 1;
+  }
+}
+
+.learningspage__list {
+  display: grid;
+  gap: 16px;
+}
+
+.learningspage__empty {
+  h3 {
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.7;
+  }
+}
+
+.learningspage__item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 10px 0 0;
+    font-size: clamp(1.3rem, 2vw, 1.7rem);
+  }
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
+.learningspage__badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.learningspage__badge {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.learningspage__badge--type {
+  border-color: rgba(143, 211, 255, 0.4);
+  color: $accent;
+}
+
+.learningspage__badge--priority {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.learningspage__badge--active {
+  border-color: rgba(82, 214, 195, 0.45);
+  color: rgba(82, 214, 195, 0.98);
+}
+
+.learningspage__badge--idea {
+  border-color: rgba(143, 211, 255, 0.4);
+  color: $accent;
+}
+
+.learningspage__badge--paused {
+  border-color: rgba(255, 204, 143, 0.4);
+  color: rgba(255, 204, 143, 0.95);
+}
+
+.learningspage__badge--completed {
+  border-color: rgba(188, 255, 188, 0.35);
+  color: rgba(188, 255, 188, 0.94);
+}
+
+.learningspage__item-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.learningspage__delete-btn {
+  color: rgb(248, 113, 113);
+  border-color: rgba(255, 107, 107, 0.5) !important;
+}
+
+.learningspage__notes {
+  margin: 0;
+  color: $muted;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.learningspage__meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  color: $muted;
+  font-size: 0.92rem;
+}
