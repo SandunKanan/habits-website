@@ -35,7 +35,6 @@ export default function Learnings() {
     useOutletContext();
   const [title, setTitle] = useState("");
   const [itemType, setItemType] = useState("learning");
-  const [priority, setPriority] = useState("3");
   const [status, setStatus] = useState("idea");
   const [notes, setNotes] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -43,7 +42,6 @@ export default function Learnings() {
   const [editingId, setEditingId] = useState("");
   const [editTitle, setEditTitle] = useState("");
   const [editItemType, setEditItemType] = useState("learning");
-  const [editPriority, setEditPriority] = useState("3");
   const [editStatus, setEditStatus] = useState("idea");
   const [editNotes, setEditNotes] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
@@ -55,11 +53,6 @@ export default function Learnings() {
       const statusDifference = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
       if (statusDifference !== 0) {
         return statusDifference;
-      }
-
-      const priorityDifference = Number(b.priority ?? 0) - Number(a.priority ?? 0);
-      if (priorityDifference !== 0) {
-        return priorityDifference;
       }
 
       return String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? ""));
@@ -77,7 +70,6 @@ export default function Learnings() {
     const result = await onAddLearningItem({
       title,
       itemType,
-      priority,
       status,
       notes
     });
@@ -85,7 +77,6 @@ export default function Learnings() {
     if (result?.ok) {
       setTitle("");
       setItemType("learning");
-      setPriority("3");
       setStatus("idea");
       setNotes("");
       setFeedback("Item added.");
@@ -100,7 +91,6 @@ export default function Learnings() {
     setEditingId(item.id);
     setEditTitle(item.title);
     setEditItemType(item.itemType);
-    setEditPriority(String(item.priority ?? 3));
     setEditStatus(item.status);
     setEditNotes(item.notes ?? "");
     setEditFeedback("");
@@ -110,7 +100,6 @@ export default function Learnings() {
     setEditingId("");
     setEditTitle("");
     setEditItemType("learning");
-    setEditPriority("3");
     setEditStatus("idea");
     setEditNotes("");
     setEditFeedback("");
@@ -126,7 +115,6 @@ export default function Learnings() {
     const result = await onUpdateLearningItem(editingId, {
       title: editTitle,
       itemType: editItemType,
-      priority: editPriority,
       status: editStatus,
       notes: editNotes
     });
@@ -168,8 +156,9 @@ export default function Learnings() {
         <h2>Keep your learnings and projects in one place</h2>
         <p className="learningspage__intro">
           Use this page for courses you want to finish, topics you want to learn, and projects you
-          want to build. The point is not to do everything at once. It is to see the whole field,
-          set priorities, and make it easier to choose what deserves focus now.
+          want to build. The point is not to do everything at once. It is to keep what you are
+          actively undertaking in one place, so it is easier to stay honest about what is actually
+          on your plate right now.
         </p>
       </section>
 
@@ -201,22 +190,6 @@ export default function Learnings() {
                 {TYPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="learningspage__field">
-              <label htmlFor="learning-priority">Priority</label>
-              <select
-                id="learning-priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                disabled={isSaving || isPersisting}
-              >
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <option key={value} value={String(value)}>
-                    {value}
                   </option>
                 ))}
               </select>
@@ -323,22 +296,6 @@ export default function Learnings() {
                       </div>
 
                       <div className="learningspage__field">
-                        <label htmlFor={`edit-learning-priority-${item.id}`}>Priority</label>
-                        <select
-                          id={`edit-learning-priority-${item.id}`}
-                          value={editPriority}
-                          onChange={(e) => setEditPriority(e.target.value)}
-                          disabled={isSavingEdit || isPersisting}
-                        >
-                          {[1, 2, 3, 4, 5].map((value) => (
-                            <option key={value} value={String(value)}>
-                              {value}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="learningspage__field">
                         <label htmlFor={`edit-learning-status-${item.id}`}>Status</label>
                         <select
                           id={`edit-learning-status-${item.id}`}
@@ -386,9 +343,6 @@ export default function Learnings() {
                           </span>
                           <span className={`learningspage__badge learningspage__badge--${item.status}`}>
                             {formatStatus(item.status)}
-                          </span>
-                          <span className="learningspage__badge learningspage__badge--priority">
-                            Priority {item.priority}
                           </span>
                         </div>
                         <h3>{item.title}</h3>

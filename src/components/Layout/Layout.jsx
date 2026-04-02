@@ -99,7 +99,7 @@ export default function Layout({
       )
     },
     "/learnings": {
-      title: "Learnings",
+      title: "Pursuits",
       subtitle: "Courses, projects, and things you want to work on",
       meta: (
         <>

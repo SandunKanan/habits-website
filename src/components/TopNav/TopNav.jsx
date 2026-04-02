@@ -44,7 +44,7 @@ export default function TopNav({ authUser, onSignOut }) {
                   Focus
                 </NavLink>
                 <NavLink to="/learnings" className={({ isActive }) => (isActive ? "active" : "")}>
-                  Learnings
+                  Pursuits
                 </NavLink>
               </div>
             </details>

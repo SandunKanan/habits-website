@@ -86,15 +86,10 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
     }
   }
 
-  async function addLearningItem({ title, itemType, priority, status, notes }) {
+  async function addLearningItem({ title, itemType, status, notes }) {
     const trimmedTitle = String(title ?? "").trim();
     if (!trimmedTitle) {
       return { ok: false, error: "Title is required." };
-    }
-
-    const parsedPriority = Number(priority ?? 3);
-    if (!Number.isInteger(parsedPriority) || parsedPriority < 1 || parsedPriority > 5) {
-      return { ok: false, error: "Priority must be between 1 and 5." };
     }
 
     const allowedTypes = new Set(["learning", "course", "project"]);
@@ -109,7 +104,7 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
       slug,
       title: trimmedTitle,
       itemType: normalizedType,
-      priority: parsedPriority,
+      priority: 3,
       status: normalizedStatus,
       notes: String(notes ?? "").trim(),
       createdAt: now,
@@ -135,11 +130,6 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
       return { ok: false, error: "Title is required." };
     }
 
-    const parsedPriority = Number(updates?.priority ?? existingItem.priority ?? 3);
-    if (!Number.isInteger(parsedPriority) || parsedPriority < 1 || parsedPriority > 5) {
-      return { ok: false, error: "Priority must be between 1 and 5." };
-    }
-
     const allowedTypes = new Set(["learning", "course", "project"]);
     const allowedStatuses = new Set(["idea", "active", "paused", "completed"]);
     const normalizedType = allowedTypes.has(updates?.itemType) ? updates.itemType : existingItem.itemType;
@@ -152,7 +142,7 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
             ...item,
             title: trimmedTitle,
             itemType: normalizedType,
-            priority: parsedPriority,
+            priority: Number(existingItem.priority ?? item.priority ?? 3),
             status: normalizedStatus,
             notes: String(updates?.notes ?? item.notes ?? "").trim(),
             updatedAt: new Date().toISOString()
