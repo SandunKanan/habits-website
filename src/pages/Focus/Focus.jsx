@@ -3,13 +3,15 @@ import { useOutletContext } from "react-router-dom";
 import "./Focus.scss";
 
 export default function Focus() {
-  const { focus, goals, onSaveFocus, isPersisting } = useOutletContext();
+  const { focus, goals, domains, onSaveFocus, isPersisting } = useOutletContext();
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [whyNow, setWhyNow] = useState("");
   const [endState, setEndState] = useState("");
   const [currentObstacles, setCurrentObstacles] = useState("");
+  const [focusDomainIds, setFocusDomainIds] = useState([]);
+  const [domainDraft, setDomainDraft] = useState("");
   const [focusTargets, setFocusTargets] = useState([]);
   const [targetDraft, setTargetDraft] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -30,11 +32,15 @@ export default function Focus() {
     setWhyNow(focus?.whyNow ?? "");
     setEndState(focus?.endState ?? "");
     setCurrentObstacles(focus?.currentObstacles ?? "");
+    setFocusDomainIds(Array.isArray(focus?.focusDomainIds) ? focus.focusDomainIds : []);
+    setDomainDraft("");
     setFocusTargets(Array.isArray(focus?.focusTargets) ? focus.focusTargets : []);
     setTargetDraft("");
   }, [focus]);
 
+  const selectedDomainIds = new Set(focusDomainIds);
   const selectedTargetKeys = new Set(focusTargets.map(buildTargetKey));
+  const domainOptions = [...domains].sort((a, b) => a.name.localeCompare(b.name));
   const targetOptions = goals.flatMap((goal) => {
     const options = [
       {
@@ -87,6 +93,25 @@ export default function Focus() {
     setTargetDraft("");
   }
 
+  function addDomainFromDraft() {
+    const nextDomainId = String(domainDraft ?? "");
+    if (!nextDomainId) return;
+
+    setFocusDomainIds((current) =>
+      current.includes(nextDomainId) ? current : [...current, nextDomainId]
+    );
+    setDomainDraft("");
+  }
+
+  function removeDomain(domainId) {
+    setFocusDomainIds((current) => current.filter((id) => id !== domainId));
+  }
+
+  function describeDomain(domainId) {
+    const domain = domains.find((item) => item.id === domainId);
+    return domain ? domain.name : "Unknown domain";
+  }
+
   function removeTarget(targetKey) {
     setFocusTargets((current) => current.filter((target) => buildTargetKey(target) !== targetKey));
   }
@@ -121,6 +146,7 @@ export default function Focus() {
       whyNow,
       endState,
       currentObstacles,
+      focusDomainIds,
       focusTargets
     });
 
@@ -216,6 +242,59 @@ export default function Focus() {
               rows={5}
               disabled={isSaving || isPersisting}
             />
+          </div>
+
+          <div className="focuspage__field">
+            <label>What domains matter most during this block?</label>
+            <p>Select the larger areas or branches you want this block to support.</p>
+            <div className="focuspage__targets">
+              {domains.length === 0 ? (
+                <p className="focuspage__targets-empty">
+                  Add domains first if you want to connect this focus block to them.
+                </p>
+              ) : (
+                <>
+                  <div className="focuspage__target-picker">
+                    <select
+                      value={domainDraft}
+                      onChange={(e) => setDomainDraft(e.target.value)}
+                      disabled={isSaving || isPersisting}
+                    >
+                      <option value="">Select a domain</option>
+                      {domainOptions.map((domain) => (
+                        <option key={domain.id} value={domain.id} disabled={selectedDomainIds.has(domain.id)}>
+                          {domain.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={addDomainFromDraft}
+                      disabled={isSaving || isPersisting || !domainDraft}
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {focusDomainIds.length > 0 ? (
+                    <ul className="focuspage__target-list">
+                      {focusDomainIds.map((domainId) => (
+                        <li key={domainId}>
+                          <span>{describeDomain(domainId)}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeDomain(domainId)}
+                            disabled={isSaving || isPersisting}
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </>
+              )}
+            </div>
           </div>
 
           <div className="focuspage__field">

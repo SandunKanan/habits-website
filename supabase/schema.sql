@@ -84,9 +84,23 @@ create table if not exists public.focus_periods (
   why_now text not null default '',
   end_state text not null default '',
   current_obstacles text not null default '',
+  focus_domain_ids_json jsonb not null default '[]'::jsonb,
   focus_targets_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.domains (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  slug text not null,
+  name text not null,
+  parent_id uuid references public.domains (id) on delete cascade,
+  notes text not null default '',
+  sort_order integer not null default 0,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id, slug)
 );
 
 create table if not exists public.goals (
@@ -179,6 +193,8 @@ create index if not exists visions_user_id_idx on public.visions (user_id);
 create index if not exists vision_focus_attributes_user_id_idx on public.vision_focus_attributes (user_id);
 create index if not exists vision_focus_attributes_attribute_id_idx on public.vision_focus_attributes (attribute_id);
 create index if not exists focus_periods_user_id_idx on public.focus_periods (user_id);
+create index if not exists domains_user_id_idx on public.domains (user_id);
+create index if not exists domains_parent_id_idx on public.domains (parent_id);
 create index if not exists goals_user_id_idx on public.goals (user_id);
 create index if not exists learning_items_user_id_idx on public.learning_items (user_id);
 create index if not exists one_off_tasks_user_id_idx on public.one_off_tasks (user_id);
@@ -195,6 +211,7 @@ alter table public.habit_attribute_links enable row level security;
 alter table public.visions enable row level security;
 alter table public.vision_focus_attributes enable row level security;
 alter table public.focus_periods enable row level security;
+alter table public.domains enable row level security;
 alter table public.goals enable row level security;
 alter table public.learning_items enable row level security;
 alter table public.one_off_tasks enable row level security;
@@ -286,6 +303,12 @@ create policy "Users can read own focus period"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own domains" on public.domains;
+create policy "Users can read own domains"
+  on public.domains
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can read own goals" on public.goals;
 create policy "Users can read own goals"
   on public.goals
@@ -347,6 +370,23 @@ create policy "Users can insert own focus period"
   on public.focus_periods
   for insert
   with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own domains" on public.domains;
+create policy "Users can insert own domains"
+  on public.domains
+  for insert
+  with check (
+    auth.uid() = user_id
+    and (
+      parent_id is null
+      or exists (
+        select 1
+        from public.domains
+        where public.domains.id = parent_id
+          and public.domains.user_id = auth.uid()
+      )
+    )
+  );
 
 drop policy if exists "Users can insert own goals" on public.goals;
 create policy "Users can insert own goals"
@@ -421,6 +461,24 @@ create policy "Users can update own focus period"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own domains" on public.domains;
+create policy "Users can update own domains"
+  on public.domains
+  for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and (
+      parent_id is null
+      or exists (
+        select 1
+        from public.domains
+        where public.domains.id = parent_id
+          and public.domains.user_id = auth.uid()
+      )
+    )
+  );
+
 drop policy if exists "Users can update own goals" on public.goals;
 create policy "Users can update own goals"
   on public.goals
@@ -486,6 +544,12 @@ create policy "Users can delete own vision focus attributes"
 drop policy if exists "Users can delete own focus period" on public.focus_periods;
 create policy "Users can delete own focus period"
   on public.focus_periods
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own domains" on public.domains;
+create policy "Users can delete own domains"
+  on public.domains
   for delete
   using (auth.uid() = user_id);
 

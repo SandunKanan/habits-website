@@ -11,6 +11,7 @@ export default function Layout({
   attributes,
   vision,
   focus,
+  domains,
   goals,
   learnings,
   oneOffTasks,
@@ -25,6 +26,9 @@ export default function Layout({
   onDeleteAttribute,
   onSaveVision,
   onSaveFocus,
+  onAddDomain,
+  onUpdateDomain,
+  onDeleteDomain,
   onAddGoal,
   onUpdateGoal,
   onDeleteGoal,
@@ -112,6 +116,15 @@ export default function Layout({
         </>
       )
     },
+    "/domains": {
+      title: "Domains",
+      subtitle: "The larger areas and branches that shape your life",
+      meta: (
+        <>
+          Total nodes: <b>{domains.length}</b>
+        </>
+      )
+    },
     "/goals": {
       title: "Goals",
       subtitle: "The outcomes your system is moving toward",
@@ -192,6 +205,7 @@ export default function Layout({
               attributes,
               vision,
               focus,
+              domains,
               goals,
               learnings,
               oneOffTasks,
@@ -206,6 +220,9 @@ export default function Layout({
               onDeleteAttribute,
               onSaveVision,
               onSaveFocus,
+              onAddDomain,
+              onUpdateDomain,
+              onDeleteDomain,
               onAddGoal,
               onUpdateGoal,
               onDeleteGoal,

@@ -55,6 +55,9 @@ function normalizeFocus(focus) {
     whyNow: String(focus.whyNow ?? focus.why_now ?? "").trim(),
     endState: String(focus.endState ?? focus.end_state ?? "").trim(),
     currentObstacles: String(focus.currentObstacles ?? focus.current_obstacles ?? "").trim(),
+    focusDomainIds: Array.isArray(focus.focusDomainIds ?? focus.focus_domain_ids_json)
+      ? [...new Set((focus.focusDomainIds ?? focus.focus_domain_ids_json).map(String).filter(Boolean))]
+      : [],
     focusTargets: Array.isArray(focus.focusTargets ?? focus.focus_targets_json)
       ? (focus.focusTargets ?? focus.focus_targets_json)
           .map((target) => ({
@@ -78,6 +81,7 @@ function buildEmptyFocus(userId) {
     whyNow: "",
     endState: "",
     currentObstacles: "",
+    focusDomainIds: [],
     focusTargets: [],
     createdAt: null,
     updatedAt: null
@@ -93,13 +97,14 @@ function serializeFocusRow(focus, userId) {
     why_now: focus.whyNow,
     end_state: focus.endState,
     current_obstacles: focus.currentObstacles,
+    focus_domain_ids_json: Array.isArray(focus.focusDomainIds) ? focus.focusDomainIds : [],
     focus_targets_json: Array.isArray(focus.focusTargets) ? focus.focusTargets : []
   };
 }
 
 export async function loadFocusForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/focus_periods?user_id=eq.${userId}&select=user_id,title,start_date,end_date,why_now,end_state,current_obstacles,focus_targets_json,created_at,updated_at&limit=1`,
+    `/rest/v1/focus_periods?user_id=eq.${userId}&select=user_id,title,start_date,end_date,why_now,end_state,current_obstacles,focus_domain_ids_json,focus_targets_json,created_at,updated_at&limit=1`,
     accessToken
   );
 

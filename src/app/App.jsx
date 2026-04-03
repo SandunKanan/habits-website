@@ -7,6 +7,7 @@ import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
 import Vision from "../pages/Vision/Vision.jsx";
 import Focus from "../pages/Focus/Focus.jsx";
+import Domains from "../pages/Domains/Domains.jsx";
 import Goals from "../pages/Goals/Goals.jsx";
 import Learnings from "../pages/Learnings/Learnings.jsx";
 import Tracking from "../pages/Tracking/Tracking.jsx";
@@ -25,6 +26,7 @@ import { useAttributesStore } from "./hooks/useAttributesStore.js";
 import { useVisionStore } from "./hooks/useVisionStore.js";
 import { useFocusStore } from "./hooks/useFocusStore.js";
 import { useGoalsStore } from "./hooks/useGoalsStore.js";
+import { useDomainsStore } from "./hooks/useDomainsStore.js";
 import { useLearningsStore } from "./hooks/useLearningsStore.js";
 import { useOneOffTasksStore } from "./hooks/useOneOffTasksStore.js";
 import { useTrackingStore } from "./hooks/useTrackingStore.js";
@@ -74,6 +76,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const domainsStore = useDomainsStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const learningsStore = useLearningsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -106,6 +114,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      domainsStore.beginLoadingDomains();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
@@ -122,6 +131,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      domainsStore.beginLoadingDomains();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
@@ -138,6 +148,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      domainsStore.beginLoadingDomains();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
@@ -154,6 +165,7 @@ export default function App() {
     attributesStore.resetAttributesState();
     visionStore.resetVisionState();
     focusStore.resetFocusState();
+    domainsStore.resetDomainsState();
     goalsStore.resetGoalsState();
     learningsStore.resetLearningsState();
     oneOffTasksStore.resetOneOffTasksState();
@@ -174,6 +186,7 @@ export default function App() {
     attributesStore.isLoading ||
     visionStore.isLoading ||
     focusStore.isLoading ||
+    domainsStore.isLoading ||
     goalsStore.isLoading ||
     learningsStore.isLoading ||
     oneOffTasksStore.isLoading ||
@@ -188,6 +201,7 @@ export default function App() {
     attributesStore.loadError ||
     visionStore.loadError ||
     focusStore.loadError ||
+    domainsStore.loadError ||
     goalsStore.loadError ||
     learningsStore.loadError ||
     oneOffTasksStore.loadError ||
@@ -200,6 +214,7 @@ export default function App() {
           attributesStore.loadError ||
           visionStore.loadError ||
           focusStore.loadError ||
+          domainsStore.loadError ||
           goalsStore.loadError ||
           learningsStore.loadError ||
           oneOffTasksStore.loadError ||
@@ -233,6 +248,7 @@ export default function App() {
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
             focus={focusStore.focus}
+            domains={domainsStore.domains}
             goals={goalsStore.goals}
             learnings={learningsStore.learnings}
             oneOffTasks={oneOffTasksStore.oneOffTasks}
@@ -247,6 +263,9 @@ export default function App() {
             onDeleteAttribute={attributesStore.deleteAttribute}
             onSaveVision={visionStore.saveVision}
             onSaveFocus={focusStore.saveFocus}
+            onAddDomain={domainsStore.addDomain}
+            onUpdateDomain={domainsStore.updateDomain}
+            onDeleteDomain={domainsStore.deleteDomain}
             onAddGoal={goalsStore.addGoal}
             onUpdateGoal={goalsStore.updateGoal}
             onDeleteGoal={goalsStore.deleteGoal}
@@ -276,6 +295,7 @@ export default function App() {
               attributesStore.isPersisting ||
               visionStore.isPersisting ||
               focusStore.isPersisting ||
+              domainsStore.isPersisting ||
               goalsStore.isPersisting ||
               learningsStore.isPersisting ||
               oneOffTasksStore.isPersisting ||
@@ -295,6 +315,7 @@ export default function App() {
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/vision" element={<Vision />} />
         <Route path="/focus" element={<Focus />} />
+        <Route path="/domains" element={<Domains />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/learnings" element={<Learnings />} />
         <Route path="/tracking" element={<Tracking />} />

@@ -1,0 +1,242 @@
+@use "../../styles/variables" as *;
+
+.domainspage {
+  display: grid;
+  gap: 18px;
+}
+
+.domainspage__hero,
+.domainspage__section,
+.domainspage__summary-card,
+.domainspage__item,
+.domainspage__empty {
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.domainspage__hero,
+.domainspage__section,
+.domainspage__item,
+.domainspage__empty {
+  padding: 24px;
+}
+
+.domainspage__hero {
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.domainspage__eyebrow {
+  margin: 0 0 10px;
+  color: $accent;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.domainspage__intro {
+  margin: 12px 0 0;
+  max-width: 48rem;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.domainspage__form,
+.domainspage__edit {
+  display: grid;
+  gap: 18px;
+}
+
+.domainspage__field {
+  display: grid;
+  gap: 8px;
+
+  label {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    line-height: 1.6;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 96px;
+  }
+}
+
+.domainspage__grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.domainspage__summary {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.domainspage__actions,
+.domainspage__item-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.domainspage__feedback {
+  margin: 0;
+  color: $accent;
+}
+
+.domainspage__summary-card {
+  padding: 18px 20px;
+
+  span {
+    display: block;
+    margin-bottom: 10px;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+  }
+
+  strong {
+    font-size: 2rem;
+    line-height: 1;
+  }
+}
+
+.domainspage__list,
+.domainspage__tree {
+  display: grid;
+  gap: 14px;
+}
+
+.domainspage__tree {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domainspage__node > .domainspage__tree {
+  margin-top: 12px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(143, 211, 255, 0.12);
+}
+
+.domainspage__item {
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid rgba(143, 211, 255, calc(0.18 + (var(--domain-depth, 0) * 0.07)));
+}
+
+.domainspage__item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  h3 {
+    margin: 10px 0 0;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+  }
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
+.domainspage__badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.domainspage__badge,
+.domainspage__toggle {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $muted;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.domainspage__badge--focus {
+  border-color: rgba(225, 97, 97, 0.35);
+  background: rgba(225, 97, 97, 0.12);
+  color: rgb(252, 163, 163);
+}
+
+.domainspage__toggle {
+  cursor: pointer;
+}
+
+.domainspage__notes {
+  margin: 10px 0 0;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.domainspage__delete-btn {
+  background: transparent !important;
+  border-color: rgba(255, 107, 107, 0.4) !important;
+  color: rgb(248, 113, 113) !important;
+}
+
+.domainspage__empty {
+  h3 {
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.7;
+  }
+}
