@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import "./Focus.scss";
 
 export default function Focus() {
-  const { focus, goals, domains, onSaveFocus, isPersisting } = useOutletContext();
+  const { focus, goals, domains, learnings, onSaveFocus, isPersisting } = useOutletContext();
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -65,6 +65,17 @@ export default function Focus() {
     }
 
     return options;
+  });
+  const focusedDomains = domains.filter((domain) => selectedDomainIds.has(domain.id));
+  const alignedGoalIds = new Set(focusTargets.map((target) => target.goalId));
+  const alignedGoals = goals.filter((goal) => alignedGoalIds.has(goal.id));
+  const alignedPursuits = learnings.filter((item) => {
+    const matchesDomain =
+      Array.isArray(item.domainIds) && item.domainIds.some((domainId) => selectedDomainIds.has(domainId));
+    const matchesGoal =
+      Array.isArray(item.pursuitTargets) &&
+      item.pursuitTargets.some((target) => alignedGoalIds.has(target.goalId));
+    return matchesDomain || matchesGoal;
   });
 
   function parseTargetKey(targetKey) {
@@ -364,6 +375,54 @@ export default function Focus() {
             {feedback ? <p className="focuspage__feedback">{feedback}</p> : null}
           </div>
         </form>
+      </section>
+
+      <section className="focuspage__section card">
+        <div className="focuspage__overview-head">
+          <h3>Currently aligned</h3>
+          <p>What this block is pointing at right now.</p>
+        </div>
+
+        <div className="focuspage__overview">
+          <article className="focuspage__overview-card">
+            <span>Domains</span>
+            {focusedDomains.length === 0 ? (
+              <p>None selected yet.</p>
+            ) : (
+              <ul>
+                {focusedDomains.map((domain) => (
+                  <li key={domain.id}>{domain.name}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+
+          <article className="focuspage__overview-card">
+            <span>Goals</span>
+            {alignedGoals.length === 0 ? (
+              <p>None selected yet.</p>
+            ) : (
+              <ul>
+                {alignedGoals.map((goal) => (
+                  <li key={goal.id}>{goal.title}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+
+          <article className="focuspage__overview-card">
+            <span>Pursuits</span>
+            {alignedPursuits.length === 0 ? (
+              <p>No linked pursuits yet.</p>
+            ) : (
+              <ul>
+                {alignedPursuits.map((item) => (
+                  <li key={item.id}>{item.title}</li>
+                ))}
+              </ul>
+            )}
+          </article>
+        </div>
       </section>
     </div>
   );

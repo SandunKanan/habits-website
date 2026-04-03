@@ -19,6 +19,10 @@ export default function Today() {
     lastDoneById,
     attributes,
     vision,
+    focus,
+    domains,
+    goals,
+    learnings,
     oneOffTasks,
     trackingMetrics,
     trackingEntries,
@@ -50,6 +54,28 @@ export default function Today() {
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
   );
+  const focusDomainIds = new Set(
+    isFocusViewEnabled && Array.isArray(focus?.focusDomainIds) ? focus.focusDomainIds : []
+  );
+  const focusedDomains = Array.isArray(domains)
+    ? domains.filter((domain) => focusDomainIds.has(domain.id))
+    : [];
+  const focusedTargetGoalIds = new Set(
+    isFocusViewEnabled && Array.isArray(focus?.focusTargets)
+      ? focus.focusTargets.map((target) => target.goalId).filter(Boolean)
+      : []
+  );
+  const focusedGoals = Array.isArray(goals) ? goals.filter((goal) => focusedTargetGoalIds.has(goal.id)) : [];
+  const alignedPursuits = Array.isArray(learnings)
+    ? learnings.filter((item) => {
+        const matchesDomain =
+          Array.isArray(item.domainIds) && item.domainIds.some((domainId) => focusDomainIds.has(domainId));
+        const matchesGoal =
+          Array.isArray(item.pursuitTargets) &&
+          item.pursuitTargets.some((target) => focusedTargetGoalIds.has(target.goalId));
+        return matchesDomain || matchesGoal;
+      })
+    : [];
 
   const todoItems = curatedTop5.filter((item) => {
     const habitId = item.habit.id;
@@ -240,6 +266,53 @@ export default function Today() {
 
   return (
     <div className="today">
+      {isFocusViewEnabled &&
+      (focusedDomains.length > 0 || focusedGoals.length > 0 || alignedPursuits.length > 0) ? (
+        <section className="today__section today__section--focus card">
+          <h2>Current Focus</h2>
+          <div className="today__focus-grid">
+            <article className="today__focus-card">
+              <span>Domains</span>
+              {focusedDomains.length > 0 ? (
+                <div className="today__focus-chips">
+                  {focusedDomains.map((domain) => (
+                    <span key={domain.id} className="today__focus-chip">
+                      {domain.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="today__empty">No focused domains selected.</p>
+              )}
+            </article>
+            <article className="today__focus-card">
+              <span>Goals</span>
+              {focusedGoals.length > 0 ? (
+                <ul className="today__focus-list">
+                  {focusedGoals.map((goal) => (
+                    <li key={goal.id}>{goal.title}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="today__empty">No focus goals selected.</p>
+              )}
+            </article>
+            <article className="today__focus-card">
+              <span>Pursuits</span>
+              {alignedPursuits.length > 0 ? (
+                <ul className="today__focus-list">
+                  {alignedPursuits.slice(0, 5).map((item) => (
+                    <li key={item.id}>{item.title}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="today__empty">No pursuits aligned yet.</p>
+              )}
+            </article>
+          </div>
+        </section>
+      ) : null}
+
       <section className="today__section card">
         <h2>To Do</h2>
         {todoItems.length === 0 ? (

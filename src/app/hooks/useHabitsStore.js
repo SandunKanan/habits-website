@@ -142,7 +142,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     frequencyValue,
     frequencyUnit,
     importance,
-    attributeLinks
+    attributeLinks,
+    domainIds
   }) {
     const trimmedName = String(name ?? "").trim();
     if (!trimmedName) {
@@ -164,7 +165,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       doneDates: [],
       skippedDates: [],
       subtasks: [],
-      attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : []
+      attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : [],
+      domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : []
     };
 
     const persisted = await persistHabits([...habits, newHabit]);
@@ -177,7 +179,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   async function updateHabit(
     habitId,
-    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks }
+    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks, domainIds }
   ) {
     const habit = habits.find((item) => item.id === habitId);
     if (!habit) {
@@ -205,7 +207,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
             ...frequency,
             importance: parsedImportance,
             createdAt: normalizedCreatedAt,
-            attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : []
+            attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : [],
+            domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : []
           }
     );
 

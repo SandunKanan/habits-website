@@ -54,6 +54,9 @@ function normalizeGoal(goal) {
     timeframeType: String(goal.timeframeType ?? goal.timeframe_type ?? "long_term"),
     targetDate: goal.targetDate ?? goal.target_date ?? "",
     notes: String(goal.notes ?? "").trim(),
+    domainIds: Array.isArray(goal.domainIds ?? goal.domain_ids_json)
+      ? [...new Set((goal.domainIds ?? goal.domain_ids_json).map(String).filter(Boolean))]
+      : [],
     subgoals: Array.isArray(goal.subgoals ?? goal.subgoals_json)
       ? (goal.subgoals ?? goal.subgoals_json)
           .map((subgoal) => ({
@@ -76,6 +79,7 @@ function parseGoalRows(rows) {
       timeframeType: row.timeframe_type,
       targetDate: row.target_date,
       notes: row.notes,
+      domainIds: row.domain_ids_json,
       subgoals: row.subgoals_json,
       createdAt: row.created_at,
       updatedAt: row.updated_at
@@ -92,13 +96,14 @@ function serializeGoalRow(goal, userId) {
     timeframe_type: goal.timeframeType,
     target_date: goal.targetDate || null,
     notes: goal.notes ?? "",
+    domain_ids_json: Array.isArray(goal.domainIds) ? goal.domainIds : [],
     subgoals_json: Array.isArray(goal.subgoals) ? goal.subgoals : []
   };
 }
 
 export async function loadGoalsForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/goals?user_id=eq.${userId}&select=id,slug,title,timeframe_type,target_date,notes,subgoals_json,created_at,updated_at&order=created_at.asc`,
+    `/rest/v1/goals?user_id=eq.${userId}&select=id,slug,title,timeframe_type,target_date,notes,domain_ids_json,subgoals_json,created_at,updated_at&order=created_at.asc`,
     accessToken
   );
 

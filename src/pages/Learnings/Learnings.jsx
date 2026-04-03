@@ -31,12 +31,21 @@ function formatStatus(status) {
 }
 
 export default function Learnings() {
-  const { goals, learnings, onAddLearningItem, onUpdateLearningItem, onDeleteLearningItem, isPersisting } =
-    useOutletContext();
+  const {
+    goals,
+    domains,
+    learnings,
+    onAddLearningItem,
+    onUpdateLearningItem,
+    onDeleteLearningItem,
+    isPersisting
+  } = useOutletContext();
   const [title, setTitle] = useState("");
   const [itemType, setItemType] = useState("learning");
   const [status, setStatus] = useState("idea");
   const [notes, setNotes] = useState("");
+  const [domainIds, setDomainIds] = useState([]);
+  const [domainDraft, setDomainDraft] = useState("");
   const [pursuitTargets, setPursuitTargets] = useState([]);
   const [targetDraft, setTargetDraft] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -46,6 +55,8 @@ export default function Learnings() {
   const [editItemType, setEditItemType] = useState("learning");
   const [editStatus, setEditStatus] = useState("idea");
   const [editNotes, setEditNotes] = useState("");
+  const [editDomainIds, setEditDomainIds] = useState([]);
+  const [editDomainDraft, setEditDomainDraft] = useState("");
   const [editPursuitTargets, setEditPursuitTargets] = useState([]);
   const [editTargetDraft, setEditTargetDraft] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
@@ -131,6 +142,9 @@ export default function Learnings() {
 
   const activeCount = sortedLearnings.filter((item) => item.status === "active").length;
   const projectCount = sortedLearnings.filter((item) => item.itemType === "project").length;
+  const selectedDomainIds = new Set(domainIds);
+  const selectedEditDomainIds = new Set(editDomainIds);
+  const domainOptions = [...domains].sort((a, b) => a.name.localeCompare(b.name));
 
   async function handleAddItem(e) {
     e.preventDefault();
@@ -142,6 +156,7 @@ export default function Learnings() {
       itemType,
       status,
       notes,
+      domainIds,
       pursuitTargets
     });
 
@@ -150,6 +165,8 @@ export default function Learnings() {
       setItemType("learning");
       setStatus("idea");
       setNotes("");
+      setDomainIds([]);
+      setDomainDraft("");
       setPursuitTargets([]);
       setTargetDraft("");
       setFeedback("Item added.");
@@ -166,6 +183,8 @@ export default function Learnings() {
     setEditItemType(item.itemType);
     setEditStatus(item.status);
     setEditNotes(item.notes ?? "");
+    setEditDomainIds(Array.isArray(item.domainIds) ? item.domainIds : []);
+    setEditDomainDraft("");
     setEditPursuitTargets(Array.isArray(item.pursuitTargets) ? item.pursuitTargets : []);
     setEditTargetDraft("");
     setEditFeedback("");
@@ -177,6 +196,8 @@ export default function Learnings() {
     setEditItemType("learning");
     setEditStatus("idea");
     setEditNotes("");
+    setEditDomainIds([]);
+    setEditDomainDraft("");
     setEditPursuitTargets([]);
     setEditTargetDraft("");
     setEditFeedback("");
@@ -194,6 +215,7 @@ export default function Learnings() {
       itemType: editItemType,
       status: editStatus,
       notes: editNotes,
+      domainIds: editDomainIds,
       pursuitTargets: editPursuitTargets
     });
 
@@ -219,6 +241,23 @@ export default function Learnings() {
 
   function removeTarget(currentTargets, targetKey) {
     return currentTargets.filter((target) => buildTargetKey(target) !== targetKey);
+  }
+
+  function addDomain(currentDomainIds, nextDomainId) {
+    const normalizedId = String(nextDomainId ?? "");
+    if (!normalizedId) return currentDomainIds;
+    return currentDomainIds.includes(normalizedId)
+      ? currentDomainIds
+      : [...currentDomainIds, normalizedId];
+  }
+
+  function removeDomain(currentDomainIds, domainId) {
+    return currentDomainIds.filter((id) => id !== domainId);
+  }
+
+  function describeDomain(domainId) {
+    const domain = domains.find((item) => item.id === domainId);
+    return domain ? domain.name : "Unknown domain";
   }
 
   async function handleDeleteItem(item) {
@@ -316,6 +355,51 @@ export default function Learnings() {
               onChange={(e) => setNotes(e.target.value)}
               disabled={isSaving || isPersisting}
             />
+          </div>
+
+          <div className="learningspage__field">
+            <label>Linked domains</label>
+            <p>Link this pursuit to the domains or branches it belongs to.</p>
+            <div className="learningspage__target-picker">
+              <select
+                value={domainDraft}
+                onChange={(e) => setDomainDraft(e.target.value)}
+                disabled={isSaving || isPersisting || domains.length === 0}
+              >
+                <option value="">{domains.length === 0 ? "Add domains first" : "Select a domain"}</option>
+                {domainOptions.map((domain) => (
+                  <option key={domain.id} value={domain.id} disabled={selectedDomainIds.has(domain.id)}>
+                    {domain.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setDomainIds((current) => addDomain(current, domainDraft));
+                  setDomainDraft("");
+                }}
+                disabled={isSaving || isPersisting || !domainDraft}
+              >
+                Add
+              </button>
+            </div>
+            {domainIds.length > 0 ? (
+              <ul className="learningspage__target-list">
+                {domainIds.map((domainId) => (
+                  <li key={domainId}>
+                    <span>{describeDomain(domainId)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setDomainIds((current) => removeDomain(current, domainId))}
+                      disabled={isSaving || isPersisting}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="learningspage__field">
@@ -465,6 +549,58 @@ export default function Learnings() {
                     </div>
 
                     <div className="learningspage__field">
+                      <label>Linked domains</label>
+                      <div className="learningspage__target-picker">
+                        <select
+                          value={editDomainDraft}
+                          onChange={(e) => setEditDomainDraft(e.target.value)}
+                          disabled={isSavingEdit || isPersisting || domains.length === 0}
+                        >
+                          <option value="">
+                            {domains.length === 0 ? "Add domains first" : "Select a domain"}
+                          </option>
+                          {domainOptions.map((domain) => (
+                            <option
+                              key={domain.id}
+                              value={domain.id}
+                              disabled={selectedEditDomainIds.has(domain.id)}
+                            >
+                              {domain.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditDomainIds((current) => addDomain(current, editDomainDraft));
+                            setEditDomainDraft("");
+                          }}
+                          disabled={isSavingEdit || isPersisting || !editDomainDraft}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {editDomainIds.length > 0 ? (
+                        <ul className="learningspage__target-list">
+                          {editDomainIds.map((domainId) => (
+                            <li key={domainId}>
+                              <span>{describeDomain(domainId)}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEditDomainIds((current) => removeDomain(current, domainId))
+                                }
+                                disabled={isSavingEdit || isPersisting}
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+
+                    <div className="learningspage__field">
                       <label>Linked goals</label>
                       <div className="learningspage__target-picker">
                         <select
@@ -555,6 +691,18 @@ export default function Learnings() {
                     </div>
 
                     {item.notes ? <p className="learningspage__notes">{item.notes}</p> : null}
+                    {Array.isArray(item.domainIds) && item.domainIds.length > 0 ? (
+                      <div className="learningspage__linked-goals">
+                        <h4>Linked domains</h4>
+                        <ul className="learningspage__target-list learningspage__target-list--read">
+                          {item.domainIds.map((domainId) => (
+                            <li key={domainId}>
+                              <span>{describeDomain(domainId)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     {Array.isArray(item.pursuitTargets) && item.pursuitTargets.length > 0 ? (
                       <div className="learningspage__linked-goals">
                         <h4>Linked goals</h4>

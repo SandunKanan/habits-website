@@ -19,6 +19,12 @@ export default function HabitEditor({
   onCreatedAtChange,
   attributes,
   attributeLinks,
+  domains,
+  domainIds,
+  domainDraft,
+  onDomainDraftChange,
+  onAddDomain,
+  onRemoveDomain,
   onAddAttributeLink,
   onRemoveAttributeLink,
   onAttributeLinkAttributeChange,
@@ -80,6 +86,51 @@ export default function HabitEditor({
         onAttributeChange={onAttributeLinkAttributeChange}
         onWeightChange={onAttributeLinkWeightChange}
       />
+      <div className="habits__domain-links">
+        <div className="habits__domain-links-head">
+          <h4>Domains</h4>
+          <small>Connect this habit to the larger areas or branches it supports.</small>
+        </div>
+        {Array.isArray(domains) && domains.length > 0 ? (
+          <>
+            <div className="habits__domain-link-add-row">
+              <select value={domainDraft} onChange={onDomainDraftChange} disabled={isSaving}>
+                <option value="">Select domain</option>
+                {domains
+                  .filter((domain) => !domainIds.includes(domain.id))
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((domain) => (
+                    <option key={domain.id} value={domain.id}>
+                      {domain.name}
+                    </option>
+                  ))}
+              </select>
+              <button type="button" onClick={onAddDomain} disabled={isSaving || !domainDraft}>
+                Add domain
+              </button>
+            </div>
+            {domainIds.length > 0 ? (
+              <div className="habits__domain-link-list">
+                {domainIds.map((domainId) => {
+                  const domain = domains.find((item) => item.id === domainId);
+                  return (
+                    <div key={domainId} className="habits__domain-link-pill">
+                      <span>{domain ? domain.name : "Unknown domain"}</span>
+                      <button type="button" onClick={() => onRemoveDomain(domainId)} disabled={isSaving}>
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="habits__attribute-links-empty">
+            Create domains first on the Domains page before linking them here.
+          </p>
+        )}
+      </div>
       <div className="habits__item-actions">
         <button type="submit" disabled={isSaving}>
           {isSaving ? "Saving..." : "Save"}

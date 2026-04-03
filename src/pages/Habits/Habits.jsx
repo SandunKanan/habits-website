@@ -18,6 +18,7 @@ export default function Habits() {
   const {
     habits,
     attributes,
+    domains,
     todayISO: contextTodayISO,
     onAddHabit,
     onUpdateHabit,
@@ -37,6 +38,8 @@ export default function Habits() {
   const [frequencyUnit, setFrequencyUnit] = useState("day");
   const [importance, setImportance] = useState(String(IMPORTANCE_LEVELS[0].value));
   const [attributeLinks, setAttributeLinks] = useState([]);
+  const [domainIds, setDomainIds] = useState([]);
+  const [domainDraft, setDomainDraft] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -48,6 +51,8 @@ export default function Habits() {
   const [editImportance, setEditImportance] = useState(String(DEFAULT_IMPORTANCE_VALUE));
   const [editCreatedAt, setEditCreatedAt] = useState("");
   const [editAttributeLinks, setEditAttributeLinks] = useState([]);
+  const [editDomainIds, setEditDomainIds] = useState([]);
+  const [editDomainDraft, setEditDomainDraft] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [expandedDetailsById, setExpandedDetailsById] = useState({});
@@ -104,6 +109,12 @@ export default function Habits() {
       });
   }
 
+  function addDomain(currentDomainIds, nextDomainId) {
+    const normalizedId = String(nextDomainId ?? "").trim();
+    if (!normalizedId) return currentDomainIds;
+    return currentDomainIds.includes(normalizedId) ? currentDomainIds : [...currentDomainIds, normalizedId];
+  }
+
   async function handleAddHabit(e) {
     e.preventDefault();
     setFeedback("");
@@ -115,7 +126,8 @@ export default function Habits() {
       frequencyValue,
       frequencyUnit,
       importance,
-      attributeLinks: normalizeAttributeLinksForSave(attributeLinks)
+      attributeLinks: normalizeAttributeLinksForSave(attributeLinks),
+      domainIds
     });
 
     if (result?.ok) {
@@ -125,6 +137,8 @@ export default function Habits() {
       setFrequencyUnit("day");
       setImportance(String(IMPORTANCE_LEVELS[0].value));
       setAttributeLinks([]);
+      setDomainIds([]);
+      setDomainDraft("");
       setFeedback("Habit added.");
       setIsAddOpen(false);
     } else {
@@ -152,6 +166,8 @@ export default function Habits() {
           }))
         : []
     );
+    setEditDomainIds(Array.isArray(habit.domainIds) ? habit.domainIds : []);
+    setEditDomainDraft("");
     setEditFeedback("");
   }
 
@@ -159,6 +175,8 @@ export default function Habits() {
     setEditingId(null);
     setEditFeedback("");
     setEditAttributeLinks([]);
+    setEditDomainIds([]);
+    setEditDomainDraft("");
   }
 
   async function handleSaveEdit(e) {
@@ -175,7 +193,8 @@ export default function Habits() {
       frequencyUnit: editFrequencyUnit,
       importance: editImportance,
       createdAt: editCreatedAt,
-      attributeLinks: normalizeAttributeLinksForSave(editAttributeLinks)
+      attributeLinks: normalizeAttributeLinksForSave(editAttributeLinks),
+      domainIds: editDomainIds
     });
 
     if (result?.ok) {
@@ -464,6 +483,75 @@ export default function Habits() {
               </div>
             </div>
 
+            <div className="habits__form-group">
+              <div className="habits__form-label">Domains</div>
+              <div className="habits__domain-links">
+                <div className="habits__domain-links-head">
+                  <h4>Domains</h4>
+                  <small>Connect this habit to the larger areas or branches it supports.</small>
+                </div>
+                {domains.length === 0 ? (
+                  <p className="habits__attribute-links-empty">
+                    Create domains first on the Domains page before linking them here.
+                  </p>
+                ) : (
+                  <>
+                    <div className="habits__domain-link-add-row">
+                      <select
+                        value={domainDraft}
+                        onChange={(e) => setDomainDraft(e.target.value)}
+                        disabled={isSaving || isPersisting}
+                      >
+                        <option value="">Select domain</option>
+                        {domains
+                          .filter((domain) => !domainIds.includes(domain.id))
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((domain) => (
+                            <option key={domain.id} value={domain.id}>
+                              {domain.name}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="habits__attribute-link-add"
+                        onClick={() => {
+                          setDomainIds((current) => addDomain(current, domainDraft));
+                          setDomainDraft("");
+                        }}
+                        disabled={isSaving || isPersisting || !domainDraft}
+                      >
+                        Add domain
+                      </button>
+                    </div>
+                    {domainIds.length > 0 ? (
+                      <div className="habits__domain-link-list">
+                        {domainIds.map((selectedDomainId) => {
+                          const selectedDomain = domains.find((domain) => domain.id === selectedDomainId);
+                          return (
+                            <div key={selectedDomainId} className="habits__domain-link-pill">
+                              <span>{selectedDomain ? selectedDomain.name : "Unknown domain"}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setDomainIds((current) =>
+                                    current.filter((id) => id !== selectedDomainId)
+                                  )
+                                }
+                                disabled={isSaving || isPersisting}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="habits__form-actions">
               <button type="submit" className="habits__save-btn" disabled={isSaving || isPersisting}>
                 {isSaving || isPersisting ? "Saving..." : "Save Habit"}
@@ -533,6 +621,15 @@ export default function Habits() {
               onImportanceChange: (e) => setEditImportance(e.target.value),
               createdAt: editCreatedAt,
               onCreatedAtChange: (e) => setEditCreatedAt(e.target.value),
+              domainIds: editDomainIds,
+              domainDraft: editDomainDraft,
+              onDomainDraftChange: (e) => setEditDomainDraft(e.target.value),
+              onAddDomain: () => {
+                setEditDomainIds((current) => addDomain(current, editDomainDraft));
+                setEditDomainDraft("");
+              },
+              onRemoveDomain: (domainId) =>
+                setEditDomainIds((current) => current.filter((id) => id !== domainId)),
               attributeLinks: editAttributeLinks,
               onAddAttributeLink: () =>
                 setEditAttributeLinks((current) => [...current, makeEmptyAttributeLink()]),
@@ -554,6 +651,7 @@ export default function Habits() {
                 )
             }}
             attributes={attributes}
+            domains={domains}
             editFeedback={editFeedback}
             isSavingEdit={isSavingEdit}
             onStartEdit={startEdit}

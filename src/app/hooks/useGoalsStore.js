@@ -94,7 +94,12 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
       .filter((subgoal) => subgoal.title);
   }
 
-  async function addGoal({ title, timeframeType, targetDate, notes, subgoals }) {
+  function normalizeDomainIds(domainIds) {
+    if (!Array.isArray(domainIds)) return [];
+    return [...new Set(domainIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
+  }
+
+  async function addGoal({ title, timeframeType, targetDate, notes, subgoals, domainIds }) {
     const trimmedTitle = String(title ?? "").trim();
     if (!trimmedTitle) {
       return { ok: false, error: "Goal title is required." };
@@ -114,6 +119,7 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
       timeframeType: normalizedTimeframeType,
       targetDate: normalizedTimeframeType === "fixed_timeframe" ? String(targetDate ?? "") : "",
       notes: String(notes ?? "").trim(),
+      domainIds: normalizeDomainIds(domainIds),
       subgoals: normalizeSubgoals(subgoals),
       createdAt: now,
       updatedAt: now
@@ -153,6 +159,7 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
             timeframeType: normalizedTimeframeType,
             targetDate: normalizedTargetDate,
             notes: String(updates?.notes ?? goal.notes ?? "").trim(),
+            domainIds: normalizeDomainIds(updates?.domainIds ?? goal.domainIds),
             subgoals: normalizeSubgoals(updates?.subgoals ?? goal.subgoals),
             updatedAt: new Date().toISOString()
           }

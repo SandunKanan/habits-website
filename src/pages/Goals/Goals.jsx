@@ -12,11 +12,13 @@ function formatTimeframeType(timeframeType) {
 }
 
 export default function Goals() {
-  const { goals, onAddGoal, onUpdateGoal, onDeleteGoal, isPersisting } = useOutletContext();
+  const { goals, domains, onAddGoal, onUpdateGoal, onDeleteGoal, isPersisting } = useOutletContext();
   const [title, setTitle] = useState("");
   const [timeframeType, setTimeframeType] = useState("long_term");
   const [targetDate, setTargetDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [domainIds, setDomainIds] = useState([]);
+  const [domainDraft, setDomainDraft] = useState("");
   const [subgoals, setSubgoals] = useState([]);
   const [subgoalDraft, setSubgoalDraft] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -26,6 +28,8 @@ export default function Goals() {
   const [editTimeframeType, setEditTimeframeType] = useState("long_term");
   const [editTargetDate, setEditTargetDate] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editDomainIds, setEditDomainIds] = useState([]);
+  const [editDomainDraft, setEditDomainDraft] = useState("");
   const [editSubgoals, setEditSubgoals] = useState([]);
   const [editSubgoalDraft, setEditSubgoalDraft] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
@@ -53,6 +57,9 @@ export default function Goals() {
 
   const longTermCount = sortedGoals.filter((goal) => goal.timeframeType === "long_term").length;
   const fixedCount = sortedGoals.filter((goal) => goal.timeframeType === "fixed_timeframe").length;
+  const selectedDomainIds = new Set(domainIds);
+  const selectedEditDomainIds = new Set(editDomainIds);
+  const domainOptions = [...domains].sort((a, b) => a.name.localeCompare(b.name));
 
   function addSubgoalItem(currentItems, draft) {
     const trimmedDraft = String(draft ?? "").trim();
@@ -68,12 +75,14 @@ export default function Goals() {
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddGoal({ title, timeframeType, targetDate, notes, subgoals });
+    const result = await onAddGoal({ title, timeframeType, targetDate, notes, domainIds, subgoals });
     if (result?.ok) {
       setTitle("");
       setTimeframeType("long_term");
       setTargetDate("");
       setNotes("");
+      setDomainIds([]);
+      setDomainDraft("");
       setSubgoals([]);
       setSubgoalDraft("");
       setFeedback("Goal added.");
@@ -90,6 +99,8 @@ export default function Goals() {
     setEditTimeframeType(goal.timeframeType);
     setEditTargetDate(goal.targetDate ?? "");
     setEditNotes(goal.notes ?? "");
+    setEditDomainIds(Array.isArray(goal.domainIds) ? goal.domainIds : []);
+    setEditDomainDraft("");
     setEditSubgoals(Array.isArray(goal.subgoals) ? goal.subgoals : []);
     setEditSubgoalDraft("");
     setEditFeedback("");
@@ -101,6 +112,8 @@ export default function Goals() {
     setEditTimeframeType("long_term");
     setEditTargetDate("");
     setEditNotes("");
+    setEditDomainIds([]);
+    setEditDomainDraft("");
     setEditSubgoals([]);
     setEditSubgoalDraft("");
     setEditFeedback("");
@@ -118,6 +131,7 @@ export default function Goals() {
       timeframeType: editTimeframeType,
       targetDate: editTargetDate,
       notes: editNotes,
+      domainIds: editDomainIds,
       subgoals: editSubgoals
     });
 
@@ -139,6 +153,35 @@ export default function Goals() {
   function handleAddEditSubgoal() {
     setEditSubgoals((current) => addSubgoalItem(current, editSubgoalDraft));
     setEditSubgoalDraft("");
+  }
+
+  function addDomainFromDraft() {
+    const nextDomainId = String(domainDraft ?? "");
+    if (!nextDomainId) return;
+    setDomainIds((current) => (current.includes(nextDomainId) ? current : [...current, nextDomainId]));
+    setDomainDraft("");
+  }
+
+  function addEditDomainFromDraft() {
+    const nextDomainId = String(editDomainDraft ?? "");
+    if (!nextDomainId) return;
+    setEditDomainIds((current) =>
+      current.includes(nextDomainId) ? current : [...current, nextDomainId]
+    );
+    setEditDomainDraft("");
+  }
+
+  function removeDomain(domainId) {
+    setDomainIds((current) => current.filter((id) => id !== domainId));
+  }
+
+  function removeEditDomain(domainId) {
+    setEditDomainIds((current) => current.filter((id) => id !== domainId));
+  }
+
+  function describeDomain(domainId) {
+    const domain = domains.find((item) => item.id === domainId);
+    return domain ? domain.name : "Unknown domain";
   }
 
   function handleSubgoalKeyDown(event, onAddItem) {
@@ -241,6 +284,44 @@ export default function Goals() {
               onChange={(e) => setNotes(e.target.value)}
               disabled={isSaving || isPersisting}
             />
+          </div>
+
+          <div className="goalspage__field">
+            <label>Domains</label>
+            <p>Link this goal to the areas or branches it belongs to.</p>
+            <div className="goalspage__target-picker">
+              <select
+                value={domainDraft}
+                onChange={(e) => setDomainDraft(e.target.value)}
+                disabled={isSaving || isPersisting || domains.length === 0}
+              >
+                <option value="">{domains.length === 0 ? "Add domains first" : "Select a domain"}</option>
+                {domainOptions.map((domain) => (
+                  <option key={domain.id} value={domain.id} disabled={selectedDomainIds.has(domain.id)}>
+                    {domain.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={addDomainFromDraft}
+                disabled={isSaving || isPersisting || !domainDraft}
+              >
+                Add
+              </button>
+            </div>
+            {domainIds.length > 0 ? (
+              <ul className="goalspage__domain-list">
+                {domainIds.map((domainId) => (
+                  <li key={domainId}>
+                    <span>{describeDomain(domainId)}</span>
+                    <button type="button" onClick={() => removeDomain(domainId)} disabled={isSaving || isPersisting}>
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="goalspage__field">
@@ -371,6 +452,53 @@ export default function Goals() {
                     </div>
 
                     <div className="goalspage__field">
+                      <label>Domains</label>
+                      <div className="goalspage__target-picker">
+                        <select
+                          value={editDomainDraft}
+                          onChange={(e) => setEditDomainDraft(e.target.value)}
+                          disabled={isSavingEdit || isPersisting || domains.length === 0}
+                        >
+                          <option value="">
+                            {domains.length === 0 ? "Add domains first" : "Select a domain"}
+                          </option>
+                          {domainOptions.map((domain) => (
+                            <option
+                              key={domain.id}
+                              value={domain.id}
+                              disabled={selectedEditDomainIds.has(domain.id)}
+                            >
+                              {domain.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={addEditDomainFromDraft}
+                          disabled={isSavingEdit || isPersisting || !editDomainDraft}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {editDomainIds.length > 0 ? (
+                        <ul className="goalspage__domain-list">
+                          {editDomainIds.map((domainId) => (
+                            <li key={domainId}>
+                              <span>{describeDomain(domainId)}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeEditDomain(domainId)}
+                                disabled={isSavingEdit || isPersisting}
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+
+                    <div className="goalspage__field">
                       <label htmlFor={`edit-goal-subgoal-${goal.id}`}>Subgoals</label>
                       <div className="goalspage__subgoal-input">
                         <input
@@ -445,6 +573,18 @@ export default function Goals() {
                     </div>
 
                     {goal.notes ? <p className="goalspage__notes">{goal.notes}</p> : null}
+                    {Array.isArray(goal.domainIds) && goal.domainIds.length > 0 ? (
+                      <div className="goalspage__subgoals">
+                        <h4>Domains</h4>
+                        <ul className="goalspage__subgoal-list goalspage__subgoal-list--read">
+                          {goal.domainIds.map((domainId) => (
+                            <li key={domainId}>
+                              <span>{describeDomain(domainId)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     {Array.isArray(goal.subgoals) && goal.subgoals.length > 0 ? (
                       <div className="goalspage__subgoals">
                         <h4>Subgoals</h4>

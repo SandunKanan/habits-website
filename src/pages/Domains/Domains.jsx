@@ -18,7 +18,7 @@ function buildDepthLabel(depth) {
 }
 
 export default function Domains() {
-  const { domains, focus, onAddDomain, onUpdateDomain, onDeleteDomain, isPersisting } =
+  const { domains, focus, goals, learnings, habits, onAddDomain, onUpdateDomain, onDeleteDomain, isPersisting } =
     useOutletContext();
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
@@ -33,6 +33,11 @@ export default function Domains() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
   const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [inlineParentId, setInlineParentId] = useState("");
+  const [inlineChildName, setInlineChildName] = useState("");
+  const [inlineChildNotes, setInlineChildNotes] = useState("");
+  const [inlineFeedback, setInlineFeedback] = useState("");
+  const [isSavingInline, setIsSavingInline] = useState(false);
 
   const tree = useMemo(() => buildTree(domains), [domains]);
   const rootCount = domains.filter((domain) => !domain.parentId).length;
@@ -49,6 +54,21 @@ export default function Domains() {
       }
       return next;
     });
+  }
+
+  function openInlineChildForm(domainId) {
+    setInlineParentId(domainId);
+    setInlineChildName("");
+    setInlineChildNotes("");
+    setInlineFeedback("");
+    setExpandedIds((current) => new Set([...current, domainId]));
+  }
+
+  function closeInlineChildForm() {
+    setInlineParentId("");
+    setInlineChildName("");
+    setInlineChildNotes("");
+    setInlineFeedback("");
   }
 
   async function handleAddDomain(event) {
@@ -70,6 +90,23 @@ export default function Domains() {
     }
 
     setIsSaving(false);
+  }
+
+  async function handleAddInlineChild(event, parentDomainId) {
+    event.preventDefault();
+    setInlineFeedback("");
+    setIsSavingInline(true);
+
+    const result = await onAddDomain({ name: inlineChildName, parentId: parentDomainId, notes: inlineChildNotes });
+    if (result?.ok) {
+      closeInlineChildForm();
+      setFeedback("Child domain added.");
+      setExpandedIds((current) => new Set([...current, parentDomainId]));
+    } else {
+      setInlineFeedback(result?.error ?? "Could not add child domain.");
+    }
+
+    setIsSavingInline(false);
   }
 
   function startEdit(domain) {
@@ -150,6 +187,13 @@ export default function Domains() {
     }
 
     collectChildrenIds(domain);
+    const linkedGoals = goals.filter((goal) => Array.isArray(goal.domainIds) && goal.domainIds.includes(domain.id));
+    const linkedPursuits = learnings.filter(
+      (item) => Array.isArray(item.domainIds) && item.domainIds.includes(domain.id)
+    );
+    const linkedHabits = habits.filter(
+      (habit) => Array.isArray(habit.domainIds) && habit.domainIds.includes(domain.id)
+    );
 
     return (
       <li key={domain.id} className="domainspage__node">
@@ -217,6 +261,21 @@ export default function Domains() {
                     {focusDomainIds.has(domain.id) ? (
                       <span className="domainspage__badge domainspage__badge--focus">Focus</span>
                     ) : null}
+                    {linkedGoals.length > 0 ? (
+                      <span className="domainspage__badge domainspage__badge--linked">
+                        {linkedGoals.length} goal{linkedGoals.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                    {linkedPursuits.length > 0 ? (
+                      <span className="domainspage__badge domainspage__badge--linked-pursuit">
+                        {linkedPursuits.length} pursuit{linkedPursuits.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                    {linkedHabits.length > 0 ? (
+                      <span className="domainspage__badge domainspage__badge--linked-habit">
+                        {linkedHabits.length} habit{linkedHabits.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
                     {hasChildren ? (
                       <button
                         type="button"
@@ -229,15 +288,41 @@ export default function Domains() {
                   </div>
                   <h3>{domain.name}</h3>
                   {domain.notes ? <p className="domainspage__notes">{domain.notes}</p> : null}
+                  {linkedGoals.length > 0 ? (
+                    <div className="domainspage__linked">
+                      <h4>Linked goals</h4>
+                      <ul className="domainspage__linked-list">
+                        {linkedGoals.slice(0, 3).map((goal) => (
+                          <li key={goal.id}>{goal.title}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {linkedPursuits.length > 0 ? (
+                    <div className="domainspage__linked">
+                      <h4>Linked pursuits</h4>
+                      <ul className="domainspage__linked-list">
+                        {linkedPursuits.slice(0, 3).map((item) => (
+                          <li key={item.id}>{item.title}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {linkedHabits.length > 0 ? (
+                    <div className="domainspage__linked">
+                      <h4>Linked habits</h4>
+                      <ul className="domainspage__linked-list">
+                        {linkedHabits.slice(0, 3).map((habit) => (
+                          <li key={habit.id}>{habit.name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="domainspage__item-actions">
                   <button
                     type="button"
-                    onClick={() => {
-                      setParentId(domain.id);
-                      setName("");
-                      setNotes("");
-                    }}
+                    onClick={() => openInlineChildForm(domain.id)}
                     disabled={isPersisting}
                   >
                     Add child
@@ -258,6 +343,41 @@ export default function Domains() {
             </>
           )}
         </article>
+
+        {inlineParentId === domain.id ? (
+          <form className="domainspage__inline-form card" onSubmit={(event) => handleAddInlineChild(event, domain.id)}>
+            <div className="domainspage__field">
+              <label htmlFor={`inline-child-name-${domain.id}`}>Child domain</label>
+              <input
+                id={`inline-child-name-${domain.id}`}
+                type="text"
+                value={inlineChildName}
+                onChange={(event) => setInlineChildName(event.target.value)}
+                disabled={isSavingInline || isPersisting}
+                required
+              />
+            </div>
+            <div className="domainspage__field">
+              <label htmlFor={`inline-child-notes-${domain.id}`}>Notes</label>
+              <textarea
+                id={`inline-child-notes-${domain.id}`}
+                rows={3}
+                value={inlineChildNotes}
+                onChange={(event) => setInlineChildNotes(event.target.value)}
+                disabled={isSavingInline || isPersisting}
+              />
+            </div>
+            <div className="domainspage__actions">
+              <button type="submit" disabled={isSavingInline || isPersisting}>
+                {isSavingInline || isPersisting ? "Saving..." : "Add child"}
+              </button>
+              <button type="button" onClick={closeInlineChildForm} disabled={isSavingInline || isPersisting}>
+                Cancel
+              </button>
+              {inlineFeedback ? <p className="domainspage__feedback">{inlineFeedback}</p> : null}
+            </div>
+          </form>
+        ) : null}
 
         {hasChildren && isExpanded ? (
           <ul className="domainspage__tree">{domain.children.map((child) => renderDomainNode(child, depth + 1))}</ul>

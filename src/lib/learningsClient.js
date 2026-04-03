@@ -55,6 +55,9 @@ function normalizeLearningItem(item) {
     priority: Number(item.priority ?? 3),
     status: String(item.status ?? "idea"),
     notes: String(item.notes ?? "").trim(),
+    domainIds: Array.isArray(item.domainIds ?? item.domain_ids_json)
+      ? [...new Set((item.domainIds ?? item.domain_ids_json).map(String).filter(Boolean))]
+      : [],
     pursuitTargets: Array.isArray(item.pursuitTargets ?? item.pursuit_targets_json)
       ? (item.pursuitTargets ?? item.pursuit_targets_json)
           .map((target) => ({
@@ -79,6 +82,7 @@ function parseLearningRows(rows) {
       priority: row.priority,
       status: row.status,
       notes: row.notes,
+      domainIds: row.domain_ids_json,
       pursuitTargets: row.pursuit_targets_json,
       createdAt: row.created_at,
       updatedAt: row.updated_at
@@ -96,13 +100,14 @@ function serializeLearningRow(item, userId) {
     priority: Number(item.priority ?? 3),
     status: item.status,
     notes: item.notes ?? "",
+    domain_ids_json: Array.isArray(item.domainIds) ? item.domainIds : [],
     pursuit_targets_json: Array.isArray(item.pursuitTargets) ? item.pursuitTargets : []
   };
 }
 
 export async function loadLearningsForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/learning_items?user_id=eq.${userId}&select=id,slug,title,item_type,priority,status,notes,pursuit_targets_json,created_at,updated_at&order=created_at.asc`,
+    `/rest/v1/learning_items?user_id=eq.${userId}&select=id,slug,title,item_type,priority,status,notes,domain_ids_json,pursuit_targets_json,created_at,updated_at&order=created_at.asc`,
     accessToken
   );
 

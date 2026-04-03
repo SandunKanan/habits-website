@@ -49,7 +49,8 @@
 }
 
 .domainspage__form,
-.domainspage__edit {
+.domainspage__edit,
+.domainspage__inline-form {
   display: grid;
   gap: 18px;
 }
@@ -166,6 +167,17 @@
   border-left: 1px solid rgba(143, 211, 255, 0.12);
 }
 
+.domainspage__inline-form {
+  margin-top: 12px;
+  margin-left: 18px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+    rgba(12, 21, 33, 0.75);
+  border: 1px solid rgba(143, 211, 255, 0.12);
+}
+
 .domainspage__item {
   position: relative;
   overflow: hidden;
@@ -213,6 +225,24 @@
   color: rgb(252, 163, 163);
 }
 
+.domainspage__badge--linked {
+  border-color: rgba(255, 210, 143, 0.35);
+  background: rgba(255, 210, 143, 0.12);
+  color: rgba(255, 210, 143, 0.98);
+}
+
+.domainspage__badge--linked-pursuit {
+  border-color: rgba(82, 214, 195, 0.35);
+  background: rgba(82, 214, 195, 0.1);
+  color: rgba(82, 214, 195, 0.98);
+}
+
+.domainspage__badge--linked-habit {
+  border-color: rgba(143, 211, 255, 0.35);
+  background: rgba(143, 211, 255, 0.12);
+  color: rgba(143, 211, 255, 0.98);
+}
+
 .domainspage__toggle {
   cursor: pointer;
 }
@@ -221,6 +251,38 @@
   margin: 10px 0 0;
   color: $muted;
   line-height: 1.7;
+}
+
+.domainspage__linked {
+  margin-top: 14px;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+  }
+}
+
+.domainspage__linked-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+
+  li {
+    color: $muted;
+    padding-left: 18px;
+    position: relative;
+
+    &::before {
+      content: "└";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: $muted;
+      font-weight: 700;
+    }
+  }
 }
 
 .domainspage__delete-btn {

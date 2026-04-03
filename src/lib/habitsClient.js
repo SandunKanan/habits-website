@@ -76,6 +76,9 @@ function normalizeHabit(habit) {
         }))
         .filter((link) => link.attributeId && Number.isFinite(link.weight) && link.weight > 0)
     : [];
+  const domainIds = Array.isArray(habit.domainIds ?? habit.domain_ids_json)
+    ? [...new Set((habit.domainIds ?? habit.domain_ids_json).map(String).filter(Boolean))]
+    : [];
   const frequency = normalizeFrequency(habit);
 
   return {
@@ -89,7 +92,8 @@ function normalizeHabit(habit) {
     doneDates,
     skippedDates,
     subtasks,
-    attributeLinks
+    attributeLinks,
+    domainIds
   };
 }
 
@@ -133,7 +137,8 @@ function parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows) 
       doneDates: completionsByHabitId.get(habitRow.id) ?? [],
       skippedDates: skipsByHabitId.get(habitRow.id) ?? [],
       subtasks: habitRow.subtasks ?? [],
-      attributeLinks: linksByHabitId.get(habitRow.id) ?? []
+      attributeLinks: linksByHabitId.get(habitRow.id) ?? [],
+      domainIds: habitRow.domain_ids_json
     })
   );
 }
@@ -152,7 +157,8 @@ function serializeHabitRow(habit, userId) {
     importance: normalizeImportanceValue(habit.importance),
     created_at: habit.createdAt ?? null,
     initial_last_done: habit.initialLastDone ?? null,
-    subtasks: habit.subtasks ?? []
+    subtasks: habit.subtasks ?? [],
+    domain_ids_json: Array.isArray(habit.domainIds) ? habit.domainIds : []
   };
 }
 

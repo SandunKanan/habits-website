@@ -41,7 +41,8 @@ export default function HabitListItem({
   onMarkDone,
   onUndoDoneToday,
   formatLastCompleted,
-  attributes
+  attributes,
+  domains
 }) {
   const sortedDoneDates = getSortedDoneDates(habit);
   const lastCompleted = formatLastCompleted(sortedDoneDates[0]);
@@ -71,6 +72,12 @@ export default function HabitListItem({
           createdAt={editState.createdAt}
           onCreatedAtChange={editState.onCreatedAtChange}
           attributes={attributes}
+          domains={domains}
+          domainIds={editState.domainIds}
+          domainDraft={editState.domainDraft}
+          onDomainDraftChange={editState.onDomainDraftChange}
+          onAddDomain={editState.onAddDomain}
+          onRemoveDomain={editState.onRemoveDomain}
           attributeLinks={editState.attributeLinks}
           onAddAttributeLink={editState.onAddAttributeLink}
           onRemoveAttributeLink={editState.onRemoveAttributeLink}
@@ -180,6 +187,17 @@ export default function HabitListItem({
               <dd>
                 {Array.isArray(habit.attributeLinks) && habit.attributeLinks.length > 0
                   ? habit.attributeLinks.length
+                  : "None"}
+              </dd>
+            </div>
+            <div>
+              <dt>Domains</dt>
+              <dd>
+                {Array.isArray(habit.domainIds) && habit.domainIds.length > 0
+                  ? habit.domainIds
+                      .map((domainId) => domains.find((item) => item.id === domainId)?.name)
+                      .filter(Boolean)
+                      .join(", ")
                   : "None"}
               </dd>
             </div>
