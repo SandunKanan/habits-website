@@ -11,6 +11,7 @@ export default function Layout({
   attributes,
   vision,
   focus,
+  goals,
   learnings,
   settings,
   onAddHabit,
@@ -21,6 +22,9 @@ export default function Layout({
   onDeleteAttribute,
   onSaveVision,
   onSaveFocus,
+  onAddGoal,
+  onUpdateGoal,
+  onDeleteGoal,
   onAddLearningItem,
   onUpdateLearningItem,
   onDeleteLearningItem,
@@ -98,6 +102,15 @@ export default function Layout({
         </>
       )
     },
+    "/goals": {
+      title: "Goals",
+      subtitle: "The outcomes your system is moving toward",
+      meta: (
+        <>
+          Total goals: <b>{goals.length}</b>
+        </>
+      )
+    },
     "/learnings": {
       title: "Pursuits",
       subtitle: "Courses, projects, and things you want to work on",
@@ -160,6 +173,7 @@ export default function Layout({
               attributes,
               vision,
               focus,
+              goals,
               learnings,
               settings,
               onAddHabit,
@@ -170,6 +184,9 @@ export default function Layout({
               onDeleteAttribute,
               onSaveVision,
               onSaveFocus,
+              onAddGoal,
+              onUpdateGoal,
+              onDeleteGoal,
               onAddLearningItem,
               onUpdateLearningItem,
               onDeleteLearningItem,

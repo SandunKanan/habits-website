@@ -1,0 +1,245 @@
+@use "../../styles/variables" as *;
+
+.goalspage {
+  display: grid;
+  gap: 18px;
+}
+
+.goalspage__hero,
+.goalspage__section,
+.goalspage__summary-card,
+.goalspage__item,
+.goalspage__empty {
+  background:
+    radial-gradient(circle at top right, rgba(255, 210, 143, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.goalspage__hero,
+.goalspage__section,
+.goalspage__item,
+.goalspage__empty {
+  padding: 24px;
+}
+
+.goalspage__hero {
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95;
+  }
+}
+
+.goalspage__eyebrow {
+  margin: 0 0 10px;
+  color: rgba(255, 210, 143, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.goalspage__intro {
+  margin: 12px 0 0;
+  max-width: 48rem;
+  color: $muted;
+  line-height: 1.7;
+}
+
+.goalspage__form,
+.goalspage__edit {
+  display: grid;
+  gap: 18px;
+}
+
+.goalspage__field {
+  display: grid;
+  gap: 8px;
+
+  label {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    line-height: 1.6;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+  }
+}
+
+.goalspage__grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.goalspage__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, rgba(255, 210, 143, 0.18), rgba(143, 211, 255, 0.1));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.goalspage__feedback {
+  margin: 0;
+  color: $accent;
+}
+
+.goalspage__summary {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.goalspage__summary-card {
+  padding: 18px 20px;
+
+  span {
+    display: block;
+    margin-bottom: 10px;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+  }
+
+  strong {
+    font-size: 2rem;
+    line-height: 1;
+  }
+}
+
+.goalspage__list {
+  display: grid;
+  gap: 16px;
+}
+
+.goalspage__empty {
+  h3 {
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.7;
+  }
+}
+
+.goalspage__item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 10px 0 0;
+    font-size: clamp(1.3rem, 2vw, 1.7rem);
+  }
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
+.goalspage__badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.goalspage__badge {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.goalspage__badge--long_term {
+  border-color: rgba(255, 210, 143, 0.4);
+  color: rgba(255, 210, 143, 0.98);
+}
+
+.goalspage__badge--fixed_timeframe {
+  border-color: rgba(143, 211, 255, 0.4);
+  color: $accent;
+}
+
+.goalspage__item-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.goalspage__delete-btn {
+  color: rgb(248, 113, 113);
+  border-color: rgba(255, 107, 107, 0.5) !important;
+}
+
+.goalspage__notes {
+  margin: 0;
+  color: $muted;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.goalspage__meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  color: $muted;
+  font-size: 0.92rem;
+}

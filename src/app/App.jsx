@@ -7,6 +7,7 @@ import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
 import Vision from "../pages/Vision/Vision.jsx";
 import Focus from "../pages/Focus/Focus.jsx";
+import Goals from "../pages/Goals/Goals.jsx";
 import Learnings from "../pages/Learnings/Learnings.jsx";
 import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
@@ -22,6 +23,7 @@ import { useHabitsStore } from "./hooks/useHabitsStore.js";
 import { useAttributesStore } from "./hooks/useAttributesStore.js";
 import { useVisionStore } from "./hooks/useVisionStore.js";
 import { useFocusStore } from "./hooks/useFocusStore.js";
+import { useGoalsStore } from "./hooks/useGoalsStore.js";
 import { useLearningsStore } from "./hooks/useLearningsStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
@@ -63,6 +65,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const goalsStore = useGoalsStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const learningsStore = useLearningsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -83,6 +91,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
@@ -96,6 +105,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
@@ -109,6 +119,7 @@ export default function App() {
       attributesStore.beginLoadingAttributes();
       visionStore.beginLoadingVision();
       focusStore.beginLoadingFocus();
+      goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
       settingsStore.beginLoadingSettings();
     }
@@ -122,6 +133,7 @@ export default function App() {
     attributesStore.resetAttributesState();
     visionStore.resetVisionState();
     focusStore.resetFocusState();
+    goalsStore.resetGoalsState();
     learningsStore.resetLearningsState();
     settingsStore.resetSettingsState();
   }
@@ -139,6 +151,7 @@ export default function App() {
     attributesStore.isLoading ||
     visionStore.isLoading ||
     focusStore.isLoading ||
+    goalsStore.isLoading ||
     learningsStore.isLoading ||
     settingsStore.isLoading
   ) {
@@ -150,6 +163,7 @@ export default function App() {
     attributesStore.loadError ||
     visionStore.loadError ||
     focusStore.loadError ||
+    goalsStore.loadError ||
     learningsStore.loadError ||
     settingsStore.loadError
   ) {
@@ -159,6 +173,7 @@ export default function App() {
           attributesStore.loadError ||
           visionStore.loadError ||
           focusStore.loadError ||
+          goalsStore.loadError ||
           learningsStore.loadError ||
           settingsStore.loadError}
       </div>
@@ -189,6 +204,7 @@ export default function App() {
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
             focus={focusStore.focus}
+            goals={goalsStore.goals}
             learnings={learningsStore.learnings}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
@@ -199,6 +215,9 @@ export default function App() {
             onDeleteAttribute={attributesStore.deleteAttribute}
             onSaveVision={visionStore.saveVision}
             onSaveFocus={focusStore.saveFocus}
+            onAddGoal={goalsStore.addGoal}
+            onUpdateGoal={goalsStore.updateGoal}
+            onDeleteGoal={goalsStore.deleteGoal}
             onAddLearningItem={learningsStore.addLearningItem}
             onUpdateLearningItem={learningsStore.updateLearningItem}
             onDeleteLearningItem={learningsStore.deleteLearningItem}
@@ -218,6 +237,7 @@ export default function App() {
               attributesStore.isPersisting ||
               visionStore.isPersisting ||
               focusStore.isPersisting ||
+              goalsStore.isPersisting ||
               learningsStore.isPersisting ||
               settingsStore.isPersisting
             }
@@ -234,6 +254,7 @@ export default function App() {
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/vision" element={<Vision />} />
         <Route path="/focus" element={<Focus />} />
+        <Route path="/goals" element={<Goals />} />
         <Route path="/learnings" element={<Learnings />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
