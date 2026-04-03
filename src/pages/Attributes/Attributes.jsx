@@ -8,6 +8,7 @@ export default function Attributes() {
     todayISO,
     attributes,
     habits,
+    oneOffTasks,
     vision,
     settings,
     onAddAttribute,
@@ -29,6 +30,7 @@ export default function Attributes() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
   const attributeSummaries = buildAttributeSummaries(attributes, habits, todayISO, {
+    oneOffTasks,
     useAttributeDecay: settings?.useAttributeDecay
   });
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
@@ -200,7 +202,7 @@ export default function Attributes() {
                 <dd>{score.toFixed(2)}</dd>
               </div>
               <div>
-                <dt>Linked habits</dt>
+                <dt>Linked items</dt>
                 <dd>{linkedHabitCount}</dd>
               </div>
               <div>
@@ -216,14 +218,17 @@ export default function Attributes() {
             <div className="attributes__contributors">
               <h4>Top contributors</h4>
               {contributors.length === 0 ? (
-                <p className="attributes__contributors-empty">No habits linked yet.</p>
+                <p className="attributes__contributors-empty">No contributing items yet.</p>
               ) : (
                 <ul className="attributes__contributors-list">
                   {contributors.slice(0, 3).map((contributor) => (
                     <li key={contributor.habitId}>
                       <span>{contributor.habitName}</span>
                       <small>
-                        {contributor.completionCount} completions × {contributor.weight} ={" "}
+                        {contributor.sourceType === "one_off"
+                          ? `One-off completion × ${contributor.weight}`
+                          : `${contributor.completionCount} completions × ${contributor.weight}`}{" "}
+                        ={" "}
                         {contributor.contribution.toFixed(2)}
                       </small>
                     </li>

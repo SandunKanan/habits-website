@@ -1,11 +1,58 @@
-import React from "react";
+import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { getAttributeGainsFromLinks } from "../../lib/attributeScores.js";
 import "./History.scss";
 
 export default function History() {
-  const { habits } = useOutletContext();
+  const { todayISO, habits, attributes, oneOffTasks, onAddOneOffTask, isPersisting } =
+    useOutletContext();
+  const [taskTitle, setTaskTitle] = useState("");
+  const [completedOn, setCompletedOn] = useState(todayISO);
+  const [taskAttributeLinks, setTaskAttributeLinks] = useState([]);
+  const [feedback, setFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const groupedByDate = new Map();
+
+  function addTaskAttributeLink() {
+    setTaskAttributeLinks((current) => [...current, { attributeId: "", weight: 1 }]);
+  }
+
+  function updateTaskAttributeLink(index, updates) {
+    setTaskAttributeLinks((current) =>
+      current.map((link, linkIndex) => (linkIndex === index ? { ...link, ...updates } : link))
+    );
+  }
+
+  function removeTaskAttributeLink(index) {
+    setTaskAttributeLinks((current) => current.filter((_, linkIndex) => linkIndex !== index));
+  }
+
+  async function handleAddPastTask(event) {
+    event.preventDefault();
+    setFeedback("");
+    setIsSaving(true);
+
+    try {
+      const result = await onAddOneOffTask({
+        title: taskTitle,
+        completedOn,
+        attributeLinks: taskAttributeLinks
+      });
+
+      if (!result?.ok) {
+        setFeedback(result?.error || "Could not save completed task.");
+        return;
+      }
+
+      setTaskTitle("");
+      setCompletedOn(todayISO);
+      setTaskAttributeLinks([]);
+      setFeedback("Past task logged.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   function ensureDateGroup(dateISO) {
     if (!groupedByDate.has(dateISO)) {
@@ -21,7 +68,8 @@ export default function History() {
       dateGroup.set(habitName, {
         habitName,
         type: "subtask_only",
-        subtasks: []
+        subtasks: [],
+        attributeGains: []
       });
     }
 
@@ -49,6 +97,16 @@ export default function History() {
     }
   }
 
+  for (const task of Array.isArray(oneOffTasks) ? oneOffTasks : []) {
+    const dateGroup = ensureDateGroup(task.completedOn);
+    dateGroup.set(`one-off:${task.id}`, {
+      habitName: task.title,
+      type: "one_off_done",
+      subtasks: [],
+      attributeGains: getAttributeGainsFromLinks(task.attributeLinks, attributes)
+    });
+  }
+
   const dailyHistory = [...groupedByDate.entries()]
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([dateISO, habitEvents]) => ({
@@ -56,13 +114,95 @@ export default function History() {
       events: [...habitEvents.values()]
         .map((event) => ({
           ...event,
-          subtasks: [...new Set(event.subtasks)].sort((a, b) => a.localeCompare(b))
+          subtasks: [...new Set(event.subtasks)].sort((a, b) => a.localeCompare(b)),
+          attributeGains: Array.isArray(event.attributeGains) ? event.attributeGains : []
         }))
         .sort((a, b) => a.habitName.localeCompare(b.habitName))
     }));
 
   return (
     <div className="history">
+      <section className="history__log card">
+        <div className="history__log-head">
+          <div>
+            <h2>Log Past Task</h2>
+            <p>Add a one-off completion to a previous day.</p>
+          </div>
+        </div>
+
+        <form className="history__log-form" onSubmit={handleAddPastTask}>
+          <div className="history__log-grid">
+            <input
+              type="text"
+              value={taskTitle}
+              onChange={(event) => setTaskTitle(event.target.value)}
+              placeholder="Task name"
+              disabled={isPersisting || isSaving}
+            />
+            <input
+              type="date"
+              value={completedOn}
+              onChange={(event) => setCompletedOn(event.target.value)}
+              disabled={isPersisting || isSaving}
+            />
+          </div>
+
+          <div className="history__log-links">
+            {taskAttributeLinks.map((link, index) => (
+              <div key={`${link.attributeId}-${index}`} className="history__log-link-row">
+                <select
+                  value={link.attributeId}
+                  onChange={(event) =>
+                    updateTaskAttributeLink(index, { attributeId: event.target.value })
+                  }
+                  disabled={isPersisting || isSaving}
+                >
+                  <option value="">Choose attribute</option>
+                  {attributes.map((attribute) => (
+                    <option key={attribute.id} value={attribute.id}>
+                      {attribute.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={link.weight}
+                  onChange={(event) =>
+                    updateTaskAttributeLink(index, { weight: Number(event.target.value) })
+                  }
+                  disabled={isPersisting || isSaving}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeTaskAttributeLink(index)}
+                  disabled={isPersisting || isSaving}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+
+            <div className="history__log-actions">
+              <button
+                type="button"
+                className="history__secondary-btn"
+                onClick={addTaskAttributeLink}
+                disabled={isPersisting || isSaving}
+              >
+                Add attribute contribution
+              </button>
+              <button type="submit" disabled={isPersisting || isSaving}>
+                {isSaving ? "Saving..." : "Log past task"}
+              </button>
+            </div>
+          </div>
+
+          {feedback ? <p className="history__feedback">{feedback}</p> : null}
+        </form>
+      </section>
+
       {dailyHistory.length === 0 ? (
         <section className="history__empty card">
           <h2>Day-by-Day History</h2>
@@ -79,11 +219,15 @@ export default function History() {
             <ul className="history__event-list">
               {events.map((event, idx) => (
                 <li key={`${event.type}-${event.habitName}-${idx}`} className="history__event">
-                  <span className={`history__badge history__badge--${event.type.replace("_", "-")}`}>
+                  <span
+                    className={`history__badge history__badge--${event.type.replaceAll("_", "-")}`}
+                  >
                     {event.type === "habit_done"
                       ? "Completed"
                       : event.type === "habit_skipped"
                         ? "Skipped"
+                        : event.type === "one_off_done"
+                          ? "One-off"
                         : "Subtasks"}
                   </span>
                   <div className="history__event-copy">
@@ -93,6 +237,18 @@ export default function History() {
                         {event.subtasks.map((subtask) => (
                           <li key={subtask} className="history__subtask-copy">
                             {subtask}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {event.attributeGains.length > 0 ? (
+                      <ul className="history__subtask-list">
+                        {event.attributeGains.map((gain) => (
+                          <li
+                            key={`${gain.attributeId}-${gain.attributeName}`}
+                            className="history__subtask-copy"
+                          >
+                            {gain.attributeName} +{gain.weight.toFixed(2).replace(/\.00$/, "")}
                           </li>
                         ))}
                       </ul>

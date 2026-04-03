@@ -118,6 +118,16 @@ create table if not exists public.learning_items (
   unique (user_id, slug)
 );
 
+create table if not exists public.one_off_tasks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  title text not null,
+  completed_on date not null,
+  attribute_links_json jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   highlight_focus_attributes boolean not null default true,
@@ -148,6 +158,7 @@ create index if not exists vision_focus_attributes_attribute_id_idx on public.vi
 create index if not exists focus_periods_user_id_idx on public.focus_periods (user_id);
 create index if not exists goals_user_id_idx on public.goals (user_id);
 create index if not exists learning_items_user_id_idx on public.learning_items (user_id);
+create index if not exists one_off_tasks_user_id_idx on public.one_off_tasks (user_id);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
 alter table public.habits enable row level security;
@@ -160,6 +171,7 @@ alter table public.vision_focus_attributes enable row level security;
 alter table public.focus_periods enable row level security;
 alter table public.goals enable row level security;
 alter table public.learning_items enable row level security;
+alter table public.one_off_tasks enable row level security;
 alter table public.user_settings enable row level security;
 alter table public.user_roles enable row level security;
 
@@ -258,6 +270,12 @@ create policy "Users can read own learning items"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own one-off tasks" on public.one_off_tasks;
+create policy "Users can read own one-off tasks"
+  on public.one_off_tasks
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can read own settings" on public.user_settings;
 create policy "Users can read own settings"
   on public.user_settings
@@ -299,6 +317,12 @@ create policy "Users can insert own goals"
 drop policy if exists "Users can insert own learning items" on public.learning_items;
 create policy "Users can insert own learning items"
   on public.learning_items
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own one-off tasks" on public.one_off_tasks;
+create policy "Users can insert own one-off tasks"
+  on public.one_off_tasks
   for insert
   with check (auth.uid() = user_id);
 
@@ -351,6 +375,13 @@ create policy "Users can update own learning items"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own one-off tasks" on public.one_off_tasks;
+create policy "Users can update own one-off tasks"
+  on public.one_off_tasks
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 drop policy if exists "Users can update own settings" on public.user_settings;
 create policy "Users can update own settings"
   on public.user_settings
@@ -385,6 +416,12 @@ create policy "Users can delete own goals"
 drop policy if exists "Users can delete own learning items" on public.learning_items;
 create policy "Users can delete own learning items"
   on public.learning_items
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own one-off tasks" on public.one_off_tasks;
+create policy "Users can delete own one-off tasks"
+  on public.one_off_tasks
   for delete
   using (auth.uid() = user_id);
 

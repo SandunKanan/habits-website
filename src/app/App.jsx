@@ -25,6 +25,7 @@ import { useVisionStore } from "./hooks/useVisionStore.js";
 import { useFocusStore } from "./hooks/useFocusStore.js";
 import { useGoalsStore } from "./hooks/useGoalsStore.js";
 import { useLearningsStore } from "./hooks/useLearningsStore.js";
+import { useOneOffTasksStore } from "./hooks/useOneOffTasksStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
 
@@ -77,6 +78,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const oneOffTasksStore = useOneOffTasksStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const settingsStore = useSettingsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -93,6 +100,7 @@ export default function App() {
       focusStore.beginLoadingFocus();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
+      oneOffTasksStore.beginLoadingOneOffTasks();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -107,6 +115,7 @@ export default function App() {
       focusStore.beginLoadingFocus();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
+      oneOffTasksStore.beginLoadingOneOffTasks();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -121,6 +130,7 @@ export default function App() {
       focusStore.beginLoadingFocus();
       goalsStore.beginLoadingGoals();
       learningsStore.beginLoadingLearnings();
+      oneOffTasksStore.beginLoadingOneOffTasks();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -135,6 +145,7 @@ export default function App() {
     focusStore.resetFocusState();
     goalsStore.resetGoalsState();
     learningsStore.resetLearningsState();
+    oneOffTasksStore.resetOneOffTasksState();
     settingsStore.resetSettingsState();
   }
 
@@ -153,6 +164,7 @@ export default function App() {
     focusStore.isLoading ||
     goalsStore.isLoading ||
     learningsStore.isLoading ||
+    oneOffTasksStore.isLoading ||
     settingsStore.isLoading
   ) {
     return <div className="appstatus card">Loading habits...</div>;
@@ -165,6 +177,7 @@ export default function App() {
     focusStore.loadError ||
     goalsStore.loadError ||
     learningsStore.loadError ||
+    oneOffTasksStore.loadError ||
     settingsStore.loadError
   ) {
     return (
@@ -175,6 +188,7 @@ export default function App() {
           focusStore.loadError ||
           goalsStore.loadError ||
           learningsStore.loadError ||
+          oneOffTasksStore.loadError ||
           settingsStore.loadError}
       </div>
     );
@@ -206,6 +220,7 @@ export default function App() {
             focus={focusStore.focus}
             goals={goalsStore.goals}
             learnings={learningsStore.learnings}
+            oneOffTasks={oneOffTasksStore.oneOffTasks}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
@@ -221,6 +236,8 @@ export default function App() {
             onAddLearningItem={learningsStore.addLearningItem}
             onUpdateLearningItem={learningsStore.updateLearningItem}
             onDeleteLearningItem={learningsStore.deleteLearningItem}
+            onAddOneOffTask={oneOffTasksStore.addOneOffTask}
+            onDeleteOneOffTask={oneOffTasksStore.deleteOneOffTask}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
@@ -239,6 +256,7 @@ export default function App() {
               focusStore.isPersisting ||
               goalsStore.isPersisting ||
               learningsStore.isPersisting ||
+              oneOffTasksStore.isPersisting ||
               settingsStore.isPersisting
             }
             authUser={auth.authUser}

@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import HabitCard from "../../components/HabitCard/HabitCard.jsx";
 import {
   buildTodayAttributeGainSummary,
+  getAttributeGainsFromLinks,
   getHabitAttributeGains
 } from "../../lib/attributeScores.js";
 import { daysBetweenISO } from "../../lib/date.js";
@@ -18,9 +19,12 @@ export default function Today() {
     lastDoneById,
     attributes,
     vision,
+    oneOffTasks,
     settings,
     skippedTodayIds,
+    onAddOneOffTask,
     onMarkDone,
+    onDeleteOneOffTask,
     onSkipToday,
     onAddCompletionDate,
     onUndoDoneToday,
@@ -30,6 +34,11 @@ export default function Today() {
   const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
   const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
   const [pendingUpcomingHabitId, setPendingUpcomingHabitId] = useState("");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskAttributeLinks, setTaskAttributeLinks] = useState([]);
+  const [taskFeedback, setTaskFeedback] = useState("");
+  const [isSavingTask, setIsSavingTask] = useState(false);
+  const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState("");
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
@@ -43,7 +52,13 @@ export default function Today() {
     const importance = Number(habit.importance);
     return importance > 0 && lastDoneById[habit.id] === todayISO;
   });
-  const todayAttributeGains = buildTodayAttributeGainSummary(completedToday, attributes);
+  const completedOneOffTasks = Array.isArray(oneOffTasks)
+    ? oneOffTasks.filter((task) => task.completedOn === todayISO)
+    : [];
+  const todayAttributeGains = buildTodayAttributeGainSummary(
+    [...completedToday, ...completedOneOffTasks],
+    attributes
+  );
   const skippedToday = habits.filter((habit) => skippedTodayIds.has(habit.id));
   const upcomingItems = habits
     .map((habit) => {
@@ -78,6 +93,20 @@ export default function Today() {
     return Number(value).toFixed(2).replace(/\.00$/, "");
   }
 
+  function addTaskAttributeLink() {
+    setTaskAttributeLinks((current) => [...current, { attributeId: "", weight: 1 }]);
+  }
+
+  function updateTaskAttributeLink(index, updates) {
+    setTaskAttributeLinks((current) =>
+      current.map((link, linkIndex) => (linkIndex === index ? { ...link, ...updates } : link))
+    );
+  }
+
+  function removeTaskAttributeLink(index) {
+    setTaskAttributeLinks((current) => current.filter((_, linkIndex) => linkIndex !== index));
+  }
+
   async function handleUndoDone(habitId) {
     setPendingCompletedHabitId(habitId);
     try {
@@ -102,6 +131,40 @@ export default function Today() {
       await onMarkDone(habitId);
     } finally {
       setPendingUpcomingHabitId("");
+    }
+  }
+
+  async function handleAddOneOffTask(event) {
+    event.preventDefault();
+    setTaskFeedback("");
+    setIsSavingTask(true);
+
+    try {
+      const result = await onAddOneOffTask({
+        title: taskTitle,
+        completedOn: todayISO,
+        attributeLinks: taskAttributeLinks
+      });
+
+      if (!result?.ok) {
+        setTaskFeedback(result?.error || "Could not save completed task.");
+        return;
+      }
+
+      setTaskTitle("");
+      setTaskAttributeLinks([]);
+    } finally {
+      setIsSavingTask(false);
+    }
+  }
+
+  async function handleDeleteOneOffTask(taskId) {
+    setPendingDeleteTaskId(taskId);
+
+    try {
+      await onDeleteOneOffTask(taskId);
+    } finally {
+      setPendingDeleteTaskId("");
     }
   }
 
@@ -148,6 +211,74 @@ export default function Today() {
       </section>
 
       <section className="today__section card">
+        <h2>Log One-Off Task</h2>
+        <form className="today__task-form" onSubmit={handleAddOneOffTask}>
+          <div className="today__task-form-row">
+            <input
+              type="text"
+              value={taskTitle}
+              onChange={(event) => setTaskTitle(event.target.value)}
+              placeholder="Task name"
+              disabled={isPersisting || isSavingTask}
+            />
+            <button type="submit" className="today__do-btn" disabled={isPersisting || isSavingTask}>
+              {isSavingTask ? "Saving..." : "Add completed task"}
+            </button>
+          </div>
+
+          <div className="today__task-links">
+            {taskAttributeLinks.map((link, index) => (
+              <div key={`${link.attributeId}-${index}`} className="today__task-link-row">
+                <select
+                  value={link.attributeId}
+                  onChange={(event) =>
+                    updateTaskAttributeLink(index, { attributeId: event.target.value })
+                  }
+                  disabled={isPersisting || isSavingTask}
+                >
+                  <option value="">Choose attribute</option>
+                  {attributes.map((attribute) => (
+                    <option key={attribute.id} value={attribute.id}>
+                      {attribute.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={link.weight}
+                  onChange={(event) =>
+                    updateTaskAttributeLink(index, { weight: Number(event.target.value) })
+                  }
+                  disabled={isPersisting || isSavingTask}
+                />
+                <button
+                  type="button"
+                  className="today__undo-btn"
+                  onClick={() => removeTaskAttributeLink(index)}
+                  disabled={isPersisting || isSavingTask}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="today__task-link-add"
+              onClick={addTaskAttributeLink}
+              disabled={isPersisting || isSavingTask}
+            >
+              Add attribute contribution
+            </button>
+          </div>
+
+          {taskFeedback ? <p className="today__task-feedback">{taskFeedback}</p> : null}
+        </form>
+      </section>
+
+      <section className="today__section card">
         <h2>Completed</h2>
         {todayAttributeGains.length > 0 ? (
           <div className="today__attribute-summary">
@@ -169,7 +300,7 @@ export default function Today() {
             </div>
           </div>
         ) : null}
-        {completedToday.length === 0 ? (
+        {completedToday.length === 0 && completedOneOffTasks.length === 0 ? (
           <p className="today__empty">No tasks completed yet today.</p>
         ) : (
           <ul className="today__completed-list">
@@ -209,6 +340,46 @@ export default function Today() {
                     disabled={isPersisting}
                   >
                     {pendingCompletedHabitId === habit.id ? "Saving..." : "Undo"}
+                  </button>
+                </li>
+              );
+            })}
+            {completedOneOffTasks.map((task) => {
+              const attributeGains = getAttributeGainsFromLinks(task.attributeLinks, attributes);
+
+              return (
+                <li key={task.id} className="today__completed-item today__completed-item--task">
+                  <div>
+                    <span>{task.title}</span>
+                    <small>One-off task completed on {todayISO}</small>
+                    {attributeGains.length > 0 ? (
+                      <div className="today__completed-attributes">
+                        {attributeGains.map((gain) => (
+                          <span
+                            key={gain.attributeId}
+                            className={[
+                              "today__attribute-chip",
+                              "today__attribute-chip--inline",
+                              focusAttributeIds.has(gain.attributeId)
+                                ? "today__attribute-chip--focus"
+                                : ""
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          >
+                            {gain.attributeName} +{formatGain(gain.weight)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <button
+                    className="today__undo-btn"
+                    type="button"
+                    onClick={() => handleDeleteOneOffTask(task.id)}
+                    disabled={isPersisting || isSavingTask}
+                  >
+                    {pendingDeleteTaskId === task.id ? "Saving..." : "Remove"}
                   </button>
                 </li>
               );

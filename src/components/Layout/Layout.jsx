@@ -13,6 +13,7 @@ export default function Layout({
   focus,
   goals,
   learnings,
+  oneOffTasks,
   settings,
   onAddHabit,
   onUpdateHabit,
@@ -28,6 +29,8 @@ export default function Layout({
   onAddLearningItem,
   onUpdateLearningItem,
   onDeleteLearningItem,
+  onAddOneOffTask,
+  onDeleteOneOffTask,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -71,7 +74,7 @@ export default function Layout({
       subtitle: "Recent completion records",
       meta: (
         <>
-          Logged completions: <b>{completionLog.length}</b>
+          Logged completions: <b>{completionLog.length + oneOffTasks.length}</b>
         </>
       )
     },
@@ -175,6 +178,7 @@ export default function Layout({
               focus,
               goals,
               learnings,
+              oneOffTasks,
               settings,
               onAddHabit,
               onUpdateHabit,
@@ -190,6 +194,8 @@ export default function Layout({
               onAddLearningItem,
               onUpdateLearningItem,
               onDeleteLearningItem,
+              onAddOneOffTask,
+              onDeleteOneOffTask,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,

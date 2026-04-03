@@ -1,8 +1,8 @@
 import { daysBetweenISO } from "./date.js";
 import { getDoneDates } from "./habitUtils.js";
 
-export function getHabitAttributeGains(habit, attributes) {
-  const safeLinks = Array.isArray(habit?.attributeLinks) ? habit.attributeLinks : [];
+export function getAttributeGainsFromLinks(attributeLinks, attributes) {
+  const safeLinks = Array.isArray(attributeLinks) ? attributeLinks : [];
   const safeAttributes = Array.isArray(attributes) ? attributes : [];
 
   return safeLinks
@@ -23,11 +23,15 @@ export function getHabitAttributeGains(habit, attributes) {
     .sort((a, b) => b.weight - a.weight || a.attributeName.localeCompare(b.attributeName));
 }
 
+export function getHabitAttributeGains(habit, attributes) {
+  return getAttributeGainsFromLinks(habit?.attributeLinks, attributes);
+}
+
 export function buildTodayAttributeGainSummary(habits, attributes) {
   const totals = new Map();
 
-  for (const habit of Array.isArray(habits) ? habits : []) {
-    for (const gain of getHabitAttributeGains(habit, attributes)) {
+  for (const item of Array.isArray(habits) ? habits : []) {
+    for (const gain of getAttributeGainsFromLinks(item?.attributeLinks, attributes)) {
       const current = totals.get(gain.attributeId);
       if (current) {
         current.weight += gain.weight;
@@ -49,11 +53,12 @@ export function buildTodayAttributeGainSummary(habits, attributes) {
 export function buildAttributeSummaries(attributes, habits, todayISO, options = {}) {
   const safeAttributes = Array.isArray(attributes) ? attributes : [];
   const safeHabits = Array.isArray(habits) ? habits : [];
+  const safeOneOffTasks = Array.isArray(options.oneOffTasks) ? options.oneOffTasks : [];
   const useAttributeDecay = options.useAttributeDecay !== false;
 
   return safeAttributes.map((attribute) => {
     const decayRate = Number(attribute.decayRate ?? 0);
-    const contributors = safeHabits
+    const habitContributors = safeHabits
       .map((habit) => {
         const links = Array.isArray(habit.attributeLinks) ? habit.attributeLinks : [];
         const link = links.find((item) => item.attributeId === attribute.id);
@@ -73,10 +78,39 @@ export function buildAttributeSummaries(attributes, habits, todayISO, options = 
           habitName: habit.name,
           completionCount: completionDates.length,
           weight,
-          contribution
+          contribution,
+          sourceType: "habit"
         };
       })
-      .filter(Boolean)
+      .filter(Boolean);
+
+    const oneOffContributors = safeOneOffTasks
+      .map((task) => {
+        const links = Array.isArray(task.attributeLinks) ? task.attributeLinks : [];
+        const link = links.find((item) => item.attributeId === attribute.id);
+        if (!link) return null;
+
+        const weight = Number(link.weight);
+        if (!Number.isFinite(weight) || weight <= 0) {
+          return null;
+        }
+
+        const ageInDays = Math.max(0, daysBetweenISO(task.completedOn, todayISO) ?? 0);
+        const contribution =
+          useAttributeDecay && decayRate > 0 ? Math.max(0, weight - decayRate * ageInDays) : weight;
+
+        return {
+          habitId: task.id,
+          habitName: task.title,
+          completionCount: 1,
+          weight,
+          contribution,
+          sourceType: "one_off"
+        };
+      })
+      .filter(Boolean);
+
+    const contributors = [...habitContributors, ...oneOffContributors]
       .sort((a, b) => b.contribution - a.contribution || a.habitName.localeCompare(b.habitName));
 
     const score = contributors.reduce((sum, contributor) => sum + contributor.contribution, 0);
