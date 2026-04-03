@@ -14,6 +14,8 @@ export default function Layout({
   goals,
   learnings,
   oneOffTasks,
+  trackingMetrics,
+  trackingEntries,
   settings,
   onAddHabit,
   onUpdateHabit,
@@ -31,6 +33,11 @@ export default function Layout({
   onDeleteLearningItem,
   onAddOneOffTask,
   onDeleteOneOffTask,
+  onAddTrackingMetric,
+  onUpdateTrackingMetric,
+  onDeleteTrackingMetric,
+  onSaveTrackingEntry,
+  onDeleteTrackingEntry,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -74,7 +81,7 @@ export default function Layout({
       subtitle: "Recent completion records",
       meta: (
         <>
-          Logged completions: <b>{completionLog.length + oneOffTasks.length}</b>
+          Logged completions: <b>{completionLog.length + oneOffTasks.length + trackingEntries.length}</b>
         </>
       )
     },
@@ -120,6 +127,15 @@ export default function Layout({
       meta: (
         <>
           Active items: <b>{learnings.filter((item) => item.status === "active").length}</b>
+        </>
+      )
+    },
+    "/tracking": {
+      title: "Tracking",
+      subtitle: "Metrics you want to measure day to day",
+      meta: (
+        <>
+          Total metrics: <b>{trackingMetrics.length}</b>
         </>
       )
     },
@@ -179,6 +195,8 @@ export default function Layout({
               goals,
               learnings,
               oneOffTasks,
+              trackingMetrics,
+              trackingEntries,
               settings,
               onAddHabit,
               onUpdateHabit,
@@ -196,6 +214,11 @@ export default function Layout({
               onDeleteLearningItem,
               onAddOneOffTask,
               onDeleteOneOffTask,
+              onAddTrackingMetric,
+              onUpdateTrackingMetric,
+              onDeleteTrackingMetric,
+              onSaveTrackingEntry,
+              onDeleteTrackingEntry,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,

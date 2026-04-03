@@ -4,7 +4,7 @@ import { getAttributeGainsFromLinks } from "../../lib/attributeScores.js";
 import "./History.scss";
 
 export default function History() {
-  const { todayISO, habits, attributes, oneOffTasks, onAddOneOffTask, isPersisting } =
+  const { todayISO, habits, attributes, oneOffTasks, trackingMetrics, trackingEntries, onAddOneOffTask, isPersisting } =
     useOutletContext();
   const [taskTitle, setTaskTitle] = useState("");
   const [completedOn, setCompletedOn] = useState(todayISO);
@@ -107,6 +107,21 @@ export default function History() {
     });
   }
 
+  for (const entry of Array.isArray(trackingEntries) ? trackingEntries : []) {
+    const metric = trackingMetrics.find((item) => item.id === entry.metricId);
+    if (!metric) continue;
+
+    const dateGroup = ensureDateGroup(entry.entryDate);
+    dateGroup.set(`metric:${entry.id}`, {
+      habitName: metric.name,
+      type: "metric_entry",
+      subtasks: [],
+      attributeGains: [],
+      metricValue: entry.value,
+      metricUnit: metric.unit
+    });
+  }
+
   const dailyHistory = [...groupedByDate.entries()]
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([dateISO, habitEvents]) => ({
@@ -115,7 +130,9 @@ export default function History() {
         .map((event) => ({
           ...event,
           subtasks: [...new Set(event.subtasks)].sort((a, b) => a.localeCompare(b)),
-          attributeGains: Array.isArray(event.attributeGains) ? event.attributeGains : []
+          attributeGains: Array.isArray(event.attributeGains) ? event.attributeGains : [],
+          metricValue: event.metricValue,
+          metricUnit: event.metricUnit
         }))
         .sort((a, b) => a.habitName.localeCompare(b.habitName))
     }));
@@ -228,10 +245,18 @@ export default function History() {
                         ? "Skipped"
                         : event.type === "one_off_done"
                           ? "One-off"
+                          : event.type === "metric_entry"
+                            ? "Metric"
                         : "Subtasks"}
                   </span>
                   <div className="history__event-copy">
                     <strong>{event.habitName}</strong>
+                    {event.type === "metric_entry" ? (
+                      <small>
+                        {event.metricValue}
+                        {event.metricUnit ? ` ${event.metricUnit}` : ""}
+                      </small>
+                    ) : null}
                     {event.subtasks.length > 0 ? (
                       <ul className="history__subtask-list">
                         {event.subtasks.map((subtask) => (

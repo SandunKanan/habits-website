@@ -128,6 +128,29 @@ create table if not exists public.one_off_tasks (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.track_metrics (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  slug text not null,
+  name text not null,
+  unit text not null,
+  target_value numeric,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (user_id, slug)
+);
+
+create table if not exists public.track_metric_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  metric_id uuid not null references public.track_metrics (id) on delete cascade,
+  entry_date date not null,
+  value numeric not null check (value >= 0),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (metric_id, entry_date)
+);
+
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   highlight_focus_attributes boolean not null default true,
@@ -159,6 +182,9 @@ create index if not exists focus_periods_user_id_idx on public.focus_periods (us
 create index if not exists goals_user_id_idx on public.goals (user_id);
 create index if not exists learning_items_user_id_idx on public.learning_items (user_id);
 create index if not exists one_off_tasks_user_id_idx on public.one_off_tasks (user_id);
+create index if not exists track_metrics_user_id_idx on public.track_metrics (user_id);
+create index if not exists track_metric_entries_user_id_idx on public.track_metric_entries (user_id);
+create index if not exists track_metric_entries_metric_id_idx on public.track_metric_entries (metric_id);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
 alter table public.habits enable row level security;
@@ -172,6 +198,8 @@ alter table public.focus_periods enable row level security;
 alter table public.goals enable row level security;
 alter table public.learning_items enable row level security;
 alter table public.one_off_tasks enable row level security;
+alter table public.track_metrics enable row level security;
+alter table public.track_metric_entries enable row level security;
 alter table public.user_settings enable row level security;
 alter table public.user_roles enable row level security;
 
@@ -276,6 +304,18 @@ create policy "Users can read own one-off tasks"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own track metrics" on public.track_metrics;
+create policy "Users can read own track metrics"
+  on public.track_metrics
+  for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can read own track metric entries" on public.track_metric_entries;
+create policy "Users can read own track metric entries"
+  on public.track_metric_entries
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can read own settings" on public.user_settings;
 create policy "Users can read own settings"
   on public.user_settings
@@ -325,6 +365,26 @@ create policy "Users can insert own one-off tasks"
   on public.one_off_tasks
   for insert
   with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own track metrics" on public.track_metrics;
+create policy "Users can insert own track metrics"
+  on public.track_metrics
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own track metric entries" on public.track_metric_entries;
+create policy "Users can insert own track metric entries"
+  on public.track_metric_entries
+  for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.track_metrics
+      where public.track_metrics.id = metric_id
+        and public.track_metrics.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Users can insert own settings" on public.user_settings;
 create policy "Users can insert own settings"
@@ -382,6 +442,28 @@ create policy "Users can update own one-off tasks"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own track metrics" on public.track_metrics;
+create policy "Users can update own track metrics"
+  on public.track_metrics
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own track metric entries" on public.track_metric_entries;
+create policy "Users can update own track metric entries"
+  on public.track_metric_entries
+  for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.track_metrics
+      where public.track_metrics.id = metric_id
+        and public.track_metrics.user_id = auth.uid()
+    )
+  );
+
 drop policy if exists "Users can update own settings" on public.user_settings;
 create policy "Users can update own settings"
   on public.user_settings
@@ -422,6 +504,18 @@ create policy "Users can delete own learning items"
 drop policy if exists "Users can delete own one-off tasks" on public.one_off_tasks;
 create policy "Users can delete own one-off tasks"
   on public.one_off_tasks
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own track metrics" on public.track_metrics;
+create policy "Users can delete own track metrics"
+  on public.track_metrics
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own track metric entries" on public.track_metric_entries;
+create policy "Users can delete own track metric entries"
+  on public.track_metric_entries
   for delete
   using (auth.uid() = user_id);
 

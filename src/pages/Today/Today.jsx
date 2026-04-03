@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import HabitCard from "../../components/HabitCard/HabitCard.jsx";
 import {
@@ -20,9 +20,13 @@ export default function Today() {
     attributes,
     vision,
     oneOffTasks,
+    trackingMetrics,
+    trackingEntries,
     settings,
     skippedTodayIds,
     onAddOneOffTask,
+    onSaveTrackingEntry,
+    onDeleteTrackingEntry,
     onMarkDone,
     onDeleteOneOffTask,
     onSkipToday,
@@ -39,6 +43,9 @@ export default function Today() {
   const [taskFeedback, setTaskFeedback] = useState("");
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState("");
+  const [metricDrafts, setMetricDrafts] = useState({});
+  const [metricFeedback, setMetricFeedback] = useState("");
+  const [pendingMetricId, setPendingMetricId] = useState("");
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
@@ -83,6 +90,17 @@ export default function Today() {
     })
     .filter(Boolean)
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue || b.item.priorityScore - a.item.priorityScore);
+
+  useEffect(() => {
+    const nextDrafts = {};
+    for (const metric of Array.isArray(trackingMetrics) ? trackingMetrics : []) {
+      const entry = Array.isArray(trackingEntries)
+        ? trackingEntries.find((item) => item.metricId === metric.id && item.entryDate === todayISO)
+        : null;
+      nextDrafts[metric.id] = entry ? String(entry.value) : "";
+    }
+    setMetricDrafts(nextDrafts);
+  }, [todayISO, trackingEntries, trackingMetrics]);
 
   function formatUpcomingLabel(daysUntilDue) {
     if (daysUntilDue === 1) return "Due tomorrow";
@@ -168,6 +186,40 @@ export default function Today() {
     }
   }
 
+  async function handleSaveMetric(metricId) {
+    setMetricFeedback("");
+    setPendingMetricId(metricId);
+
+    try {
+      const draftValue = metricDrafts[metricId];
+      const result = await onSaveTrackingEntry({
+        metricId,
+        entryDate: todayISO,
+        value: draftValue
+      });
+
+      if (!result?.ok) {
+        setMetricFeedback(result?.error || "Could not save metric entry.");
+      }
+    } finally {
+      setPendingMetricId("");
+    }
+  }
+
+  async function handleClearMetric(metricId) {
+    setMetricFeedback("");
+    setPendingMetricId(metricId);
+
+    try {
+      const result = await onDeleteTrackingEntry(metricId, todayISO);
+      if (!result?.ok) {
+        setMetricFeedback(result?.error || "Could not clear metric entry.");
+      }
+    } finally {
+      setPendingMetricId("");
+    }
+  }
+
   if (habits.length === 0) {
     return (
       <section className="today__welcome card">
@@ -208,6 +260,73 @@ export default function Today() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="today__section card">
+        <h2>Track Today</h2>
+        {trackingMetrics.length === 0 ? (
+          <p className="today__empty">
+            No metrics set up yet. Add what you want to measure on the Tracking page.
+          </p>
+        ) : (
+          <div className="today__tracking-list">
+            {trackingMetrics.map((metric) => {
+              const todayEntry = trackingEntries.find(
+                (entry) => entry.metricId === metric.id && entry.entryDate === todayISO
+              );
+              const hasSavedValue = Boolean(todayEntry);
+
+              return (
+                <div key={metric.id} className="today__tracking-item">
+                  <div className="today__tracking-copy">
+                    <span>{metric.name}</span>
+                    <small>
+                      {metric.unit}
+                      {metric.targetValue !== null && metric.targetValue !== undefined
+                        ? ` · target ${metric.targetValue}`
+                        : ""}
+                    </small>
+                  </div>
+
+                  <div className="today__tracking-controls">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={metricDrafts[metric.id] ?? ""}
+                      onChange={(event) =>
+                        setMetricDrafts((current) => ({
+                          ...current,
+                          [metric.id]: event.target.value
+                        }))
+                      }
+                      disabled={isPersisting}
+                    />
+                    <button
+                      type="button"
+                      className="today__do-btn"
+                      onClick={() => handleSaveMetric(metric.id)}
+                      disabled={isPersisting || pendingMetricId === metric.id}
+                    >
+                      {pendingMetricId === metric.id ? "Saving..." : "Save"}
+                    </button>
+                    {hasSavedValue ? (
+                      <button
+                        type="button"
+                        className="today__undo-btn"
+                        onClick={() => handleClearMetric(metric.id)}
+                        disabled={isPersisting || pendingMetricId === metric.id}
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {metricFeedback ? <p className="today__task-feedback">{metricFeedback}</p> : null}
       </section>
 
       <section className="today__section card">

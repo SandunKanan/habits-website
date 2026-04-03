@@ -5,7 +5,7 @@ import "./TopNav.scss";
 export default function TopNav({ authUser, onSignOut }) {
   const location = useLocation();
   const isDirectionActive = ["/vision", "/focus", "/goals", "/learnings"].includes(location.pathname);
-  const isMoreActive = ["/history", "/settings", "/help"].includes(location.pathname);
+  const isMoreActive = ["/history", "/tracking", "/settings", "/help"].includes(location.pathname);
 
   return (
     <nav className="topnav">
@@ -68,6 +68,9 @@ export default function TopNav({ authUser, onSignOut }) {
               <div className="topnav__menu-panel">
                 <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
                   History
+                </NavLink>
+                <NavLink to="/tracking" className={({ isActive }) => (isActive ? "active" : "")}>
+                  Tracking
                 </NavLink>
                 <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")}>
                   Settings
