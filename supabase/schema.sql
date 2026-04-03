@@ -112,6 +112,7 @@ create table if not exists public.learning_items (
   priority integer not null default 3 check (priority >= 1 and priority <= 5),
   status text not null default 'idea' check (status in ('idea', 'active', 'paused', 'completed')),
   notes text not null default '',
+  pursuit_targets_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, slug)

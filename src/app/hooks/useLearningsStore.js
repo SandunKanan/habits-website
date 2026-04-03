@@ -86,7 +86,7 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
     }
   }
 
-  async function addLearningItem({ title, itemType, status, notes }) {
+  async function addLearningItem({ title, itemType, status, notes, pursuitTargets }) {
     const trimmedTitle = String(title ?? "").trim();
     if (!trimmedTitle) {
       return { ok: false, error: "Title is required." };
@@ -107,6 +107,7 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
       priority: 3,
       status: normalizedStatus,
       notes: String(notes ?? "").trim(),
+      pursuitTargets: Array.isArray(pursuitTargets) ? pursuitTargets : [],
       createdAt: now,
       updatedAt: now
     };
@@ -145,6 +146,11 @@ export function useLearningsStore({ authEnabled, isAuthReady, session, authUser 
             priority: Number(existingItem.priority ?? item.priority ?? 3),
             status: normalizedStatus,
             notes: String(updates?.notes ?? item.notes ?? "").trim(),
+            pursuitTargets: Array.isArray(updates?.pursuitTargets)
+              ? updates.pursuitTargets
+              : Array.isArray(item.pursuitTargets)
+                ? item.pursuitTargets
+                : [],
             updatedAt: new Date().toISOString()
           }
     );

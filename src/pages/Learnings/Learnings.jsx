@@ -31,12 +31,14 @@ function formatStatus(status) {
 }
 
 export default function Learnings() {
-  const { learnings, onAddLearningItem, onUpdateLearningItem, onDeleteLearningItem, isPersisting } =
+  const { goals, learnings, onAddLearningItem, onUpdateLearningItem, onDeleteLearningItem, isPersisting } =
     useOutletContext();
   const [title, setTitle] = useState("");
   const [itemType, setItemType] = useState("learning");
   const [status, setStatus] = useState("idea");
   const [notes, setNotes] = useState("");
+  const [pursuitTargets, setPursuitTargets] = useState([]);
+  const [targetDraft, setTargetDraft] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState("");
@@ -44,9 +46,77 @@ export default function Learnings() {
   const [editItemType, setEditItemType] = useState("learning");
   const [editStatus, setEditStatus] = useState("idea");
   const [editNotes, setEditNotes] = useState("");
+  const [editPursuitTargets, setEditPursuitTargets] = useState([]);
+  const [editTargetDraft, setEditTargetDraft] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
+
+  function buildTargetKey(target) {
+    if (target.kind === "subgoal") {
+      return `subgoal:${target.goalId}:${target.subgoalId}`;
+    }
+
+    return `goal:${target.goalId}`;
+  }
+
+  function parseTargetKey(targetKey) {
+    const [kind, goalId, subgoalId] = String(targetKey ?? "").split(":");
+    if (!goalId) return null;
+
+    if (kind === "subgoal" && subgoalId) {
+      return { kind: "subgoal", goalId, subgoalId };
+    }
+
+    if (kind === "goal") {
+      return { kind: "goal", goalId, subgoalId: "" };
+    }
+
+    return null;
+  }
+
+  function describeTarget(target) {
+    const goal = goals.find((item) => item.id === target.goalId);
+    if (!goal) {
+      return "Unknown target";
+    }
+
+    if (target.kind === "goal") {
+      return goal.title;
+    }
+
+    const subgoal = Array.isArray(goal.subgoals)
+      ? goal.subgoals.find((item) => item.id === target.subgoalId)
+      : null;
+
+    return subgoal ? `${goal.title} -> ${subgoal.title}` : goal.title;
+  }
+
+  const targetOptions = goals.flatMap((goal) => {
+    const options = [
+      {
+        value: buildTargetKey({ kind: "goal", goalId: goal.id, subgoalId: "" }),
+        label: goal.title,
+        kindLabel: "Goal"
+      }
+    ];
+
+    if (Array.isArray(goal.subgoals)) {
+      goal.subgoals.forEach((subgoal) => {
+        options.push({
+          value: buildTargetKey({
+            kind: "subgoal",
+            goalId: goal.id,
+            subgoalId: subgoal.id
+          }),
+          label: `${goal.title} -> ${subgoal.title}`,
+          kindLabel: "Subgoal"
+        });
+      });
+    }
+
+    return options;
+  });
 
   const sortedLearnings = useMemo(() => {
     return [...learnings].sort((a, b) => {
@@ -71,7 +141,8 @@ export default function Learnings() {
       title,
       itemType,
       status,
-      notes
+      notes,
+      pursuitTargets
     });
 
     if (result?.ok) {
@@ -79,6 +150,8 @@ export default function Learnings() {
       setItemType("learning");
       setStatus("idea");
       setNotes("");
+      setPursuitTargets([]);
+      setTargetDraft("");
       setFeedback("Item added.");
     } else {
       setFeedback(result?.error ?? "Could not add item.");
@@ -93,6 +166,8 @@ export default function Learnings() {
     setEditItemType(item.itemType);
     setEditStatus(item.status);
     setEditNotes(item.notes ?? "");
+    setEditPursuitTargets(Array.isArray(item.pursuitTargets) ? item.pursuitTargets : []);
+    setEditTargetDraft("");
     setEditFeedback("");
   }
 
@@ -102,6 +177,8 @@ export default function Learnings() {
     setEditItemType("learning");
     setEditStatus("idea");
     setEditNotes("");
+    setEditPursuitTargets([]);
+    setEditTargetDraft("");
     setEditFeedback("");
   }
 
@@ -116,7 +193,8 @@ export default function Learnings() {
       title: editTitle,
       itemType: editItemType,
       status: editStatus,
-      notes: editNotes
+      notes: editNotes,
+      pursuitTargets: editPursuitTargets
     });
 
     if (result?.ok) {
@@ -127,6 +205,20 @@ export default function Learnings() {
     }
 
     setIsSavingEdit(false);
+  }
+
+  function addTarget(currentTargets, targetKey) {
+    const nextTarget = parseTargetKey(targetKey);
+    if (!nextTarget) return currentTargets;
+    const nextKey = buildTargetKey(nextTarget);
+
+    return currentTargets.some((target) => buildTargetKey(target) === nextKey)
+      ? currentTargets
+      : [...currentTargets, nextTarget];
+  }
+
+  function removeTarget(currentTargets, targetKey) {
+    return currentTargets.filter((target) => buildTargetKey(target) !== targetKey);
   }
 
   async function handleDeleteItem(item) {
@@ -148,6 +240,9 @@ export default function Learnings() {
 
     setPendingDeleteId("");
   }
+
+  const selectedTargetKeys = new Set(pursuitTargets.map(buildTargetKey));
+  const selectedEditTargetKeys = new Set(editPursuitTargets.map(buildTargetKey));
 
   return (
     <div className="learningspage">
@@ -221,6 +316,54 @@ export default function Learnings() {
               onChange={(e) => setNotes(e.target.value)}
               disabled={isSaving || isPersisting}
             />
+          </div>
+
+          <div className="learningspage__field">
+            <label>Linked goals</label>
+            <p>Link this pursuit to one or more goals or subgoals it supports.</p>
+            <div className="learningspage__target-picker">
+              <select
+                value={targetDraft}
+                onChange={(e) => setTargetDraft(e.target.value)}
+                disabled={isSaving || isPersisting || goals.length === 0}
+              >
+                <option value="">Select a goal or subgoal</option>
+                {targetOptions.map((option) => (
+                  <option key={option.value} value={option.value} disabled={selectedTargetKeys.has(option.value)}>
+                    {option.kindLabel}: {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setPursuitTargets((current) => addTarget(current, targetDraft));
+                  setTargetDraft("");
+                }}
+                disabled={isSaving || isPersisting || !targetDraft}
+              >
+                Add
+              </button>
+            </div>
+            {pursuitTargets.length > 0 ? (
+              <ul className="learningspage__target-list">
+                {pursuitTargets.map((target) => {
+                  const targetKey = buildTargetKey(target);
+                  return (
+                    <li key={targetKey}>
+                      <span>{describeTarget(target)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPursuitTargets((current) => removeTarget(current, targetKey))}
+                        disabled={isSaving || isPersisting}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </div>
 
           <div className="learningspage__actions">
@@ -321,6 +464,57 @@ export default function Learnings() {
                       />
                     </div>
 
+                    <div className="learningspage__field">
+                      <label>Linked goals</label>
+                      <div className="learningspage__target-picker">
+                        <select
+                          value={editTargetDraft}
+                          onChange={(e) => setEditTargetDraft(e.target.value)}
+                          disabled={isSavingEdit || isPersisting || goals.length === 0}
+                        >
+                          <option value="">Select a goal or subgoal</option>
+                          {targetOptions.map((option) => (
+                            <option
+                              key={option.value}
+                              value={option.value}
+                              disabled={selectedEditTargetKeys.has(option.value)}
+                            >
+                              {option.kindLabel}: {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditPursuitTargets((current) => addTarget(current, editTargetDraft));
+                            setEditTargetDraft("");
+                          }}
+                          disabled={isSavingEdit || isPersisting || !editTargetDraft}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {editPursuitTargets.length > 0 ? (
+                        <ul className="learningspage__target-list">
+                          {editPursuitTargets.map((target) => {
+                            const targetKey = buildTargetKey(target);
+                            return (
+                              <li key={targetKey}>
+                                <span>{describeTarget(target)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditPursuitTargets((current) => removeTarget(current, targetKey))}
+                                  disabled={isSavingEdit || isPersisting}
+                                >
+                                  Remove
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : null}
+                    </div>
+
                     <div className="learningspage__actions">
                       <button type="submit" disabled={isSavingEdit || isPersisting}>
                         {isSavingEdit || isPersisting ? "Saving..." : "Save"}
@@ -361,6 +555,18 @@ export default function Learnings() {
                     </div>
 
                     {item.notes ? <p className="learningspage__notes">{item.notes}</p> : null}
+                    {Array.isArray(item.pursuitTargets) && item.pursuitTargets.length > 0 ? (
+                      <div className="learningspage__linked-goals">
+                        <h4>Linked goals</h4>
+                        <ul className="learningspage__target-list learningspage__target-list--read">
+                          {item.pursuitTargets.map((target) => (
+                            <li key={buildTargetKey(target)}>
+                              <span>{describeTarget(target)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
 
                     <div className="learningspage__meta">
                       <span>Slug: {item.slug}</span>
