@@ -13,6 +13,7 @@ function buildEmptyFocus(userId) {
     whyNow: "",
     endState: "",
     currentObstacles: "",
+    focusTargets: [],
     createdAt: null,
     updatedAt: null
   };

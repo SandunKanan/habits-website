@@ -83,7 +83,18 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
     }
   }
 
-  async function addGoal({ title, timeframeType, targetDate, notes }) {
+  function normalizeSubgoals(subgoals) {
+    if (!Array.isArray(subgoals)) return [];
+
+    return subgoals
+      .map((subgoal) => ({
+        id: String(subgoal?.id ?? crypto.randomUUID()),
+        title: String(subgoal?.title ?? "").trim()
+      }))
+      .filter((subgoal) => subgoal.title);
+  }
+
+  async function addGoal({ title, timeframeType, targetDate, notes, subgoals }) {
     const trimmedTitle = String(title ?? "").trim();
     if (!trimmedTitle) {
       return { ok: false, error: "Goal title is required." };
@@ -103,6 +114,7 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
       timeframeType: normalizedTimeframeType,
       targetDate: normalizedTimeframeType === "fixed_timeframe" ? String(targetDate ?? "") : "",
       notes: String(notes ?? "").trim(),
+      subgoals: normalizeSubgoals(subgoals),
       createdAt: now,
       updatedAt: now
     };
@@ -141,6 +153,7 @@ export function useGoalsStore({ authEnabled, isAuthReady, session, authUser }) {
             timeframeType: normalizedTimeframeType,
             targetDate: normalizedTargetDate,
             notes: String(updates?.notes ?? goal.notes ?? "").trim(),
+            subgoals: normalizeSubgoals(updates?.subgoals ?? goal.subgoals),
             updatedAt: new Date().toISOString()
           }
     );

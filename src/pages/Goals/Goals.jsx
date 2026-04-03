@@ -17,6 +17,8 @@ export default function Goals() {
   const [timeframeType, setTimeframeType] = useState("long_term");
   const [targetDate, setTargetDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [subgoals, setSubgoals] = useState([]);
+  const [subgoalDraft, setSubgoalDraft] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState("");
@@ -24,6 +26,8 @@ export default function Goals() {
   const [editTimeframeType, setEditTimeframeType] = useState("long_term");
   const [editTargetDate, setEditTargetDate] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editSubgoals, setEditSubgoals] = useState([]);
+  const [editSubgoalDraft, setEditSubgoalDraft] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
@@ -50,17 +54,28 @@ export default function Goals() {
   const longTermCount = sortedGoals.filter((goal) => goal.timeframeType === "long_term").length;
   const fixedCount = sortedGoals.filter((goal) => goal.timeframeType === "fixed_timeframe").length;
 
+  function addSubgoalItem(currentItems, draft) {
+    const trimmedDraft = String(draft ?? "").trim();
+    if (!trimmedDraft) {
+      return currentItems;
+    }
+
+    return [...currentItems, { id: crypto.randomUUID(), title: trimmedDraft }];
+  }
+
   async function handleAddGoal(e) {
     e.preventDefault();
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddGoal({ title, timeframeType, targetDate, notes });
+    const result = await onAddGoal({ title, timeframeType, targetDate, notes, subgoals });
     if (result?.ok) {
       setTitle("");
       setTimeframeType("long_term");
       setTargetDate("");
       setNotes("");
+      setSubgoals([]);
+      setSubgoalDraft("");
       setFeedback("Goal added.");
     } else {
       setFeedback(result?.error ?? "Could not add goal.");
@@ -75,6 +90,8 @@ export default function Goals() {
     setEditTimeframeType(goal.timeframeType);
     setEditTargetDate(goal.targetDate ?? "");
     setEditNotes(goal.notes ?? "");
+    setEditSubgoals(Array.isArray(goal.subgoals) ? goal.subgoals : []);
+    setEditSubgoalDraft("");
     setEditFeedback("");
   }
 
@@ -84,6 +101,8 @@ export default function Goals() {
     setEditTimeframeType("long_term");
     setEditTargetDate("");
     setEditNotes("");
+    setEditSubgoals([]);
+    setEditSubgoalDraft("");
     setEditFeedback("");
   }
 
@@ -98,7 +117,8 @@ export default function Goals() {
       title: editTitle,
       timeframeType: editTimeframeType,
       targetDate: editTargetDate,
-      notes: editNotes
+      notes: editNotes,
+      subgoals: editSubgoals
     });
 
     if (result?.ok) {
@@ -109,6 +129,30 @@ export default function Goals() {
     }
 
     setIsSavingEdit(false);
+  }
+
+  function handleAddSubgoal() {
+    setSubgoals((current) => addSubgoalItem(current, subgoalDraft));
+    setSubgoalDraft("");
+  }
+
+  function handleAddEditSubgoal() {
+    setEditSubgoals((current) => addSubgoalItem(current, editSubgoalDraft));
+    setEditSubgoalDraft("");
+  }
+
+  function handleSubgoalKeyDown(event, onAddItem) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    onAddItem();
+  }
+
+  function removeSubgoal(subgoalId) {
+    setSubgoals((current) => current.filter((item) => item.id !== subgoalId));
+  }
+
+  function removeEditSubgoal(subgoalId) {
+    setEditSubgoals((current) => current.filter((item) => item.id !== subgoalId));
   }
 
   async function handleDeleteGoal(goal) {
@@ -198,6 +242,40 @@ export default function Goals() {
               disabled={isSaving || isPersisting}
               placeholder="Example: Get there without sacrificing health or consistency."
             />
+          </div>
+
+          <div className="goalspage__field">
+            <label htmlFor="goal-subgoal">Subgoals</label>
+            <p>Break the bigger goal into a few concrete milestones.</p>
+            <div className="goalspage__subgoal-input">
+              <input
+                id="goal-subgoal"
+                type="text"
+                value={subgoalDraft}
+                onChange={(e) => setSubgoalDraft(e.target.value)}
+                onKeyDown={(e) => handleSubgoalKeyDown(e, handleAddSubgoal)}
+                disabled={isSaving || isPersisting}
+              />
+              <button
+                type="button"
+                onClick={handleAddSubgoal}
+                disabled={isSaving || isPersisting || !String(subgoalDraft).trim()}
+              >
+                Add
+              </button>
+            </div>
+            {subgoals.length > 0 ? (
+              <ul className="goalspage__subgoal-list">
+                {subgoals.map((subgoal) => (
+                  <li key={subgoal.id}>
+                    <span>{subgoal.title}</span>
+                    <button type="button" onClick={() => removeSubgoal(subgoal.id)} disabled={isSaving || isPersisting}>
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="goalspage__actions">
@@ -293,6 +371,43 @@ export default function Goals() {
                       />
                     </div>
 
+                    <div className="goalspage__field">
+                      <label htmlFor={`edit-goal-subgoal-${goal.id}`}>Subgoals</label>
+                      <div className="goalspage__subgoal-input">
+                        <input
+                          id={`edit-goal-subgoal-${goal.id}`}
+                          type="text"
+                          value={editSubgoalDraft}
+                          onChange={(e) => setEditSubgoalDraft(e.target.value)}
+                          onKeyDown={(e) => handleSubgoalKeyDown(e, handleAddEditSubgoal)}
+                          disabled={isSavingEdit || isPersisting}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddEditSubgoal}
+                          disabled={isSavingEdit || isPersisting || !String(editSubgoalDraft).trim()}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {editSubgoals.length > 0 ? (
+                        <ul className="goalspage__subgoal-list">
+                          {editSubgoals.map((subgoal) => (
+                            <li key={subgoal.id}>
+                              <span>{subgoal.title}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeEditSubgoal(subgoal.id)}
+                                disabled={isSavingEdit || isPersisting}
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+
                     <div className="goalspage__actions">
                       <button type="submit" disabled={isSavingEdit || isPersisting}>
                         {isSavingEdit || isPersisting ? "Saving..." : "Save"}
@@ -331,6 +446,18 @@ export default function Goals() {
                     </div>
 
                     {goal.notes ? <p className="goalspage__notes">{goal.notes}</p> : null}
+                    {Array.isArray(goal.subgoals) && goal.subgoals.length > 0 ? (
+                      <div className="goalspage__subgoals">
+                        <h4>Subgoals</h4>
+                        <ul className="goalspage__subgoal-list goalspage__subgoal-list--read">
+                          {goal.subgoals.map((subgoal) => (
+                            <li key={subgoal.id}>
+                              <span>{subgoal.title}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
 
                     <div className="goalspage__meta">
                       <span>Slug: {goal.slug}</span>

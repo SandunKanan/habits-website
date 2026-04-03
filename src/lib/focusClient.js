@@ -55,6 +55,15 @@ function normalizeFocus(focus) {
     whyNow: String(focus.whyNow ?? focus.why_now ?? "").trim(),
     endState: String(focus.endState ?? focus.end_state ?? "").trim(),
     currentObstacles: String(focus.currentObstacles ?? focus.current_obstacles ?? "").trim(),
+    focusTargets: Array.isArray(focus.focusTargets ?? focus.focus_targets_json)
+      ? (focus.focusTargets ?? focus.focus_targets_json)
+          .map((target) => ({
+            kind: target?.kind === "subgoal" ? "subgoal" : "goal",
+            goalId: String(target?.goalId ?? target?.goal_id ?? ""),
+            subgoalId: String(target?.subgoalId ?? target?.subgoal_id ?? "")
+          }))
+          .filter((target) => target.goalId && (target.kind === "goal" || target.subgoalId))
+      : [],
     createdAt: focus.createdAt ?? focus.created_at ?? null,
     updatedAt: focus.updatedAt ?? focus.updated_at ?? null
   };
@@ -69,6 +78,7 @@ function buildEmptyFocus(userId) {
     whyNow: "",
     endState: "",
     currentObstacles: "",
+    focusTargets: [],
     createdAt: null,
     updatedAt: null
   });
@@ -82,13 +92,14 @@ function serializeFocusRow(focus, userId) {
     end_date: focus.endDate || null,
     why_now: focus.whyNow,
     end_state: focus.endState,
-    current_obstacles: focus.currentObstacles
+    current_obstacles: focus.currentObstacles,
+    focus_targets_json: Array.isArray(focus.focusTargets) ? focus.focusTargets : []
   };
 }
 
 export async function loadFocusForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/focus_periods?user_id=eq.${userId}&select=user_id,title,start_date,end_date,why_now,end_state,current_obstacles,created_at,updated_at&limit=1`,
+    `/rest/v1/focus_periods?user_id=eq.${userId}&select=user_id,title,start_date,end_date,why_now,end_state,current_obstacles,focus_targets_json,created_at,updated_at&limit=1`,
     accessToken
   );
 

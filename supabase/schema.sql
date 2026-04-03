@@ -84,6 +84,7 @@ create table if not exists public.focus_periods (
   why_now text not null default '',
   end_state text not null default '',
   current_obstacles text not null default '',
+  focus_targets_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -96,6 +97,7 @@ create table if not exists public.goals (
   timeframe_type text not null check (timeframe_type in ('long_term', 'fixed_timeframe')),
   target_date date,
   notes text not null default '',
+  subgoals_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, slug)
