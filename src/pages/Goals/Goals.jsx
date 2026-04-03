@@ -240,7 +240,6 @@ export default function Goals() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={isSaving || isPersisting}
-              placeholder="Example: Get there without sacrificing health or consistency."
             />
           </div>
 

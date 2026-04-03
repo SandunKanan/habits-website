@@ -98,7 +98,6 @@ export default function Vision() {
                 type="text"
                 value={currentFocus}
                 onChange={(e) => setCurrentFocus(e.target.value)}
-                placeholder="Example: Avoidance, overcommitting, self-doubt"
                 disabled={isSaving || isPersisting}
               />
             </div>

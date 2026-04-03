@@ -154,7 +154,6 @@ export default function Focus() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Example: Rebuild energy"
               disabled={isSaving || isPersisting}
             />
           </div>

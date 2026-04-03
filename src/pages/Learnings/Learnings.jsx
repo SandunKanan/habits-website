@@ -172,7 +172,6 @@ export default function Learnings() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Example: Learn SQL joins"
               disabled={isSaving || isPersisting}
               required
             />
@@ -221,7 +220,6 @@ export default function Learnings() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={isSaving || isPersisting}
-              placeholder="Example: Finish the first three modules and build a small practice project."
             />
           </div>
 
