@@ -31,6 +31,8 @@ export default function Today() {
     onAddOneOffTask,
     onSaveTrackingEntry,
     onDeleteTrackingEntry,
+    onAddTrackingStructuredEntry,
+    onDeleteTrackingStructuredEntry,
     onMarkDone,
     onDeleteOneOffTask,
     onSkipToday,
@@ -48,8 +50,10 @@ export default function Today() {
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState("");
   const [metricDrafts, setMetricDrafts] = useState({});
+  const [structuredDrafts, setStructuredDrafts] = useState({});
   const [metricFeedback, setMetricFeedback] = useState("");
   const [pendingMetricId, setPendingMetricId] = useState("");
+  const [pendingStructuredEntryId, setPendingStructuredEntryId] = useState("");
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
@@ -135,6 +139,17 @@ export default function Today() {
 
   function formatGain(value) {
     return Number(value).toFixed(2).replace(/\.00$/, "");
+  }
+
+  function formatStructuredEntry(entry, metric) {
+    return (Array.isArray(metric?.fields) ? metric.fields : [])
+      .map((field) => {
+        const value = entry?.valueJson?.[field.key];
+        if (value === null || value === undefined || value === "") return null;
+        const suffix = field.inputType === "number" && field.unit ? ` ${field.unit}` : "";
+        return `${field.label}: ${value}${suffix}`;
+      })
+      .filter(Boolean);
   }
 
   function addTaskAttributeLink() {
@@ -246,26 +261,60 @@ export default function Today() {
     }
   }
 
-  if (habits.length === 0) {
-    return (
-      <section className="today__welcome card">
-        <p className="today__eyebrow">New account</p>
-        <h2>Start with your first habit.</h2>
-        <p className="today__welcome-copy">
-          Your daily list will appear here once you add habits. Set a frequency and priority level,
-          then this page will decide what is due today.
-        </p>
-        <div className="today__welcome-actions">
-          <button type="button" onClick={() => navigate("/habits")}>
-            Create first habit
-          </button>
-        </div>
-      </section>
-    );
+  async function handleAddStructuredEntry(metric) {
+    setMetricFeedback("");
+    setPendingMetricId(metric.id);
+
+    try {
+      const result = await onAddTrackingStructuredEntry({
+        metricId: metric.id,
+        entryDate: todayISO,
+        valueJson: structuredDrafts[metric.id] ?? {}
+      });
+
+      if (!result?.ok) {
+        setMetricFeedback(result?.error || "Could not save structured entry.");
+        return;
+      }
+
+      setStructuredDrafts((current) => ({ ...current, [metric.id]: {} }));
+    } finally {
+      setPendingMetricId("");
+    }
+  }
+
+  async function handleDeleteStructuredEntry(entryId) {
+    setMetricFeedback("");
+    setPendingStructuredEntryId(entryId);
+
+    try {
+      const result = await onDeleteTrackingStructuredEntry(entryId);
+      if (!result?.ok) {
+        setMetricFeedback(result?.error || "Could not delete structured entry.");
+      }
+    } finally {
+      setPendingStructuredEntryId("");
+    }
   }
 
   return (
     <div className="today">
+      {habits.length === 0 ? (
+        <section className="today__welcome card">
+          <p className="today__eyebrow">New account</p>
+          <h2>Start with your first habit.</h2>
+          <p className="today__welcome-copy">
+            Your daily list will appear here once you add habits. You can still use tracking and one-off
+            tasks in the meantime.
+          </p>
+          <div className="today__welcome-actions">
+            <button type="button" onClick={() => navigate("/habits")}>
+              Create first habit
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       {isFocusViewEnabled &&
       (focusedDomains.length > 0 || focusedGoals.length > 0 || alignedPursuits.length > 0) ? (
         <section className="today__section today__section--focus card">
@@ -344,9 +393,10 @@ export default function Today() {
         ) : (
           <div className="today__tracking-list">
             {trackingMetrics.map((metric) => {
-              const todayEntry = trackingEntries.find(
+              const todayEntries = trackingEntries.filter(
                 (entry) => entry.metricId === metric.id && entry.entryDate === todayISO
               );
+              const todayEntry = todayEntries[0] ?? null;
               const hasSavedValue = Boolean(todayEntry);
 
               return (
@@ -354,46 +404,113 @@ export default function Today() {
                   <div className="today__tracking-copy">
                     <span>{metric.name}</span>
                     <small>
-                      {metric.unit}
-                      {metric.targetValue !== null && metric.targetValue !== undefined
-                        ? ` · target ${metric.targetValue}`
-                        : ""}
+                      {metric.mode === "structured_log"
+                        ? "Structured log"
+                        : `${metric.unit}${
+                            metric.targetValue !== null && metric.targetValue !== undefined
+                              ? ` · target ${metric.targetValue}`
+                              : ""
+                          }`}
                     </small>
                   </div>
 
-                  <div className="today__tracking-controls">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={metricDrafts[metric.id] ?? ""}
-                      onChange={(event) =>
-                        setMetricDrafts((current) => ({
-                          ...current,
-                          [metric.id]: event.target.value
-                        }))
-                      }
-                      disabled={isPersisting}
-                    />
-                    <button
-                      type="button"
-                      className="today__do-btn"
-                      onClick={() => handleSaveMetric(metric.id)}
-                      disabled={isPersisting || pendingMetricId === metric.id}
-                    >
-                      {pendingMetricId === metric.id ? "Saving..." : "Save"}
-                    </button>
-                    {hasSavedValue ? (
+                  {metric.mode === "structured_log" ? (
+                    <div className="today__structured-log">
+                      <div className="today__structured-form">
+                        {metric.fields.map((field) => (
+                          <input
+                            key={field.id}
+                            type={field.inputType === "number" ? "number" : "text"}
+                            min={field.inputType === "number" ? "0" : undefined}
+                            step={field.inputType === "number" ? "0.1" : undefined}
+                            value={structuredDrafts[metric.id]?.[field.key] ?? ""}
+                            onChange={(event) =>
+                              setStructuredDrafts((current) => ({
+                                ...current,
+                                [metric.id]: {
+                                  ...(current[metric.id] ?? {}),
+                                  [field.key]: event.target.value
+                                }
+                              }))
+                            }
+                            placeholder={field.label}
+                            title={
+                              field.inputType === "number" && field.unit
+                                ? `${field.label} (${field.unit})`
+                                : field.label
+                            }
+                            disabled={isPersisting}
+                          />
+                        ))}
+                        <button
+                          type="button"
+                          className="today__do-btn"
+                          onClick={() => handleAddStructuredEntry(metric)}
+                          disabled={isPersisting || pendingMetricId === metric.id}
+                        >
+                          {pendingMetricId === metric.id ? "Saving..." : "Add entry"}
+                        </button>
+                      </div>
+
+                      {todayEntries.length > 0 ? (
+                        <ul className="today__structured-entry-list">
+                          {todayEntries.map((entry) => (
+                            <li key={entry.id} className="today__structured-entry">
+                              <div>
+                                {formatStructuredEntry(entry, metric).map((line) => (
+                                  <small key={line}>{line}</small>
+                                ))}
+                              </div>
+                              <button
+                                type="button"
+                                className="today__undo-btn"
+                                onClick={() => handleDeleteStructuredEntry(entry.id)}
+                                disabled={isPersisting || pendingStructuredEntryId === entry.id}
+                              >
+                                {pendingStructuredEntryId === entry.id ? "Saving..." : "Remove"}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="today__empty">No entries logged yet today.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="today__tracking-controls">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={metricDrafts[metric.id] ?? ""}
+                        onChange={(event) =>
+                          setMetricDrafts((current) => ({
+                            ...current,
+                            [metric.id]: event.target.value
+                          }))
+                        }
+                        disabled={isPersisting}
+                      />
                       <button
                         type="button"
-                        className="today__undo-btn"
-                        onClick={() => handleClearMetric(metric.id)}
+                        className="today__do-btn"
+                        onClick={() => handleSaveMetric(metric.id)}
                         disabled={isPersisting || pendingMetricId === metric.id}
                       >
-                        Clear
+                        {pendingMetricId === metric.id ? "Saving..." : "Save"}
                       </button>
-                    ) : null}
-                  </div>
+                      {hasSavedValue ? (
+                        <button
+                          type="button"
+                          className="today__undo-btn"
+                          onClick={() => handleClearMetric(metric.id)}
+                          disabled={isPersisting || pendingMetricId === metric.id}
+                        >
+                          Clear
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               );
             })}

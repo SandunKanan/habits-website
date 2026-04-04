@@ -114,11 +114,13 @@ export default function History() {
     const dateGroup = ensureDateGroup(entry.entryDate);
     dateGroup.set(`metric:${entry.id}`, {
       habitName: metric.name,
-      type: "metric_entry",
+      type: metric.mode === "structured_log" ? "structured_entry" : "metric_entry",
       subtasks: [],
       attributeGains: [],
       metricValue: entry.value,
-      metricUnit: metric.unit
+      metricUnit: metric.unit,
+      metricFields: Array.isArray(metric.fields) ? metric.fields : [],
+      metricValueJson: entry.valueJson ?? {}
     });
   }
 
@@ -243,10 +245,12 @@ export default function History() {
                       ? "Completed"
                       : event.type === "habit_skipped"
                         ? "Skipped"
-                        : event.type === "one_off_done"
-                          ? "One-off"
+                          : event.type === "one_off_done"
+                            ? "One-off"
                           : event.type === "metric_entry"
                             ? "Metric"
+                            : event.type === "structured_entry"
+                              ? "Log"
                         : "Subtasks"}
                   </span>
                   <div className="history__event-copy">
@@ -256,6 +260,20 @@ export default function History() {
                         {event.metricValue}
                         {event.metricUnit ? ` ${event.metricUnit}` : ""}
                       </small>
+                    ) : null}
+                    {event.type === "structured_entry" ? (
+                      <ul className="history__subtask-list">
+                        {event.metricFields.map((field) => {
+                          const value = event.metricValueJson?.[field.key];
+                          if (value === null || value === undefined || value === "") return null;
+                          return (
+                            <li key={field.key} className="history__subtask-copy">
+                              {field.label}: {value}
+                              {field.inputType === "number" && field.unit ? ` ${field.unit}` : ""}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     ) : null}
                     {event.subtasks.length > 0 ? (
                       <ul className="history__subtask-list">

@@ -46,6 +46,17 @@ async function fetchSupabase(pathname, accessToken, options = {}) {
   return res.json();
 }
 
+function normalizeField(field) {
+  const inputType = field.inputType === "number" ? "number" : "text";
+  return {
+    id: String(field.id ?? field.key ?? ""),
+    key: String(field.key ?? "").trim(),
+    label: String(field.label ?? "").trim(),
+    inputType,
+    unit: inputType === "number" ? String(field.unit ?? "").trim() : ""
+  };
+}
+
 function normalizeMetric(metric) {
   return {
     id: String(metric.id ?? ""),
@@ -56,17 +67,31 @@ function normalizeMetric(metric) {
       metric.targetValue === null || metric.targetValue === undefined || metric.target_value === null
         ? null
         : Number(metric.targetValue ?? metric.target_value),
+    mode: metric.mode ?? metric.entry_mode ?? "single_value",
+    fields: Array.isArray(metric.fields ?? metric.fields_json)
+      ? (metric.fields ?? metric.fields_json).map(normalizeField).filter((field) => field.key && field.label)
+      : [],
     createdAt: metric.createdAt ?? metric.created_at ?? null,
     updatedAt: metric.updatedAt ?? metric.updated_at ?? null
   };
 }
 
 function normalizeEntry(entry) {
+  const rawValue = entry.value;
+  const normalizedValue = rawValue === null || rawValue === undefined || rawValue === "" ? null : Number(rawValue);
   return {
     id: String(entry.id ?? ""),
     metricId: String(entry.metricId ?? entry.metric_id ?? ""),
     entryDate: String(entry.entryDate ?? entry.entry_date ?? "").slice(0, 10),
-    value: Number(entry.value ?? 0),
+    value: Number.isFinite(normalizedValue) ? normalizedValue : null,
+    valueJson:
+      entry.valueJson && typeof entry.valueJson === "object"
+        ? entry.valueJson
+        : entry.value_json && typeof entry.value_json === "object"
+          ? entry.value_json
+          : Number.isFinite(normalizedValue)
+            ? { value: normalizedValue }
+            : {},
     createdAt: entry.createdAt ?? entry.created_at ?? null,
     updatedAt: entry.updatedAt ?? entry.updated_at ?? null
   };
@@ -80,6 +105,8 @@ function parseMetricRows(rows) {
       name: row.name,
       unit: row.unit,
       targetValue: row.target_value,
+      mode: row.entry_mode,
+      fields: row.fields_json,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })
@@ -93,6 +120,7 @@ function parseEntryRows(rows) {
       metricId: row.metric_id,
       entryDate: row.entry_date,
       value: row.value,
+      valueJson: row.value_json,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })
@@ -109,28 +137,33 @@ function serializeMetricRow(metric, userId) {
     target_value:
       metric.targetValue === null || metric.targetValue === undefined || metric.targetValue === ""
         ? null
-        : Number(metric.targetValue)
+        : Number(metric.targetValue),
+    entry_mode: metric.mode ?? "single_value",
+    fields_json: Array.isArray(metric.fields) ? metric.fields : []
   };
 }
 
 function serializeEntryRow(entry, userId) {
+  const value = entry.value === null || entry.value === undefined || entry.value === "" ? null : Number(entry.value);
+
   return {
     id: entry.id,
     user_id: userId,
     metric_id: entry.metricId,
     entry_date: entry.entryDate,
-    value: Number(entry.value)
+    value: Number.isFinite(value) ? value : null,
+    value_json: entry.valueJson && typeof entry.valueJson === "object" ? entry.valueJson : {}
   };
 }
 
 export async function loadTrackingForSession(accessToken, userId) {
   const [metricRows, entryRows] = await Promise.all([
     fetchSupabase(
-      `/rest/v1/track_metrics?user_id=eq.${userId}&select=id,slug,name,unit,target_value,created_at,updated_at&order=created_at.asc`,
+      `/rest/v1/track_metrics?user_id=eq.${userId}&select=id,slug,name,unit,target_value,entry_mode,fields_json,created_at,updated_at&order=created_at.asc`,
       accessToken
     ),
     fetchSupabase(
-      `/rest/v1/track_metric_entries?user_id=eq.${userId}&select=id,metric_id,entry_date,value,created_at,updated_at&order=entry_date.desc&order=created_at.desc`,
+      `/rest/v1/track_metric_entries?user_id=eq.${userId}&select=id,metric_id,entry_date,value,value_json,created_at,updated_at&order=entry_date.desc&order=created_at.desc`,
       accessToken
     )
   ]);
@@ -169,7 +202,7 @@ export async function saveTrackingMetricsForSession(accessToken, userId, metrics
   }
 
   const metricRows = await fetchSupabase(
-    `/rest/v1/track_metrics?user_id=eq.${userId}&select=id,slug,name,unit,target_value,created_at,updated_at&order=created_at.asc`,
+    `/rest/v1/track_metrics?user_id=eq.${userId}&select=id,slug,name,unit,target_value,entry_mode,fields_json,created_at,updated_at&order=created_at.asc`,
     accessToken
   );
 
@@ -204,7 +237,7 @@ export async function saveTrackingEntriesForSession(accessToken, userId, entries
   }
 
   const entryRows = await fetchSupabase(
-    `/rest/v1/track_metric_entries?user_id=eq.${userId}&select=id,metric_id,entry_date,value,created_at,updated_at&order=entry_date.desc&order=created_at.desc`,
+    `/rest/v1/track_metric_entries?user_id=eq.${userId}&select=id,metric_id,entry_date,value,value_json,created_at,updated_at&order=entry_date.desc&order=created_at.desc`,
     accessToken
   );
 

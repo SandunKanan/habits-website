@@ -63,7 +63,8 @@
     color: $muted;
   }
 
-  input {
+  input,
+  select {
     border: 1px solid $border;
     border-radius: 16px;
     padding: 14px 16px;
@@ -72,6 +73,78 @@
     font: inherit;
     line-height: 1.6;
   }
+}
+
+.trackingpage__field-builder {
+  display: grid;
+  gap: 12px;
+}
+
+.trackingpage__field-builder-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  label {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: $muted;
+  }
+
+  button {
+    border: 1px solid $border-strong;
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+    color: $text;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.trackingpage__field-list {
+  display: grid;
+  gap: 10px;
+}
+
+.trackingpage__field-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 160px 140px auto;
+
+  input,
+  select,
+  button {
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trackingpage__field-spacer {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+}
+
+.trackingpage__empty-copy {
+  margin: 0;
+  color: $muted;
+  font-style: italic;
 }
 
 .trackingpage__grid,

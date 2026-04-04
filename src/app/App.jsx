@@ -279,6 +279,8 @@ export default function App() {
             onDeleteTrackingMetric={trackingStore.deleteTrackingMetric}
             onSaveTrackingEntry={trackingStore.saveTrackingEntry}
             onDeleteTrackingEntry={trackingStore.deleteTrackingEntry}
+            onAddTrackingStructuredEntry={trackingStore.addTrackingStructuredEntry}
+            onDeleteTrackingStructuredEntry={trackingStore.deleteTrackingStructuredEntry}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}

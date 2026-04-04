@@ -23,6 +23,71 @@ function buildSlug(name, existingSlugs) {
   return candidate;
 }
 
+function buildFieldKey(label, existingKeys) {
+  const base =
+    String(label ?? "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "") || "field";
+
+  let candidate = base;
+  let n = 2;
+  while (existingKeys.has(candidate)) {
+    candidate = `${base}_${n}`;
+    n += 1;
+  }
+
+  return candidate;
+}
+
+function normalizeFields(fields) {
+  if (!Array.isArray(fields)) return [];
+
+  const usedKeys = new Set();
+  return fields
+    .map((field) => {
+      const label = String(field?.label ?? "").trim();
+      if (!label) return null;
+      const key = buildFieldKey(field?.key ?? label, usedKeys);
+      usedKeys.add(key);
+
+      return {
+        id: String(field?.id ?? crypto.randomUUID()),
+        key,
+        label,
+        inputType: field?.inputType === "number" ? "number" : "text",
+        unit: field?.inputType === "number" ? String(field?.unit ?? "").trim() : ""
+      };
+    })
+    .filter(Boolean);
+}
+
+function normalizeStructuredValueJson(metric, valueJson) {
+  const fields = Array.isArray(metric?.fields) ? metric.fields : [];
+  const result = {};
+
+  for (const field of fields) {
+    const rawValue = valueJson?.[field.key];
+    if (field.inputType === "number") {
+      const parsed = rawValue === "" || rawValue === null || rawValue === undefined ? null : Number(rawValue);
+      if (parsed === null || !Number.isFinite(parsed) || parsed < 0) {
+        return { ok: false, error: `${field.label} must be zero or greater.` };
+      }
+      result[field.key] = parsed;
+      continue;
+    }
+
+    const normalizedText = String(rawValue ?? "").trim();
+    if (!normalizedText) {
+      return { ok: false, error: `${field.label} is required.` };
+    }
+    result[field.key] = normalizedText;
+  }
+
+  return { ok: true, valueJson: result };
+}
+
 export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }) {
   const [metrics, setMetrics] = useState([]);
   const [entries, setEntries] = useState([]);
@@ -108,18 +173,23 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
     }
   }
 
-  async function addMetric({ name, unit, targetValue }) {
+  async function addMetric({ name, unit, targetValue, mode, fields }) {
     const trimmedName = String(name ?? "").trim();
-    const trimmedUnit = String(unit ?? "").trim();
+    const normalizedMode = mode === "structured_log" ? "structured_log" : "single_value";
+    const trimmedUnit = normalizedMode === "single_value" ? String(unit ?? "").trim() : "";
+    const normalizedFields = normalizedMode === "structured_log" ? normalizeFields(fields) : [];
     if (!trimmedName) {
-      return { ok: false, error: "Metric name is required." };
+      return { ok: false, error: "Tracking name is required." };
     }
-    if (!trimmedUnit) {
-      return { ok: false, error: "Unit is required." };
+    if (normalizedMode === "single_value" && !trimmedUnit) {
+      return { ok: false, error: "Unit is required for a simple metric." };
+    }
+    if (normalizedMode === "structured_log" && normalizedFields.length === 0) {
+      return { ok: false, error: "Add at least one field for a structured log." };
     }
 
     const parsedTarget =
-      targetValue === "" || targetValue === null || targetValue === undefined
+      normalizedMode === "structured_log" || targetValue === "" || targetValue === null || targetValue === undefined
         ? null
         : Number(targetValue);
     if (parsedTarget !== null && (!Number.isFinite(parsedTarget) || parsedTarget < 0)) {
@@ -133,13 +203,15 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
       name: trimmedName,
       unit: trimmedUnit,
       targetValue: parsedTarget,
+      mode: normalizedMode,
+      fields: normalizedFields,
       createdAt: now,
       updatedAt: now
     };
 
     const persisted = await persistMetrics([...metrics, newMetric]);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save metric." };
+      return { ok: false, error: "Could not save tracking type." };
     }
 
     return { ok: true, id: newMetric.id };
@@ -148,20 +220,27 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
   async function updateMetric(metricId, updates) {
     const existingMetric = metrics.find((metric) => metric.id === metricId);
     if (!existingMetric) {
-      return { ok: false, error: "Metric not found." };
+      return { ok: false, error: "Tracking type not found." };
     }
 
     const trimmedName = String(updates?.name ?? existingMetric.name ?? "").trim();
-    const trimmedUnit = String(updates?.unit ?? existingMetric.unit ?? "").trim();
+    const normalizedMode = (updates?.mode ?? existingMetric.mode) === "structured_log" ? "structured_log" : "single_value";
+    const trimmedUnit = normalizedMode === "single_value" ? String(updates?.unit ?? existingMetric.unit ?? "").trim() : "";
+    const normalizedFields = normalizedMode === "structured_log"
+      ? normalizeFields(updates?.fields ?? existingMetric.fields)
+      : [];
     if (!trimmedName) {
-      return { ok: false, error: "Metric name is required." };
+      return { ok: false, error: "Tracking name is required." };
     }
-    if (!trimmedUnit) {
-      return { ok: false, error: "Unit is required." };
+    if (normalizedMode === "single_value" && !trimmedUnit) {
+      return { ok: false, error: "Unit is required for a simple metric." };
+    }
+    if (normalizedMode === "structured_log" && normalizedFields.length === 0) {
+      return { ok: false, error: "Add at least one field for a structured log." };
     }
 
     const parsedTarget =
-      updates?.targetValue === "" || updates?.targetValue === null || updates?.targetValue === undefined
+      normalizedMode === "structured_log" || updates?.targetValue === "" || updates?.targetValue === null || updates?.targetValue === undefined
         ? null
         : Number(updates.targetValue);
     if (parsedTarget !== null && (!Number.isFinite(parsedTarget) || parsedTarget < 0)) {
@@ -176,13 +255,15 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
             name: trimmedName,
             unit: trimmedUnit,
             targetValue: parsedTarget,
+            mode: normalizedMode,
+            fields: normalizedFields,
             updatedAt: new Date().toISOString()
           }
     );
 
     const persisted = await persistMetrics(nextMetrics);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save metric." };
+      return { ok: false, error: "Could not save tracking type." };
     }
 
     return { ok: true };
@@ -191,19 +272,19 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
   async function deleteMetric(metricId) {
     const existingMetric = metrics.find((metric) => metric.id === metricId);
     if (!existingMetric) {
-      return { ok: false, error: "Metric not found." };
+      return { ok: false, error: "Tracking type not found." };
     }
 
     const nextMetrics = metrics.filter((metric) => metric.id !== metricId);
     const nextEntries = entries.filter((entry) => entry.metricId !== metricId);
     const metricsResult = await persistMetrics(nextMetrics);
     if (!metricsResult.ok) {
-      return { ok: false, error: "Could not save metric." };
+      return { ok: false, error: "Could not save tracking type." };
     }
 
     const entriesResult = await persistEntries(nextEntries);
     if (!entriesResult.ok) {
-      return { ok: false, error: "Could not save metric entries." };
+      return { ok: false, error: "Could not save tracking entries." };
     }
 
     return { ok: true };
@@ -212,7 +293,10 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
   async function saveMetricEntry({ metricId, entryDate, value }) {
     const existingMetric = metrics.find((metric) => metric.id === metricId);
     if (!existingMetric) {
-      return { ok: false, error: "Metric not found." };
+      return { ok: false, error: "Tracking type not found." };
+    }
+    if (existingMetric.mode !== "single_value") {
+      return { ok: false, error: "This tracking type uses structured entries." };
     }
 
     const parsedValue = Number(value);
@@ -225,27 +309,33 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
       return { ok: false, error: "Entry date is required." };
     }
 
-    const existingEntry = entries.find(
+    const matchingEntries = entries.filter(
       (entry) => entry.metricId === metricId && entry.entryDate === normalizedDate
     );
+    const existingEntry = matchingEntries[0] ?? null;
     const now = new Date().toISOString();
+    const filteredEntries = entries.filter(
+      (entry) => !(entry.metricId === metricId && entry.entryDate === normalizedDate && entry.id !== existingEntry?.id)
+    );
     const nextEntries = existingEntry
-      ? entries.map((entry) =>
+      ? filteredEntries.map((entry) =>
           entry.id !== existingEntry.id
             ? entry
             : {
                 ...entry,
                 value: parsedValue,
+                valueJson: { value: parsedValue },
                 updatedAt: now
               }
         )
       : [
-          ...entries,
+          ...filteredEntries,
           {
             id: crypto.randomUUID(),
             metricId,
             entryDate: normalizedDate,
             value: parsedValue,
+            valueJson: { value: parsedValue },
             createdAt: now,
             updatedAt: now
           }
@@ -254,6 +344,47 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
     const persisted = await persistEntries(nextEntries);
     if (!persisted.ok) {
       return { ok: false, error: "Could not save metric entry." };
+    }
+
+    return { ok: true };
+  }
+
+  async function addStructuredEntry({ metricId, entryDate, valueJson }) {
+    const existingMetric = metrics.find((metric) => metric.id === metricId);
+    if (!existingMetric) {
+      return { ok: false, error: "Tracking type not found." };
+    }
+    if (existingMetric.mode !== "structured_log") {
+      return { ok: false, error: "This tracking type uses a single numeric value." };
+    }
+
+    const normalizedDate = String(entryDate ?? "").slice(0, 10);
+    if (!normalizedDate) {
+      return { ok: false, error: "Entry date is required." };
+    }
+
+    const normalizedValue = normalizeStructuredValueJson(existingMetric, valueJson);
+    if (!normalizedValue.ok) {
+      return normalizedValue;
+    }
+
+    const now = new Date().toISOString();
+    const nextEntries = [
+      ...entries,
+      {
+        id: crypto.randomUUID(),
+        metricId,
+        entryDate: normalizedDate,
+        value: null,
+        valueJson: normalizedValue.valueJson,
+        createdAt: now,
+        updatedAt: now
+      }
+    ];
+
+    const persisted = await persistEntries(nextEntries);
+    if (!persisted.ok) {
+      return { ok: false, error: "Could not save structured entry." };
     }
 
     return { ok: true };
@@ -271,6 +402,20 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
     const persisted = await persistEntries(entries.filter((entry) => entry.id !== existingEntry.id));
     if (!persisted.ok) {
       return { ok: false, error: "Could not save metric entry." };
+    }
+
+    return { ok: true };
+  }
+
+  async function deleteStructuredEntry(entryId) {
+    const existingEntry = entries.find((entry) => entry.id === entryId);
+    if (!existingEntry) {
+      return { ok: false, error: "Entry not found." };
+    }
+
+    const persisted = await persistEntries(entries.filter((entry) => entry.id !== entryId));
+    if (!persisted.ok) {
+      return { ok: false, error: "Could not delete structured entry." };
     }
 
     return { ok: true };
@@ -298,7 +443,9 @@ export function useTrackingStore({ authEnabled, isAuthReady, session, authUser }
     updateTrackingMetric: updateMetric,
     deleteTrackingMetric: deleteMetric,
     saveTrackingEntry: saveMetricEntry,
+    addTrackingStructuredEntry: addStructuredEntry,
     deleteTrackingEntry: deleteMetricEntry,
+    deleteTrackingStructuredEntry: deleteStructuredEntry,
     beginLoadingTracking,
     resetTrackingState
   };

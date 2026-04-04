@@ -84,6 +84,8 @@
 
 .topnav__menu {
   position: relative;
+  padding-bottom: 10px;
+  margin-bottom: -10px;
 
   &[open] {
     .topnav__menu-panel {
@@ -115,7 +117,7 @@
 
 .topnav__menu-panel {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 2px);
   right: 0;
   min-width: 180px;
   display: grid;

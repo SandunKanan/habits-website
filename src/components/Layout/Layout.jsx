@@ -42,6 +42,8 @@ export default function Layout({
   onDeleteTrackingMetric,
   onSaveTrackingEntry,
   onDeleteTrackingEntry,
+  onAddTrackingStructuredEntry,
+  onDeleteTrackingStructuredEntry,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -83,9 +85,9 @@ export default function Layout({
     "/history": {
       title: "History",
       subtitle: "Recent completion records",
-      meta: (
+          meta: (
         <>
-          Logged completions: <b>{completionLog.length + oneOffTasks.length + trackingEntries.length}</b>
+          Logged entries: <b>{completionLog.length + oneOffTasks.length + trackingEntries.length}</b>
         </>
       )
     },
@@ -236,6 +238,8 @@ export default function Layout({
               onDeleteTrackingMetric,
               onSaveTrackingEntry,
               onDeleteTrackingEntry,
+              onAddTrackingStructuredEntry,
+              onDeleteTrackingStructuredEntry,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,

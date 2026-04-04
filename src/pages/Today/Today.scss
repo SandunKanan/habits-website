@@ -271,6 +271,62 @@
   }
 }
 
+.today__structured-log {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.today__structured-form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  align-items: end;
+
+  input {
+    min-width: 0;
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+  }
+}
+
+.today__structured-entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.today__structured-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid $border;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+
+  div {
+    display: grid;
+    gap: 4px;
+  }
+
+  small {
+    display: block;
+    color: $muted;
+  }
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
 .today__completed-list {
   list-style: none;
   margin: 0;

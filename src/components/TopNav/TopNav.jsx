@@ -9,6 +9,10 @@ export default function TopNav({ authUser, onSignOut }) {
   );
   const isMoreActive = ["/history", "/tracking", "/settings", "/help"].includes(location.pathname);
 
+  function closeMenu(event) {
+    event.currentTarget.removeAttribute("open");
+  }
+
   return (
     <nav className="topnav">
       <div className="container topnav__inner">
@@ -24,7 +28,10 @@ export default function TopNav({ authUser, onSignOut }) {
             <NavLink to="/attributes" className={({ isActive }) => (isActive ? "active" : "")}>
               Attributes
             </NavLink>
-            <details className={["topnav__menu", isDirectionActive ? "topnav__menu--active" : ""].join(" ")}>
+            <details
+              className={["topnav__menu", isDirectionActive ? "topnav__menu--active" : ""].join(" ")}
+              onMouseLeave={closeMenu}
+            >
               <summary>
                 <span>Growth</span>
                 <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -39,24 +46,27 @@ export default function TopNav({ authUser, onSignOut }) {
                 </svg>
               </summary>
               <div className="topnav__menu-panel">
-                <NavLink to="/vision" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/vision" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Vision
                 </NavLink>
-                <NavLink to="/focus" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/focus" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Focus
                 </NavLink>
-                <NavLink to="/domains" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/domains" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Domains
                 </NavLink>
-                <NavLink to="/goals" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/goals" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Goals
                 </NavLink>
-                <NavLink to="/learnings" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/learnings" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Pursuits
                 </NavLink>
               </div>
             </details>
-            <details className={["topnav__menu", isMoreActive ? "topnav__menu--active" : ""].join(" ")}>
+            <details
+              className={["topnav__menu", isMoreActive ? "topnav__menu--active" : ""].join(" ")}
+              onMouseLeave={closeMenu}
+            >
               <summary>
                 <span>More</span>
                 <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -71,16 +81,16 @@ export default function TopNav({ authUser, onSignOut }) {
                 </svg>
               </summary>
               <div className="topnav__menu-panel">
-                <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   History
                 </NavLink>
-                <NavLink to="/tracking" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/tracking" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Tracking
                 </NavLink>
-                <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Settings
                 </NavLink>
-                <NavLink to="/help" className={({ isActive }) => (isActive ? "active" : "")}>
+                <NavLink to="/help" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Help
                 </NavLink>
               </div>

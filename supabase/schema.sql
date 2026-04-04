@@ -152,6 +152,8 @@ create table if not exists public.track_metrics (
   name text not null,
   unit text not null,
   target_value numeric,
+  entry_mode text not null default 'single_value' check (entry_mode in ('single_value', 'structured_log')),
+  fields_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (user_id, slug)
@@ -162,10 +164,10 @@ create table if not exists public.track_metric_entries (
   user_id uuid not null references auth.users (id) on delete cascade,
   metric_id uuid not null references public.track_metrics (id) on delete cascade,
   entry_date date not null,
-  value numeric not null check (value >= 0),
+  value numeric check (value >= 0),
+  value_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now()),
-  unique (metric_id, entry_date)
+  updated_at timestamptz not null default timezone('utc', now())
 );
 
 create table if not exists public.user_settings (
@@ -204,6 +206,7 @@ create index if not exists one_off_tasks_user_id_idx on public.one_off_tasks (us
 create index if not exists track_metrics_user_id_idx on public.track_metrics (user_id);
 create index if not exists track_metric_entries_user_id_idx on public.track_metric_entries (user_id);
 create index if not exists track_metric_entries_metric_id_idx on public.track_metric_entries (metric_id);
+create index if not exists track_metric_entries_entry_date_idx on public.track_metric_entries (entry_date);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
 alter table public.habits enable row level security;
