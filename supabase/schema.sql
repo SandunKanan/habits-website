@@ -425,9 +425,9 @@ create policy "Users can insert own domains"
       parent_id is null
       or exists (
         select 1
-        from public.domains
-        where public.domains.id = parent_id
-          and public.domains.user_id = auth.uid()
+        from public.domains as parent_domain
+        where parent_domain.id = public.domains.parent_id
+          and parent_domain.user_id = auth.uid()
       )
     )
   );
@@ -516,9 +516,9 @@ create policy "Users can update own domains"
       parent_id is null
       or exists (
         select 1
-        from public.domains
-        where public.domains.id = parent_id
-          and public.domains.user_id = auth.uid()
+        from public.domains as parent_domain
+        where parent_domain.id = public.domains.parent_id
+          and parent_domain.user_id = auth.uid()
       )
     )
   );

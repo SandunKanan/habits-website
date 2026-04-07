@@ -95,7 +95,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
       return { ok: true, domains: Array.isArray(data) ? data : nextDomains };
     } catch (error) {
       console.error("Failed to persist domains", error);
-      return { ok: false };
+      return { ok: false, error: error instanceof Error ? error.message : "Could not save domains." };
     } finally {
       setIsPersisting(false);
     }
@@ -125,7 +125,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
 
     const persisted = await persistDomains([...domains, newDomain]);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save domains." };
+      return { ok: false, error: persisted.error ?? "Could not save domains." };
     }
 
     return { ok: true, id: newDomain.id };
@@ -170,7 +170,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
 
     const persisted = await persistDomains(nextDomains);
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save domains." };
+      return { ok: false, error: persisted.error ?? "Could not save domains." };
     }
 
     return { ok: true };
@@ -186,7 +186,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
     const idsToRemove = new Set([domainId, ...descendantIds]);
     const persisted = await persistDomains(domains.filter((domain) => !idsToRemove.has(domain.id)));
     if (!persisted.ok) {
-      return { ok: false, error: "Could not save domains." };
+      return { ok: false, error: persisted.error ?? "Could not save domains." };
     }
 
     return { ok: true };

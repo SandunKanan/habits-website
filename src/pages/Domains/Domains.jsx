@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import "./Domains.scss";
 
@@ -12,9 +12,44 @@ function buildTree(domains, parentId = "") {
     }));
 }
 
-function buildDepthLabel(depth) {
-  if (depth === 0) return "Root";
-  return `Level ${depth + 1}`;
+function getAncestorIds(domains, domainId) {
+  const ancestors = [];
+  let currentId = String(domainId ?? "");
+
+  while (currentId) {
+    const currentDomain = domains.find((domain) => domain.id === currentId);
+    if (!currentDomain) break;
+    ancestors.push(currentDomain.id);
+    currentId = String(currentDomain.parentId ?? "");
+  }
+
+  return ancestors;
+}
+
+function buildDomainPathMap(domains) {
+  const pathById = new Map();
+
+  function getPath(domainId) {
+    if (pathById.has(domainId)) {
+      return pathById.get(domainId);
+    }
+
+    const domain = domains.find((item) => item.id === domainId);
+    if (!domain) {
+      return "";
+    }
+
+    const parentPath = domain.parentId ? getPath(domain.parentId) : "";
+    const path = parentPath ? `${parentPath} / ${domain.name}` : domain.name;
+    pathById.set(domainId, path);
+    return path;
+  }
+
+  for (const domain of domains) {
+    getPath(domain.id);
+  }
+
+  return pathById;
 }
 
 export default function Domains() {
@@ -40,9 +75,26 @@ export default function Domains() {
   const [isSavingInline, setIsSavingInline] = useState(false);
 
   const tree = useMemo(() => buildTree(domains), [domains]);
+  const domainPathMap = useMemo(() => buildDomainPathMap(domains), [domains]);
   const rootCount = domains.filter((domain) => !domain.parentId).length;
   const focusDomainIds = new Set(Array.isArray(focus?.focusDomainIds) ? focus.focusDomainIds : []);
   const focusedCount = domains.filter((domain) => focusDomainIds.has(domain.id)).length;
+
+  useEffect(() => {
+    if (domains.length === 0) return;
+    setExpandedIds((current) => {
+      if (current.size > 0) {
+        return current;
+      }
+      return new Set(domains.filter((domain) => !domain.parentId).map((domain) => domain.id));
+    });
+  }, [domains]);
+
+  function expandDomainPath(domainId) {
+    if (!domainId) return;
+    const idsToExpand = getAncestorIds(domains, domainId);
+    setExpandedIds((current) => new Set([...current, ...idsToExpand]));
+  }
 
   function toggleExpanded(domainId) {
     setExpandedIds((current) => {
@@ -61,7 +113,7 @@ export default function Domains() {
     setInlineChildName("");
     setInlineChildNotes("");
     setInlineFeedback("");
-    setExpandedIds((current) => new Set([...current, domainId]));
+    expandDomainPath(domainId);
   }
 
   function closeInlineChildForm() {
@@ -83,7 +135,7 @@ export default function Domains() {
       setNotes("");
       setFeedback("Domain added.");
       if (parentId) {
-        setExpandedIds((current) => new Set([...current, parentId]));
+        expandDomainPath(parentId);
       }
     } else {
       setFeedback(result?.error ?? "Could not add domain.");
@@ -101,7 +153,7 @@ export default function Domains() {
     if (result?.ok) {
       closeInlineChildForm();
       setFeedback("Child domain added.");
-      setExpandedIds((current) => new Set([...current, parentDomainId]));
+      expandDomainPath(parentDomainId);
     } else {
       setInlineFeedback(result?.error ?? "Could not add child domain.");
     }
@@ -142,7 +194,7 @@ export default function Domains() {
       setEditingId("");
       setFeedback("Domain updated.");
       if (editParentId) {
-        setExpandedIds((current) => new Set([...current, editParentId]));
+        expandDomainPath(editParentId);
       }
     } else {
       setEditFeedback(result?.error ?? "Could not update domain.");
@@ -176,7 +228,7 @@ export default function Domains() {
   function renderDomainNode(domain, depth = 0) {
     const isEditing = editingId === domain.id;
     const hasChildren = domain.children.length > 0;
-    const isExpanded = expandedIds.has(domain.id) || depth === 0;
+    const isExpanded = expandedIds.has(domain.id);
     const unavailableParentIds = new Set([domain.id]);
 
     function collectChildrenIds(node) {
@@ -197,7 +249,14 @@ export default function Domains() {
 
     return (
       <li key={domain.id} className="domainspage__node">
-        <article className="domainspage__item card" style={{ "--domain-depth": depth }}>
+        <article
+          className={[
+            "domainspage__item",
+            "card",
+            depth > 0 ? "domainspage__item--child" : "domainspage__item--root"
+          ].join(" ")}
+          style={{ "--domain-depth": depth }}
+        >
           {isEditing ? (
             <form className="domainspage__edit" onSubmit={handleSaveEdit}>
               <div className="domainspage__field">
@@ -225,7 +284,7 @@ export default function Domains() {
                     .filter((item) => !unavailableParentIds.has(item.id))
                     .map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name}
+                        {domainPathMap.get(item.id) ?? item.name}
                       </option>
                     ))}
                 </select>
@@ -257,7 +316,6 @@ export default function Domains() {
               <div className="domainspage__item-head">
                 <div>
                   <div className="domainspage__badges">
-                    <span className="domainspage__badge">{buildDepthLabel(depth)}</span>
                     {focusDomainIds.has(domain.id) ? (
                       <span className="domainspage__badge domainspage__badge--focus">Focus</span>
                     ) : null}
@@ -276,17 +334,42 @@ export default function Domains() {
                         {linkedHabits.length} habit{linkedHabits.length === 1 ? "" : "s"}
                       </span>
                     ) : null}
+                  </div>
+                  <div className="domainspage__title-row">
+                    <h3
+                      className={depth > 0 ? "domainspage__title domainspage__title--child" : "domainspage__title"}
+                    >
+                      {domain.name}
+                    </h3>
                     {hasChildren ? (
                       <button
                         type="button"
                         className="domainspage__toggle"
                         onClick={() => toggleExpanded(domain.id)}
+                        aria-expanded={isExpanded}
                       >
-                        {isExpanded ? "Collapse" : `Expand (${domain.children.length})`}
+                        <svg
+                          className={[
+                            "domainspage__toggle-caret",
+                            depth > 0 ? "domainspage__toggle-caret--child" : "",
+                            isExpanded ? "domainspage__toggle-caret--expanded" : ""
+                          ].join(" ")}
+                          viewBox="0 0 12 12"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <path
+                            d="M2.25 4.25 6 8l3.75-3.75"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </button>
                     ) : null}
                   </div>
-                  <h3>{domain.name}</h3>
                   {domain.notes ? <p className="domainspage__notes">{domain.notes}</p> : null}
                   {linkedGoals.length > 0 ? (
                     <div className="domainspage__linked">
@@ -426,7 +509,7 @@ export default function Domains() {
                 <option value="">No parent</option>
                 {domains.map((domain) => (
                   <option key={domain.id} value={domain.id}>
-                    {domain.name}
+                    {domainPathMap.get(domain.id) ?? domain.name}
                   </option>
                 ))}
               </select>
