@@ -1,15 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import "./TopNav.scss";
 
 export default function TopNav({ authUser, onSignOut }) {
   const location = useLocation();
+  const [isHoverCapable, setIsHoverCapable] = useState(false);
   const isDirectionActive = ["/vision", "/focus", "/domains", "/goals", "/learnings"].includes(
     location.pathname
   );
   const isMoreActive = ["/history", "/tracking", "/notes", "/settings", "/help"].includes(location.pathname);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const updateHoverCapability = () => setIsHoverCapable(mediaQuery.matches);
+
+    updateHoverCapability();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateHoverCapability);
+      return () => mediaQuery.removeEventListener("change", updateHoverCapability);
+    }
+
+    mediaQuery.addListener(updateHoverCapability);
+    return () => mediaQuery.removeListener(updateHoverCapability);
+  }, []);
+
   function closeMenu(event) {
+    if (!isHoverCapable) return;
     event.currentTarget.removeAttribute("open");
   }
 
