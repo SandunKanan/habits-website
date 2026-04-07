@@ -53,6 +53,33 @@
   gap: 16px;
 }
 
+.notespage__tag-details {
+  display: grid;
+  gap: 12px;
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    color: $muted;
+    font-size: 0.95rem;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "▾";
+    margin-left: 8px;
+    color: $accent;
+  }
+
+  &[open] summary::after {
+    content: "▴";
+  }
+}
+
 .notespage__field {
   display: grid;
   gap: 8px;

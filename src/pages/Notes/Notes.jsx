@@ -17,9 +17,10 @@ function formatTimestamp(timestamp) {
 export default function Notes() {
   const { notes, onAddNote, onUpdateNote, onDeleteNote, isPersisting } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [tagInput, setTagInput] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [showTagInput, setShowTagInput] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState("");
@@ -65,6 +66,7 @@ export default function Notes() {
       setTitle("");
       setBody("");
       setTagInput("");
+      setShowTagInput(false);
       setFeedback("Note saved.");
     } else {
       setFeedback(result?.error ?? "Could not save note.");
@@ -138,16 +140,6 @@ export default function Notes() {
       <section className="notespage__section card">
         <form className="notespage__form" onSubmit={handleAddNote}>
           <div className="notespage__field">
-            <label htmlFor="note-tags">Tags</label>
-            <input
-              id="note-tags"
-              type="text"
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-          <div className="notespage__field">
             <label htmlFor="note-title">Title</label>
             <input
               id="note-title"
@@ -169,6 +161,19 @@ export default function Notes() {
               required
             />
           </div>
+          <details className="notespage__tag-details" open={showTagInput} onToggle={(event) => setShowTagInput(event.currentTarget.open)}>
+            <summary>Add tags</summary>
+            <div className="notespage__field">
+              <label htmlFor="note-tags">Tags</label>
+              <input
+                id="note-tags"
+                type="text"
+                value={tagInput}
+                onChange={(event) => setTagInput(event.target.value)}
+                disabled={isSaving || isPersisting}
+              />
+            </div>
+          </details>
           <div className="notespage__actions">
             <button type="submit" disabled={isSaving || isPersisting}>
               {isSaving || isPersisting ? "Saving..." : "Add note"}
