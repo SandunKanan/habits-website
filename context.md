@@ -169,9 +169,7 @@ A beginner can use it as a habits app.
 A more engaged user can use it as a broader life-design system:
 Vision -> Focus -> Domains -> Goals / Pursuits -> Habits / Tracking -> Today
 
-Important design principle:
-I do not want the app to become bloated or overcomplicated.
-The deeper layers should feel optional and additive, not required for basic use.
+
 
 What I want help thinking about:
 - higher-level product direction
