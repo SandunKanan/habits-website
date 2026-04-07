@@ -16,6 +16,8 @@ function formatTimestamp(timestamp) {
 
 export default function Notes() {
   const { notes, onAddNote, onUpdateNote, onDeleteNote, isPersisting } = useOutletContext();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -23,24 +25,46 @@ export default function Notes() {
   const [editingId, setEditingId] = useState("");
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [editTagInput, setEditTagInput] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
 
-  const sortedNotes = useMemo(
-    () => [...notes].sort((a, b) => String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? ""))),
+  const allTags = useMemo(
+    () =>
+      [...new Set(notes.flatMap((note) => (Array.isArray(note.tags) ? note.tags : [])))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
     [notes]
   );
+
+  const filteredNotes = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return [...notes]
+      .filter((note) => {
+        if (!normalizedSearch) return true;
+        const haystack = [
+          note.title,
+          note.body,
+          ...(Array.isArray(note.tags) ? note.tags : [])
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(normalizedSearch);
+      })
+      .sort((a, b) => String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")));
+  }, [notes, searchTerm]);
 
   async function handleAddNote(event) {
     event.preventDefault();
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddNote({ title, body });
+    const result = await onAddNote({ title, body, tags: tagInput });
     if (result?.ok) {
       setTitle("");
       setBody("");
+      setTagInput("");
       setFeedback("Note saved.");
     } else {
       setFeedback(result?.error ?? "Could not save note.");
@@ -53,6 +77,7 @@ export default function Notes() {
     setEditingId(note.id);
     setEditTitle(note.title);
     setEditBody(note.body ?? "");
+    setEditTagInput(Array.isArray(note.tags) ? note.tags.join(", ") : "");
     setEditFeedback("");
   }
 
@@ -60,6 +85,7 @@ export default function Notes() {
     setEditingId("");
     setEditTitle("");
     setEditBody("");
+    setEditTagInput("");
     setEditFeedback("");
   }
 
@@ -69,9 +95,10 @@ export default function Notes() {
 
     setIsSavingEdit(true);
     setEditFeedback("");
-    const result = await onUpdateNote(editingId, { title: editTitle, body: editBody });
+    const result = await onUpdateNote(editingId, { title: editTitle, body: editBody, tags: editTagInput });
     if (result?.ok) {
       setEditingId("");
+      setEditTagInput("");
       setFeedback("Note updated.");
     } else {
       setEditFeedback(result?.error ?? "Could not update note.");
@@ -111,6 +138,16 @@ export default function Notes() {
       <section className="notespage__section card">
         <form className="notespage__form" onSubmit={handleAddNote}>
           <div className="notespage__field">
+            <label htmlFor="note-tags">Tags</label>
+            <input
+              id="note-tags"
+              type="text"
+              value={tagInput}
+              onChange={(event) => setTagInput(event.target.value)}
+              disabled={isSaving || isPersisting}
+            />
+          </div>
+          <div className="notespage__field">
             <label htmlFor="note-title">Title</label>
             <input
               id="note-title"
@@ -141,14 +178,50 @@ export default function Notes() {
         </form>
       </section>
 
+      <section className="notespage__section card">
+        <div className="notespage__toolbar">
+          <div className="notespage__field">
+            <label htmlFor="note-search">Search notes</label>
+            <input
+              id="note-search"
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search title, text, or tags"
+            />
+          </div>
+          {allTags.length > 0 ? (
+            <div className="notespage__tag-cloud" aria-label="Available tags">
+              {allTags.map((tag) => {
+                const isActive = searchTerm.trim().toLowerCase() === tag.toLowerCase();
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={["notespage__tag", isActive ? "notespage__tag--active" : ""].join(" ")}
+                    onClick={() => setSearchTerm(isActive ? "" : tag)}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      </section>
+
       <section className="notespage__list">
-        {sortedNotes.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <article className="notespage__empty card">
-            <h3>No notes yet</h3>
-            <p>Add your first note above. It will be timestamped automatically.</p>
+            <h3>{notes.length === 0 ? "No notes yet" : "No notes match your search"}</h3>
+            <p>
+              {notes.length === 0
+                ? "Add your first note above. It will be timestamped automatically."
+                : "Try a different keyword or tag."}
+            </p>
           </article>
         ) : (
-          sortedNotes.map((note) => {
+          filteredNotes.map((note) => {
             const isEditing = editingId === note.id;
             return (
               <article key={note.id} className="notespage__item card">
@@ -163,6 +236,16 @@ export default function Notes() {
                         onChange={(event) => setEditTitle(event.target.value)}
                         disabled={isSavingEdit || isPersisting}
                         required
+                      />
+                    </div>
+                    <div className="notespage__field">
+                      <label htmlFor={`edit-note-tags-${note.id}`}>Tags</label>
+                      <input
+                        id={`edit-note-tags-${note.id}`}
+                        type="text"
+                        value={editTagInput}
+                        onChange={(event) => setEditTagInput(event.target.value)}
+                        disabled={isSavingEdit || isPersisting}
                       />
                     </div>
                     <div className="notespage__field">
@@ -207,6 +290,20 @@ export default function Notes() {
                         </button>
                       </div>
                     </div>
+                    {Array.isArray(note.tags) && note.tags.length > 0 ? (
+                      <div className="notespage__tag-list">
+                        {note.tags.map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            className="notespage__tag"
+                            onClick={() => setSearchTerm(tag)}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <p className="notespage__body">{note.body}</p>
                     <div className="notespage__meta">
                       <span>Created {formatTimestamp(note.createdAt)}</span>

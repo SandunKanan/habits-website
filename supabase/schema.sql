@@ -175,6 +175,7 @@ create table if not exists public.notes (
   user_id uuid not null references auth.users (id) on delete cascade,
   title text not null,
   body text not null,
+  tags_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );

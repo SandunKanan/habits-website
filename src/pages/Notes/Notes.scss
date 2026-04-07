@@ -48,6 +48,11 @@
   gap: 18px;
 }
 
+.notespage__toolbar {
+  display: grid;
+  gap: 16px;
+}
+
 .notespage__field {
   display: grid;
   gap: 8px;
@@ -73,6 +78,29 @@
     resize: vertical;
     min-height: 160px;
   }
+}
+
+.notespage__tag-cloud,
+.notespage__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.notespage__tag {
+  border: 1px solid rgba(143, 211, 255, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(143, 211, 255, 0.08);
+  color: $text;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.notespage__tag--active {
+  border-color: rgba(82, 214, 195, 0.4);
+  background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.14));
 }
 
 .notespage__actions,

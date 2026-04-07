@@ -65,9 +65,10 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     }
   }
 
-  async function addNote({ title, body }) {
+  async function addNote({ title, body, tags }) {
     const trimmedTitle = String(title ?? "").trim();
     const trimmedBody = String(body ?? "").trim();
+    const normalizedTags = normalizeTags(tags);
     if (!trimmedTitle) return { ok: false, error: "Title is required." };
     if (!trimmedBody) return { ok: false, error: "Note text is required." };
 
@@ -76,6 +77,7 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
       id: crypto.randomUUID(),
       title: trimmedTitle,
       body: trimmedBody,
+      tags: normalizedTags,
       createdAt: now,
       updatedAt: now
     };
@@ -85,9 +87,10 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     return { ok: true, id: newNote.id };
   }
 
-  async function updateNote(noteId, { title, body }) {
+  async function updateNote(noteId, { title, body, tags }) {
     const trimmedTitle = String(title ?? "").trim();
     const trimmedBody = String(body ?? "").trim();
+    const normalizedTags = normalizeTags(tags);
     if (!trimmedTitle) return { ok: false, error: "Title is required." };
     if (!trimmedBody) return { ok: false, error: "Note text is required." };
 
@@ -101,6 +104,7 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
             ...note,
             title: trimmedTitle,
             body: trimmedBody,
+            tags: normalizedTags,
             updatedAt: new Date().toISOString()
           }
     );
@@ -136,4 +140,12 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     beginLoadingNotes,
     resetNotesState
   };
+}
+
+function normalizeTags(value) {
+  const rawTags = Array.isArray(value) ? value : String(value ?? "").split(",");
+  return rawTags
+    .map((tag) => String(tag ?? "").trim().toLowerCase())
+    .filter(Boolean)
+    .filter((tag, index, collection) => collection.indexOf(tag) === index);
 }

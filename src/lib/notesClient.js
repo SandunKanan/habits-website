@@ -47,10 +47,15 @@ async function fetchSupabase(pathname, accessToken, options = {}) {
 }
 
 function normalizeNote(note) {
+  const rawTags = Array.isArray(note.tags ?? note.tags_json) ? note.tags ?? note.tags_json : [];
   return {
     id: String(note.id ?? ""),
     title: String(note.title ?? "").trim(),
     body: String(note.body ?? note.content ?? ""),
+    tags: rawTags
+      .map((tag) => String(tag ?? "").trim())
+      .filter(Boolean)
+      .filter((tag, index, collection) => collection.indexOf(tag) === index),
     createdAt: note.createdAt ?? note.created_at ?? null,
     updatedAt: note.updatedAt ?? note.updated_at ?? null
   };
@@ -62,6 +67,7 @@ function parseNoteRows(rows) {
       id: row.id,
       title: row.title,
       body: row.body,
+      tags: row.tags_json,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })
@@ -74,6 +80,7 @@ function serializeNoteRow(note, userId) {
     user_id: userId,
     title: note.title,
     body: note.body,
+    tags_json: Array.isArray(note.tags) ? note.tags : [],
     created_at: note.createdAt,
     updated_at: note.updatedAt
   };
@@ -81,7 +88,7 @@ function serializeNoteRow(note, userId) {
 
 export async function loadNotesForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/notes?user_id=eq.${userId}&select=id,title,body,created_at,updated_at&order=updated_at.desc&order=created_at.desc`,
+    `/rest/v1/notes?user_id=eq.${userId}&select=id,title,body,tags_json,created_at,updated_at&order=updated_at.desc&order=created_at.desc`,
     accessToken
   );
 
