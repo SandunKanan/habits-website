@@ -1,7 +1,7 @@
 import React from "react";
 import { formatFrequencyLabel } from "../../../lib/frequency.js";
 import { getImportanceLabel } from "../../../lib/importance.js";
-import { getHabitSlug, getSortedDoneDates } from "../../../lib/habitUtils.js";
+import { getHabitSlug, getMostRecentProgressISO, getSortedDoneDates } from "../../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../../lib/scoring.js";
 import HabitEditor from "./HabitEditor.jsx";
 import HabitSubtasks from "./HabitSubtasks.jsx";
@@ -50,7 +50,7 @@ export default function HabitListItem({
   const isDeleting = pendingHabitActionKey === `delete:${habit.id}`;
   const score = scoreHabitForToday({
     habit,
-    lastDoneISO: sortedDoneDates[0] ?? habit.initialLastDone ?? null,
+    lastDoneISO: getMostRecentProgressISO(habit),
     todayISO
   });
 

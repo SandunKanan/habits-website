@@ -260,6 +260,7 @@ export default function App() {
             habits={habitsStore.habits}
             curatedTop5={habitsStore.curatedTop5}
             lastDoneById={habitsStore.lastDoneById}
+            lastProgressById={habitsStore.lastProgressById}
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
             focus={focusStore.focus}
@@ -308,9 +309,12 @@ export default function App() {
             onMarkDone={habitsStore.markDone}
             onUndoDoneToday={habitsStore.undoDoneToday}
             onSkipToday={habitsStore.skipToday}
+            onSkipCycle={habitsStore.skipCycle}
             onUndoSkipToday={habitsStore.undoSkipToday}
+            onUndoSkipCycleToday={habitsStore.undoSkipCycleToday}
             completionLog={habitsStore.completionLog}
             skippedTodayIds={habitsStore.skippedTodayIds}
+            cycleSkippedTodayIds={habitsStore.cycleSkippedTodayIds}
             isPersisting={
               habitsStore.isPersisting ||
               attributesStore.isPersisting ||

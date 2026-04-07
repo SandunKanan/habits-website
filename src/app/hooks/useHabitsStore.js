@@ -4,8 +4,10 @@ import { normalizeFrequency } from "../../lib/frequency.js";
 import { normalizeImportanceValue } from "../../lib/importance.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import {
+  getCycleSkippedDates,
   getDoneDates,
   getMostRecentDoneISO,
+  getMostRecentProgressISO,
   getSkippedDates,
   getSubtasks
 } from "../../lib/habitUtils.js";
@@ -83,6 +85,14 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     return map;
   }, [habits]);
 
+  const lastProgressById = useMemo(() => {
+    const map = {};
+    for (const habit of habits) {
+      map[habit.id] = getMostRecentProgressISO(habit);
+    }
+    return map;
+  }, [habits]);
+
   const completionLog = useMemo(() => {
     const seeded = [];
     for (const habit of habits) {
@@ -107,9 +117,21 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     return ids;
   }, [habits, todayISO]);
 
+  const cycleSkippedTodayIds = useMemo(() => {
+    const ids = new Set();
+
+    for (const habit of habits) {
+      if (getCycleSkippedDates(habit).includes(todayISO)) {
+        ids.add(habit.id);
+      }
+    }
+
+    return ids;
+  }, [habits, todayISO]);
+
   const curatedTop5 = useMemo(() => {
     const scored = habits.map((habit) => {
-      const lastDoneISO = lastDoneById[habit.id];
+      const lastDoneISO = lastProgressById[habit.id];
       const score = scoreHabitForToday({ habit, lastDoneISO, todayISO });
       return { habit, ...score };
     });
@@ -117,7 +139,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     const schedulable = scored.filter((item) => item.importance > 0 && item.due);
     schedulable.sort((a, b) => b.priorityScore - a.priorityScore);
     return schedulable.slice(0, 5);
-  }, [habits, lastDoneById, todayISO]);
+  }, [habits, lastProgressById, todayISO]);
 
   async function persistHabits(nextHabits) {
     try {
@@ -164,6 +186,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       initialLastDone: null,
       doneDates: [],
       skippedDates: [],
+      cycleSkipDates: [],
       subtasks: [],
       attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : [],
       domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : []
@@ -348,6 +371,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
     const currentDoneDates = getDoneDates(habit);
     const currentSkippedDates = getSkippedDates(habit);
+    const currentCycleSkipDates = getCycleSkippedDates(habit);
     if (currentDoneDates.includes(parsedDateISO)) {
       return { ok: false, error: "That completion date already exists." };
     }
@@ -360,7 +384,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
         : {
             ...item,
             doneDates: nextDoneDates,
-            skippedDates: currentSkippedDates.filter((value) => value !== parsedDateISO)
+            skippedDates: currentSkippedDates.filter((value) => value !== parsedDateISO),
+            cycleSkipDates: currentCycleSkipDates.filter((value) => value !== parsedDateISO)
           }
     );
 
@@ -378,6 +403,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
     const currentDoneDates = getDoneDates(habit);
     const currentSkippedDates = getSkippedDates(habit);
+    const currentCycleSkipDates = getCycleSkippedDates(habit);
     if (currentDoneDates.includes(todayISO)) return;
     const subtaskIdsToMarkToday = Array.isArray(options.subtaskIds)
       ? options.subtaskIds.map((value) => String(value))
@@ -405,6 +431,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
             ...item,
             doneDates: [...currentDoneDates, todayISO],
             skippedDates: currentSkippedDates.filter((value) => value !== todayISO),
+            cycleSkipDates: currentCycleSkipDates.filter((value) => value !== todayISO),
             subtasks: nextSubtasks
           }
     );
@@ -437,7 +464,14 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
     const currentDoneDates = getDoneDates(habit);
     const currentSkippedDates = getSkippedDates(habit);
-    if (currentDoneDates.includes(todayISO) || currentSkippedDates.includes(todayISO)) return;
+    const currentCycleSkipDates = getCycleSkippedDates(habit);
+    if (
+      currentDoneDates.includes(todayISO) ||
+      currentSkippedDates.includes(todayISO) ||
+      currentCycleSkipDates.includes(todayISO)
+    ) {
+      return;
+    }
 
     const nextHabits = habits.map((item) =>
       item.id !== habitId
@@ -445,6 +479,34 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
         : {
             ...item,
             skippedDates: [...currentSkippedDates, todayISO]
+          }
+    );
+
+    await persistHabits(nextHabits);
+  }
+
+  async function skipCycle(habitId) {
+    const habit = habits.find((item) => item.id === habitId);
+    if (!habit) return;
+
+    const currentDoneDates = getDoneDates(habit);
+    const currentSkippedDates = getSkippedDates(habit);
+    const currentCycleSkipDates = getCycleSkippedDates(habit);
+    if (
+      currentDoneDates.includes(todayISO) ||
+      currentSkippedDates.includes(todayISO) ||
+      currentCycleSkipDates.includes(todayISO)
+    ) {
+      return;
+    }
+
+    const nextHabits = habits.map((item) =>
+      item.id !== habitId
+        ? item
+        : {
+            ...item,
+            skippedDates: currentSkippedDates.filter((dateISO) => dateISO !== todayISO),
+            cycleSkipDates: [...currentCycleSkipDates, todayISO].sort((a, b) => a.localeCompare(b))
           }
     );
 
@@ -470,6 +532,25 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     await persistHabits(nextHabits);
   }
 
+  async function undoSkipCycleToday(habitId) {
+    const habit = habits.find((item) => item.id === habitId);
+    if (!habit) return;
+
+    const currentCycleSkipDates = getCycleSkippedDates(habit);
+    if (!currentCycleSkipDates.includes(todayISO)) return;
+
+    const nextHabits = habits.map((item) =>
+      item.id !== habitId
+        ? item
+        : {
+            ...item,
+            cycleSkipDates: currentCycleSkipDates.filter((dateISO) => dateISO !== todayISO)
+          }
+    );
+
+    await persistHabits(nextHabits);
+  }
+
   function beginLoadingHabits() {
     setIsLoading(true);
   }
@@ -487,8 +568,10 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     isPersisting,
     loadError,
     lastDoneById,
+    lastProgressById,
     completionLog,
     skippedTodayIds,
+    cycleSkippedTodayIds,
     curatedTop5,
     addHabit,
     updateHabit,
@@ -500,7 +583,9 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
     markDone,
     undoDoneToday,
     skipToday,
+    skipCycle,
     undoSkipToday,
+    undoSkipCycleToday,
     beginLoadingHabits,
     resetHabitsState
   };

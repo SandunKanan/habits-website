@@ -82,6 +82,65 @@
   }
 }
 
+.today__section--compact {
+  padding: 0;
+
+  &::before {
+    display: none;
+  }
+}
+
+.today__drawer {
+  display: grid;
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "▾";
+    color: $accent;
+    font-size: 1rem;
+    flex: 0 0 auto;
+  }
+
+  &[open] summary::after {
+    content: "▴";
+  }
+}
+
+.today__drawer-title {
+  display: block;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $text;
+}
+
+.today__drawer-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: $muted;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.today__drawer-body {
+  padding: 0 20px 20px;
+  display: grid;
+  gap: 14px;
+}
+
 .today__section--focus::before {
   width: 180px;
   height: 180px;
@@ -407,6 +466,10 @@
 
 .today__completed-item--skipped {
   background: linear-gradient(135deg, rgba(240, 191, 85, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.today__completed-item--cycle-skipped {
+  background: linear-gradient(135deg, rgba(143, 211, 255, 0.08), rgba(255, 255, 255, 0.03));
 }
 
 .today__completed-item--task {

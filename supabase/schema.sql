@@ -10,6 +10,7 @@ create table if not exists public.habits (
   frequency_unit text not null check (frequency_unit in ('day', 'week', 'month')),
   importance integer not null check (importance >= 0 and importance <= 10),
   domain_ids_json jsonb not null default '[]'::jsonb,
+  cycle_skip_dates_json jsonb not null default '[]'::jsonb,
   subtasks jsonb not null default '[]'::jsonb,
   initial_last_done date,
   created_at timestamptz not null default timezone('utc', now()),

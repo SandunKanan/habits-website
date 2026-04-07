@@ -13,6 +13,7 @@ export default function HabitCard({
   isPersisting,
   onMarkDone,
   onSkipToday,
+  onSkipCycle,
   onAddCompletionDate
 }) {
   const { habit, trackingScore, due, frequencyLabel, importance, statusLabel } = item;
@@ -22,6 +23,7 @@ export default function HabitCard({
   const [feedback, setFeedback] = useState("");
   const [isSavingPast, setIsSavingPast] = useState(false);
   const [pendingAction, setPendingAction] = useState("");
+  const [isSkipMenuOpen, setIsSkipMenuOpen] = useState(false);
   const [draftSubtaskIds, setDraftSubtaskIds] = useState([]);
 
   async function handleAddPastCompletion(e) {
@@ -193,14 +195,49 @@ export default function HabitCard({
         >
           {pendingAction === "mark-done" ? "Saving..." : "Mark done"}
         </button>
-        <button
-          className="habitcard__skip-btn"
-          type="button"
-          onClick={() => runAction("skip-today", () => onSkipToday(habit.id))}
-          disabled={isPersisting}
-        >
-          {pendingAction === "skip-today" ? "Saving..." : "Skip today"}
-        </button>
+        <div className="habitcard__skip-menu">
+          <button
+            className={[
+              "habitcard__skip-btn",
+              isSkipMenuOpen ? "habitcard__skip-btn--active" : ""
+            ].join(" ")}
+            type="button"
+            onClick={() => setIsSkipMenuOpen((current) => !current)}
+            disabled={isPersisting}
+          >
+            Skip
+          </button>
+          {isSkipMenuOpen ? (
+            <div className="habitcard__skip-options" role="group" aria-label={`Skip options for ${habit.name}`}>
+              <button
+                className="habitcard__skip-option"
+                type="button"
+                onClick={() =>
+                  runAction("skip-today", async () => {
+                    await onSkipToday(habit.id);
+                    setIsSkipMenuOpen(false);
+                  })
+                }
+                disabled={isPersisting}
+              >
+                {pendingAction === "skip-today" ? "Saving..." : "Today"}
+              </button>
+              <button
+                className="habitcard__skip-option"
+                type="button"
+                onClick={() =>
+                  runAction("skip-cycle", async () => {
+                    await onSkipCycle(habit.id);
+                    setIsSkipMenuOpen(false);
+                  })
+                }
+                disabled={isPersisting}
+              >
+                {pendingAction === "skip-cycle" ? "Saving..." : "Cycle"}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

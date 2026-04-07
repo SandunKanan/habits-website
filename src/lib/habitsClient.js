@@ -59,6 +59,9 @@ function normalizeHabit(habit) {
   const skippedDates = Array.isArray(habit.skippedDates)
     ? [...new Set(habit.skippedDates)].sort((a, b) => a.localeCompare(b))
     : [];
+  const cycleSkipDates = Array.isArray(habit.cycleSkipDates ?? habit.cycle_skip_dates_json)
+    ? [...new Set((habit.cycleSkipDates ?? habit.cycle_skip_dates_json))].sort((a, b) => a.localeCompare(b))
+    : [];
   const subtasks = Array.isArray(habit.subtasks)
     ? habit.subtasks.map((subtask) => ({
         id: String(subtask.id ?? ""),
@@ -91,6 +94,7 @@ function normalizeHabit(habit) {
     initialLastDone: habit.initialLastDone ?? null,
     doneDates,
     skippedDates,
+    cycleSkipDates,
     subtasks,
     attributeLinks,
     domainIds
@@ -136,6 +140,7 @@ function parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows) 
       initialLastDone: habitRow.initial_last_done,
       doneDates: completionsByHabitId.get(habitRow.id) ?? [],
       skippedDates: skipsByHabitId.get(habitRow.id) ?? [],
+      cycleSkipDates: habitRow.cycle_skip_dates_json,
       subtasks: habitRow.subtasks ?? [],
       attributeLinks: linksByHabitId.get(habitRow.id) ?? [],
       domainIds: habitRow.domain_ids_json
@@ -158,6 +163,7 @@ function serializeHabitRow(habit, userId) {
     created_at: habit.createdAt ?? null,
     initial_last_done: habit.initialLastDone ?? null,
     subtasks: habit.subtasks ?? [],
+    cycle_skip_dates_json: Array.isArray(habit.cycleSkipDates) ? habit.cycleSkipDates : [],
     domain_ids_json: Array.isArray(habit.domainIds) ? habit.domainIds : []
   };
 }

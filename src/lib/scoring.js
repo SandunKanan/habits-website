@@ -17,6 +17,8 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
   const importance = normalizeImportanceValue(habit.importance);
   const frequency = normalizeFrequency(habit);
   const doneDates = Array.isArray(habit.doneDates) ? habit.doneDates : [];
+  const cycleSkipDates = Array.isArray(habit.cycleSkipDates) ? habit.cycleSkipDates : [];
+  const progressDates = [...new Set([...doneDates, ...cycleSkipDates])].sort((a, b) => a.localeCompare(b));
   const createdDateISO = habit.createdAt?.slice?.(0, 10) ?? todayISO;
 
   if (frequency.frequencyMode === "rate") {
@@ -26,7 +28,7 @@ export function scoreHabitForToday({ habit, lastDoneISO, todayISO }) {
     const fullWindowStartISO = addDaysISO(todayISO, -(windowDays - 1));
     const windowStartISO = createdDateISO > fullWindowStartISO ? createdDateISO : fullWindowStartISO;
     const activeWindowDays = Math.max(1, (daysBetweenISO(windowStartISO, todayISO) ?? 0) + 1);
-    const completionsInWindow = doneDates.filter(
+    const completionsInWindow = progressDates.filter(
       (dateISO) => dateISO >= windowStartISO && dateISO <= todayISO
     ).length;
     const expectedCompletions = Math.max(1, activeWindowDays * ratePerDay);

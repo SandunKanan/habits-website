@@ -76,6 +76,16 @@ export default function History() {
     return dateGroup.get(habitName);
   }
 
+  function ensureUniqueEvent(dateISO, key, habitName, type) {
+    const dateGroup = ensureDateGroup(dateISO);
+    dateGroup.set(key, {
+      habitName,
+      type,
+      subtasks: [],
+      attributeGains: []
+    });
+  }
+
   for (const habit of habits) {
     const habitName = habit.name;
 
@@ -87,6 +97,10 @@ export default function History() {
     for (const dateISO of Array.isArray(habit.skippedDates) ? habit.skippedDates : []) {
       const event = ensureHabitEvent(dateISO, habitName);
       event.type = "habit_skipped";
+    }
+
+    for (const dateISO of Array.isArray(habit.cycleSkipDates) ? habit.cycleSkipDates : []) {
+      ensureUniqueEvent(dateISO, `cycle-skip:${habit.id}:${dateISO}`, habitName, "habit_cycle_skipped");
     }
 
     for (const subtask of Array.isArray(habit.subtasks) ? habit.subtasks : []) {
@@ -245,7 +259,9 @@ export default function History() {
                       ? "Completed"
                       : event.type === "habit_skipped"
                         ? "Skipped"
-                          : event.type === "one_off_done"
+                        : event.type === "habit_cycle_skipped"
+                          ? "Cycle skipped"
+                        : event.type === "one_off_done"
                             ? "One-off"
                           : event.type === "metric_entry"
                             ? "Metric"

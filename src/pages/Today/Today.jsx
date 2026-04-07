@@ -17,6 +17,7 @@ export default function Today() {
     habits,
     curatedTop5,
     lastDoneById,
+    lastProgressById,
     attributes,
     vision,
     focus,
@@ -28,6 +29,7 @@ export default function Today() {
     trackingEntries,
     settings,
     skippedTodayIds,
+    cycleSkippedTodayIds,
     onAddOneOffTask,
     onSaveTrackingEntry,
     onDeleteTrackingEntry,
@@ -36,13 +38,15 @@ export default function Today() {
     onMarkDone,
     onDeleteOneOffTask,
     onSkipToday,
+    onSkipCycle,
     onAddCompletionDate,
     onUndoDoneToday,
     onUndoSkipToday,
+    onUndoSkipCycleToday,
     isPersisting
   } = useOutletContext();
   const [pendingCompletedHabitId, setPendingCompletedHabitId] = useState("");
-  const [pendingSkippedHabitId, setPendingSkippedHabitId] = useState("");
+  const [pendingSkipActionKey, setPendingSkipActionKey] = useState("");
   const [pendingUpcomingHabitId, setPendingUpcomingHabitId] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [taskAttributeLinks, setTaskAttributeLinks] = useState([]);
@@ -97,9 +101,10 @@ export default function Today() {
     attributes
   );
   const skippedToday = habits.filter((habit) => skippedTodayIds.has(habit.id));
+  const cycleSkippedToday = habits.filter((habit) => cycleSkippedTodayIds.has(habit.id));
   const upcomingItems = habits
     .map((habit) => {
-      const lastDoneISO = lastDoneById[habit.id];
+      const lastDoneISO = lastProgressById[habit.id];
       const item = scoreHabitForToday({ habit, lastDoneISO, todayISO });
       const intervalDays = item.intervalDays ?? 0;
       if (Number(habit.importance) <= 0 || item.due || intervalDays < 7 || !item.nextDueISO) {
@@ -175,12 +180,16 @@ export default function Today() {
     }
   }
 
-  async function handleUndoSkip(habitId) {
-    setPendingSkippedHabitId(habitId);
+  async function handleUndoSkip(habitId, mode) {
+    setPendingSkipActionKey(`${mode}:${habitId}`);
     try {
-      await onUndoSkipToday(habitId);
+      if (mode === "cycle") {
+        await onUndoSkipCycleToday(habitId);
+      } else {
+        await onUndoSkipToday(habitId);
+      }
     } finally {
-      setPendingSkippedHabitId("");
+      setPendingSkipActionKey("");
     }
   }
 
@@ -377,6 +386,7 @@ export default function Today() {
                 isPersisting={isPersisting}
                 onMarkDone={onMarkDone}
                 onSkipToday={onSkipToday}
+                onSkipCycle={onSkipCycle}
                 onAddCompletionDate={onAddCompletionDate}
               />
             ))}
@@ -384,207 +394,231 @@ export default function Today() {
         )}
       </section>
 
-      <section className="today__section card">
-        <h2>Track Today</h2>
-        {trackingMetrics.length === 0 ? (
-          <p className="today__empty">
-            No metrics set up yet. Add what you want to measure on the Tracking page.
-          </p>
-        ) : (
-          <div className="today__tracking-list">
-            {trackingMetrics.map((metric) => {
-              const todayEntries = trackingEntries.filter(
-                (entry) => entry.metricId === metric.id && entry.entryDate === todayISO
-              );
-              const todayEntry = todayEntries[0] ?? null;
-              const hasSavedValue = Boolean(todayEntry);
+      <section className="today__section today__section--compact card">
+        <details className="today__drawer">
+          <summary>
+            <div>
+              <span className="today__drawer-title">Track Today</span>
+              <span className="today__drawer-subtitle">
+                {trackingMetrics.length === 0
+                  ? "No metrics set up yet"
+                  : `${trackingMetrics.length} ${trackingMetrics.length === 1 ? "metric" : "metrics"} available`}
+              </span>
+            </div>
+          </summary>
+          <div className="today__drawer-body">
+            {trackingMetrics.length === 0 ? (
+              <p className="today__empty">
+                No metrics set up yet. Add what you want to measure on the Tracking page.
+              </p>
+            ) : (
+              <div className="today__tracking-list">
+                {trackingMetrics.map((metric) => {
+                  const todayEntries = trackingEntries.filter(
+                    (entry) => entry.metricId === metric.id && entry.entryDate === todayISO
+                  );
+                  const todayEntry = todayEntries[0] ?? null;
+                  const hasSavedValue = Boolean(todayEntry);
 
-              return (
-                <div key={metric.id} className="today__tracking-item">
-                  <div className="today__tracking-copy">
-                    <span>{metric.name}</span>
-                    <small>
-                      {metric.mode === "structured_log"
-                        ? "Structured log"
-                        : `${metric.unit}${
-                            metric.targetValue !== null && metric.targetValue !== undefined
-                              ? ` · target ${metric.targetValue}`
-                              : ""
-                          }`}
-                    </small>
-                  </div>
+                  return (
+                    <div key={metric.id} className="today__tracking-item">
+                      <div className="today__tracking-copy">
+                        <span>{metric.name}</span>
+                        <small>
+                          {metric.mode === "structured_log"
+                            ? "Structured log"
+                            : `${metric.unit}${
+                                metric.targetValue !== null && metric.targetValue !== undefined
+                                  ? ` · target ${metric.targetValue}`
+                                  : ""
+                              }`}
+                        </small>
+                      </div>
 
-                  {metric.mode === "structured_log" ? (
-                    <div className="today__structured-log">
-                      <div className="today__structured-form">
-                        {metric.fields.map((field) => (
-                          <input
-                            key={field.id}
-                            type={field.inputType === "number" ? "number" : "text"}
-                            min={field.inputType === "number" ? "0" : undefined}
-                            step={field.inputType === "number" ? "0.1" : undefined}
-                            value={structuredDrafts[metric.id]?.[field.key] ?? ""}
-                            onChange={(event) =>
-                              setStructuredDrafts((current) => ({
-                                ...current,
-                                [metric.id]: {
-                                  ...(current[metric.id] ?? {}),
-                                  [field.key]: event.target.value
+                      {metric.mode === "structured_log" ? (
+                        <div className="today__structured-log">
+                          <div className="today__structured-form">
+                            {metric.fields.map((field) => (
+                              <input
+                                key={field.id}
+                                type={field.inputType === "number" ? "number" : "text"}
+                                min={field.inputType === "number" ? "0" : undefined}
+                                step={field.inputType === "number" ? "0.1" : undefined}
+                                value={structuredDrafts[metric.id]?.[field.key] ?? ""}
+                                onChange={(event) =>
+                                  setStructuredDrafts((current) => ({
+                                    ...current,
+                                    [metric.id]: {
+                                      ...(current[metric.id] ?? {}),
+                                      [field.key]: event.target.value
+                                    }
+                                  }))
                                 }
+                                placeholder={field.label}
+                                title={
+                                  field.inputType === "number" && field.unit
+                                    ? `${field.label} (${field.unit})`
+                                    : field.label
+                                }
+                                disabled={isPersisting}
+                              />
+                            ))}
+                            <button
+                              type="button"
+                              className="today__do-btn"
+                              onClick={() => handleAddStructuredEntry(metric)}
+                              disabled={isPersisting || pendingMetricId === metric.id}
+                            >
+                              {pendingMetricId === metric.id ? "Saving..." : "Add entry"}
+                            </button>
+                          </div>
+
+                          {todayEntries.length > 0 ? (
+                            <ul className="today__structured-entry-list">
+                              {todayEntries.map((entry) => (
+                                <li key={entry.id} className="today__structured-entry">
+                                  <div>
+                                    {formatStructuredEntry(entry, metric).map((line) => (
+                                      <small key={line}>{line}</small>
+                                    ))}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="today__undo-btn"
+                                    onClick={() => handleDeleteStructuredEntry(entry.id)}
+                                    disabled={isPersisting || pendingStructuredEntryId === entry.id}
+                                  >
+                                    {pendingStructuredEntryId === entry.id ? "Saving..." : "Remove"}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="today__empty">No entries logged yet today.</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="today__tracking-controls">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={metricDrafts[metric.id] ?? ""}
+                            onChange={(event) =>
+                              setMetricDrafts((current) => ({
+                                ...current,
+                                [metric.id]: event.target.value
                               }))
-                            }
-                            placeholder={field.label}
-                            title={
-                              field.inputType === "number" && field.unit
-                                ? `${field.label} (${field.unit})`
-                                : field.label
                             }
                             disabled={isPersisting}
                           />
-                        ))}
-                        <button
-                          type="button"
-                          className="today__do-btn"
-                          onClick={() => handleAddStructuredEntry(metric)}
-                          disabled={isPersisting || pendingMetricId === metric.id}
-                        >
-                          {pendingMetricId === metric.id ? "Saving..." : "Add entry"}
-                        </button>
-                      </div>
-
-                      {todayEntries.length > 0 ? (
-                        <ul className="today__structured-entry-list">
-                          {todayEntries.map((entry) => (
-                            <li key={entry.id} className="today__structured-entry">
-                              <div>
-                                {formatStructuredEntry(entry, metric).map((line) => (
-                                  <small key={line}>{line}</small>
-                                ))}
-                              </div>
-                              <button
-                                type="button"
-                                className="today__undo-btn"
-                                onClick={() => handleDeleteStructuredEntry(entry.id)}
-                                disabled={isPersisting || pendingStructuredEntryId === entry.id}
-                              >
-                                {pendingStructuredEntryId === entry.id ? "Saving..." : "Remove"}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="today__empty">No entries logged yet today.</p>
+                          <button
+                            type="button"
+                            className="today__do-btn"
+                            onClick={() => handleSaveMetric(metric.id)}
+                            disabled={isPersisting || pendingMetricId === metric.id}
+                          >
+                            {pendingMetricId === metric.id ? "Saving..." : "Save"}
+                          </button>
+                          {hasSavedValue ? (
+                            <button
+                              type="button"
+                              className="today__undo-btn"
+                              onClick={() => handleClearMetric(metric.id)}
+                              disabled={isPersisting || pendingMetricId === metric.id}
+                            >
+                              Clear
+                            </button>
+                          ) : null}
+                        </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="today__tracking-controls">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={metricDrafts[metric.id] ?? ""}
-                        onChange={(event) =>
-                          setMetricDrafts((current) => ({
-                            ...current,
-                            [metric.id]: event.target.value
-                          }))
-                        }
-                        disabled={isPersisting}
-                      />
-                      <button
-                        type="button"
-                        className="today__do-btn"
-                        onClick={() => handleSaveMetric(metric.id)}
-                        disabled={isPersisting || pendingMetricId === metric.id}
-                      >
-                        {pendingMetricId === metric.id ? "Saving..." : "Save"}
-                      </button>
-                      {hasSavedValue ? (
-                        <button
-                          type="button"
-                          className="today__undo-btn"
-                          onClick={() => handleClearMetric(metric.id)}
-                          disabled={isPersisting || pendingMetricId === metric.id}
-                        >
-                          Clear
-                        </button>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
+            {metricFeedback ? <p className="today__task-feedback">{metricFeedback}</p> : null}
           </div>
-        )}
-        {metricFeedback ? <p className="today__task-feedback">{metricFeedback}</p> : null}
+        </details>
       </section>
 
-      <section className="today__section card">
-        <h2>Log One-Off Task</h2>
-        <form className="today__task-form" onSubmit={handleAddOneOffTask}>
-          <div className="today__task-form-row">
-            <input
-              type="text"
-              value={taskTitle}
-              onChange={(event) => setTaskTitle(event.target.value)}
-              placeholder="Task name"
-              disabled={isPersisting || isSavingTask}
-            />
-            <button type="submit" className="today__do-btn" disabled={isPersisting || isSavingTask}>
-              {isSavingTask ? "Saving..." : "Add completed task"}
-            </button>
-          </div>
-
-          <div className="today__task-links">
-            {taskAttributeLinks.map((link, index) => (
-              <div key={`${link.attributeId}-${index}`} className="today__task-link-row">
-                <select
-                  value={link.attributeId}
-                  onChange={(event) =>
-                    updateTaskAttributeLink(index, { attributeId: event.target.value })
-                  }
-                  disabled={isPersisting || isSavingTask}
-                >
-                  <option value="">Choose attribute</option>
-                  {attributes.map((attribute) => (
-                    <option key={attribute.id} value={attribute.id}>
-                      {attribute.name}
-                    </option>
-                  ))}
-                </select>
+      <section className="today__section today__section--compact card">
+        <details className="today__drawer">
+          <summary>
+            <div>
+              <span className="today__drawer-title">Log One-Off Task</span>
+              <span className="today__drawer-subtitle">
+                Add a completed task that is not one of your recurring habits
+              </span>
+            </div>
+          </summary>
+          <div className="today__drawer-body">
+            <form className="today__task-form" onSubmit={handleAddOneOffTask}>
+              <div className="today__task-form-row">
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={link.weight}
-                  onChange={(event) =>
-                    updateTaskAttributeLink(index, { weight: Number(event.target.value) })
-                  }
+                  type="text"
+                  value={taskTitle}
+                  onChange={(event) => setTaskTitle(event.target.value)}
+                  placeholder="Task name"
                   disabled={isPersisting || isSavingTask}
                 />
-                <button
-                  type="button"
-                  className="today__undo-btn"
-                  onClick={() => removeTaskAttributeLink(index)}
-                  disabled={isPersisting || isSavingTask}
-                >
-                  Remove
+                <button type="submit" className="today__do-btn" disabled={isPersisting || isSavingTask}>
+                  {isSavingTask ? "Saving..." : "Add completed task"}
                 </button>
               </div>
-            ))}
 
-            <button
-              type="button"
-              className="today__task-link-add"
-              onClick={addTaskAttributeLink}
-              disabled={isPersisting || isSavingTask}
-            >
-              Add attribute contribution
-            </button>
+              <div className="today__task-links">
+                {taskAttributeLinks.map((link, index) => (
+                  <div key={`${link.attributeId}-${index}`} className="today__task-link-row">
+                    <select
+                      value={link.attributeId}
+                      onChange={(event) =>
+                        updateTaskAttributeLink(index, { attributeId: event.target.value })
+                      }
+                      disabled={isPersisting || isSavingTask}
+                    >
+                      <option value="">Choose attribute</option>
+                      {attributes.map((attribute) => (
+                        <option key={attribute.id} value={attribute.id}>
+                          {attribute.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={link.weight}
+                      onChange={(event) =>
+                        updateTaskAttributeLink(index, { weight: Number(event.target.value) })
+                      }
+                      disabled={isPersisting || isSavingTask}
+                    />
+                    <button
+                      type="button"
+                      className="today__undo-btn"
+                      onClick={() => removeTaskAttributeLink(index)}
+                      disabled={isPersisting || isSavingTask}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="today__task-link-add"
+                  onClick={addTaskAttributeLink}
+                  disabled={isPersisting || isSavingTask}
+                >
+                  Add attribute contribution
+                </button>
+              </div>
+
+              {taskFeedback ? <p className="today__task-feedback">{taskFeedback}</p> : null}
+            </form>
           </div>
-
-          {taskFeedback ? <p className="today__task-feedback">{taskFeedback}</p> : null}
-        </form>
+        </details>
       </section>
 
       <section className="today__section card">
@@ -699,7 +733,7 @@ export default function Today() {
 
       <section className="today__section card">
         <h2>Skipped</h2>
-        {skippedToday.length === 0 ? (
+        {skippedToday.length === 0 && cycleSkippedToday.length === 0 ? (
           <p className="today__empty">No tasks skipped today.</p>
         ) : (
           <ul className="today__completed-list">
@@ -712,10 +746,26 @@ export default function Today() {
                 <button
                   className="today__undo-btn"
                   type="button"
-                  onClick={() => handleUndoSkip(habit.id)}
+                  onClick={() => handleUndoSkip(habit.id, "today")}
                   disabled={isPersisting}
                 >
-                  {pendingSkippedHabitId === habit.id ? "Saving..." : "Undo skip"}
+                  {pendingSkipActionKey === `today:${habit.id}` ? "Saving..." : "Undo skip"}
+                </button>
+              </li>
+            ))}
+            {cycleSkippedToday.map((habit) => (
+              <li key={habit.id} className="today__completed-item today__completed-item--cycle-skipped">
+                <div>
+                  <span>{habit.name}</span>
+                  <small>Cycle skipped on {todayISO}</small>
+                </div>
+                <button
+                  className="today__undo-btn"
+                  type="button"
+                  onClick={() => handleUndoSkip(habit.id, "cycle")}
+                  disabled={isPersisting}
+                >
+                  {pendingSkipActionKey === `cycle:${habit.id}` ? "Saving..." : "Undo skip"}
                 </button>
               </li>
             ))}
