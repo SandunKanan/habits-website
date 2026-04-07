@@ -11,6 +11,7 @@ import Domains from "../pages/Domains/Domains.jsx";
 import Goals from "../pages/Goals/Goals.jsx";
 import Learnings from "../pages/Learnings/Learnings.jsx";
 import Tracking from "../pages/Tracking/Tracking.jsx";
+import Notes from "../pages/Notes/Notes.jsx";
 import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
@@ -30,6 +31,7 @@ import { useDomainsStore } from "./hooks/useDomainsStore.js";
 import { useLearningsStore } from "./hooks/useLearningsStore.js";
 import { useOneOffTasksStore } from "./hooks/useOneOffTasksStore.js";
 import { useTrackingStore } from "./hooks/useTrackingStore.js";
+import { useNotesStore } from "./hooks/useNotesStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
 
@@ -100,6 +102,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const notesStore = useNotesStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const settingsStore = useSettingsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -119,6 +127,7 @@ export default function App() {
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
+      notesStore.beginLoadingNotes();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -136,6 +145,7 @@ export default function App() {
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
+      notesStore.beginLoadingNotes();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -153,6 +163,7 @@ export default function App() {
       learningsStore.beginLoadingLearnings();
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
+      notesStore.beginLoadingNotes();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -170,6 +181,7 @@ export default function App() {
     learningsStore.resetLearningsState();
     oneOffTasksStore.resetOneOffTasksState();
     trackingStore.resetTrackingState();
+    notesStore.resetNotesState();
     settingsStore.resetSettingsState();
   }
 
@@ -191,6 +203,7 @@ export default function App() {
     learningsStore.isLoading ||
     oneOffTasksStore.isLoading ||
     trackingStore.isLoading ||
+    notesStore.isLoading ||
     settingsStore.isLoading
   ) {
     return <div className="appstatus card">Loading habits...</div>;
@@ -206,6 +219,7 @@ export default function App() {
     learningsStore.loadError ||
     oneOffTasksStore.loadError ||
     trackingStore.loadError ||
+    notesStore.loadError ||
     settingsStore.loadError
   ) {
     return (
@@ -219,6 +233,7 @@ export default function App() {
           learningsStore.loadError ||
           oneOffTasksStore.loadError ||
           trackingStore.loadError ||
+          notesStore.loadError ||
           settingsStore.loadError}
       </div>
     );
@@ -254,6 +269,7 @@ export default function App() {
             oneOffTasks={oneOffTasksStore.oneOffTasks}
             trackingMetrics={trackingStore.trackingMetrics}
             trackingEntries={trackingStore.trackingEntries}
+            notes={notesStore.notes}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
@@ -281,6 +297,9 @@ export default function App() {
             onDeleteTrackingEntry={trackingStore.deleteTrackingEntry}
             onAddTrackingStructuredEntry={trackingStore.addTrackingStructuredEntry}
             onDeleteTrackingStructuredEntry={trackingStore.deleteTrackingStructuredEntry}
+            onAddNote={notesStore.addNote}
+            onUpdateNote={notesStore.updateNote}
+            onDeleteNote={notesStore.deleteNote}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
@@ -302,6 +321,7 @@ export default function App() {
               learningsStore.isPersisting ||
               oneOffTasksStore.isPersisting ||
               trackingStore.isPersisting ||
+              notesStore.isPersisting ||
               settingsStore.isPersisting
             }
             authUser={auth.authUser}
@@ -321,6 +341,7 @@ export default function App() {
         <Route path="/goals" element={<Goals />} />
         <Route path="/learnings" element={<Learnings />} />
         <Route path="/tracking" element={<Tracking />} />
+        <Route path="/notes" element={<Notes />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />

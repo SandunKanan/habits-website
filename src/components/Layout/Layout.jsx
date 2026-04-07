@@ -17,6 +17,7 @@ export default function Layout({
   oneOffTasks,
   trackingMetrics,
   trackingEntries,
+  notes,
   settings,
   onAddHabit,
   onUpdateHabit,
@@ -44,6 +45,9 @@ export default function Layout({
   onDeleteTrackingEntry,
   onAddTrackingStructuredEntry,
   onDeleteTrackingStructuredEntry,
+  onAddNote,
+  onUpdateNote,
+  onDeleteNote,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -154,6 +158,15 @@ export default function Layout({
         </>
       )
     },
+    "/notes": {
+      title: "Notes",
+      subtitle: "Timestamped thoughts, observations, and writing",
+      meta: (
+        <>
+          Total notes: <b>{notes.length}</b>
+        </>
+      )
+    },
     "/settings": {
       title: "Settings",
       subtitle: "Display and behavior preferences",
@@ -213,6 +226,7 @@ export default function Layout({
               oneOffTasks,
               trackingMetrics,
               trackingEntries,
+              notes,
               settings,
               onAddHabit,
               onUpdateHabit,
@@ -240,6 +254,9 @@ export default function Layout({
               onDeleteTrackingEntry,
               onAddTrackingStructuredEntry,
               onDeleteTrackingStructuredEntry,
+              onAddNote,
+              onUpdateNote,
+              onDeleteNote,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,

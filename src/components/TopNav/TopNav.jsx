@@ -7,7 +7,7 @@ export default function TopNav({ authUser, onSignOut }) {
   const isDirectionActive = ["/vision", "/focus", "/domains", "/goals", "/learnings"].includes(
     location.pathname
   );
-  const isMoreActive = ["/history", "/tracking", "/settings", "/help"].includes(location.pathname);
+  const isMoreActive = ["/history", "/tracking", "/notes", "/settings", "/help"].includes(location.pathname);
 
   function closeMenu(event) {
     event.currentTarget.removeAttribute("open");
@@ -86,6 +86,9 @@ export default function TopNav({ authUser, onSignOut }) {
                 </NavLink>
                 <NavLink to="/tracking" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Tracking
+                </NavLink>
+                <NavLink to="/notes" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
+                  Notes
                 </NavLink>
                 <NavLink to="/settings" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Settings
