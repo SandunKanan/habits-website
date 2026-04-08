@@ -6,12 +6,14 @@ export default function Settings() {
   const { settings, onSaveSettings, isPersisting } = useOutletContext();
   const [highlightFocusAttributes, setHighlightFocusAttributes] = useState(true);
   const [useAttributeDecay, setUseAttributeDecay] = useState(true);
+  const [useDecimalDomainScores, setUseDecimalDomainScores] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setHighlightFocusAttributes(Boolean(settings?.highlightFocusAttributes ?? true));
     setUseAttributeDecay(Boolean(settings?.useAttributeDecay ?? true));
+    setUseDecimalDomainScores(Boolean(settings?.useDecimalDomainScores ?? false));
   }, [settings]);
 
   async function handleSubmit(e) {
@@ -22,7 +24,8 @@ export default function Settings() {
     const result = await onSaveSettings({
       ...settings,
       highlightFocusAttributes,
-      useAttributeDecay
+      useAttributeDecay,
+      useDecimalDomainScores
     });
 
     if (result?.ok) {
@@ -73,6 +76,22 @@ export default function Settings() {
                 type="checkbox"
                 checked={useAttributeDecay}
                 onChange={(e) => setUseAttributeDecay(e.target.checked)}
+                disabled={isSaving || isPersisting}
+              />
+              <span className="settingspage__switch-track" aria-hidden="true" />
+            </span>
+          </label>
+
+          <label className="settingspage__toggle">
+            <div>
+              <strong>Use 0.1 domain score increments</strong>
+              <p>Let domain score sliders and inputs move in tenths instead of whole numbers.</p>
+            </div>
+            <span className="settingspage__switch">
+              <input
+                type="checkbox"
+                checked={useDecimalDomainScores}
+                onChange={(e) => setUseDecimalDomainScores(e.target.checked)}
                 disabled={isSaving || isPersisting}
               />
               <span className="settingspage__switch-track" aria-hidden="true" />

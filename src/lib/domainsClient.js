@@ -47,12 +47,19 @@ async function fetchSupabase(pathname, accessToken, options = {}) {
 }
 
 function normalizeDomain(domain) {
+  const rawScore = domain.scoreOutOfTen ?? domain.score_out_of_ten;
+  const normalizedScore =
+    rawScore === null || rawScore === undefined || rawScore === ""
+      ? null
+      : Math.max(0, Math.min(10, Number(rawScore)));
+
   return {
     id: String(domain.id ?? ""),
     slug: String(domain.slug ?? domain.id ?? ""),
     name: String(domain.name ?? "").trim(),
     parentId: domain.parentId ?? domain.parent_id ?? "",
     notes: String(domain.notes ?? "").trim(),
+    scoreOutOfTen: Number.isFinite(normalizedScore) ? normalizedScore : null,
     sortOrder: Number(domain.sortOrder ?? domain.sort_order ?? 0),
     createdAt: domain.createdAt ?? domain.created_at ?? null,
     updatedAt: domain.updatedAt ?? domain.updated_at ?? null
@@ -67,6 +74,7 @@ function parseDomainRows(rows) {
       name: row.name,
       parentId: row.parent_id,
       notes: row.notes,
+      scoreOutOfTen: row.score_out_of_ten,
       sortOrder: row.sort_order,
       createdAt: row.created_at,
       updatedAt: row.updated_at
@@ -82,13 +90,17 @@ function serializeDomainRow(domain, userId) {
     name: domain.name,
     parent_id: domain.parentId || null,
     notes: domain.notes ?? "",
+    score_out_of_ten:
+      domain.scoreOutOfTen === null || domain.scoreOutOfTen === undefined || domain.scoreOutOfTen === ""
+        ? null
+        : Number(domain.scoreOutOfTen),
     sort_order: Number(domain.sortOrder ?? 0)
   };
 }
 
 export async function loadDomainsForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/domains?user_id=eq.${userId}&select=id,slug,name,parent_id,notes,sort_order,created_at,updated_at&order=sort_order.asc&order=created_at.asc`,
+    `/rest/v1/domains?user_id=eq.${userId}&select=id,slug,name,parent_id,notes,score_out_of_ten,sort_order,created_at,updated_at&order=sort_order.asc&order=created_at.asc`,
     accessToken
   );
 

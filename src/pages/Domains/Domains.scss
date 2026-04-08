@@ -210,8 +210,14 @@
 .domainspage__title-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 6px;
+}
+
+.domainspage__title-row > .domainspage__title {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .domainspage__title--child {
@@ -242,6 +248,96 @@
   border-color: rgba(225, 97, 97, 0.35);
   background: rgba(225, 97, 97, 0.12);
   color: rgb(252, 163, 163);
+}
+
+.domainspage__score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 1 240px;
+  min-width: 180px;
+  max-width: 260px;
+  margin-left: auto;
+}
+
+.domainspage__score-value {
+  min-width: 3.5rem;
+  color: $text;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.domainspage__score-value--high {
+  color: rgba(151, 245, 232, 0.98);
+}
+
+.domainspage__score-value--mid {
+  color: rgba(255, 222, 170, 0.98);
+}
+
+.domainspage__score-value--low {
+  color: rgba(252, 165, 165, 0.98);
+}
+
+.domainspage__score-track {
+  flex: 1 1 auto;
+  min-width: 96px;
+  height: 18px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.domainspage__score-track::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(248, 113, 113, 0.95),
+    rgba(255, 210, 143, 0.98) 50%,
+    rgba(82, 214, 195, 0.98)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.domainspage__score-track::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background: $panel;
+  border: 2px solid rgba(244, 247, 251, 0.96);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.domainspage__score-track::-moz-range-track {
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(248, 113, 113, 0.95),
+    rgba(255, 210, 143, 0.98) 50%,
+    rgba(82, 214, 195, 0.98)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.domainspage__score-track::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: $panel;
+  border: 2px solid rgba(244, 247, 251, 0.96);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.domainspage__score-track:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .domainspage__badge--linked {

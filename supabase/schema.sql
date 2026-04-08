@@ -99,6 +99,7 @@ create table if not exists public.domains (
   name text not null,
   parent_id uuid references public.domains (id) on delete cascade,
   notes text not null default '',
+  score_out_of_ten numeric check (score_out_of_ten >= 0 and score_out_of_ten <= 10),
   sort_order integer not null default 0,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
@@ -188,6 +189,7 @@ create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   highlight_focus_attributes boolean not null default true,
   use_attribute_decay boolean not null default true,
+  use_decimal_domain_scores boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );

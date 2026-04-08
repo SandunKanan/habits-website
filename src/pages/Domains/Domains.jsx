@@ -53,17 +53,29 @@ function buildDomainPathMap(domains) {
 }
 
 export default function Domains() {
-  const { domains, focus, goals, learnings, habits, onAddDomain, onUpdateDomain, onDeleteDomain, isPersisting } =
-    useOutletContext();
+  const {
+    domains,
+    focus,
+    goals,
+    learnings,
+    habits,
+    settings,
+    onAddDomain,
+    onUpdateDomain,
+    onDeleteDomain,
+    isPersisting
+  } = useOutletContext();
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
   const [notes, setNotes] = useState("");
+  const [scoreOutOfTen, setScoreOutOfTen] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [editName, setEditName] = useState("");
   const [editParentId, setEditParentId] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editScoreOutOfTen, setEditScoreOutOfTen] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
@@ -71,14 +83,20 @@ export default function Domains() {
   const [inlineParentId, setInlineParentId] = useState("");
   const [inlineChildName, setInlineChildName] = useState("");
   const [inlineChildNotes, setInlineChildNotes] = useState("");
+  const [inlineChildScoreOutOfTen, setInlineChildScoreOutOfTen] = useState("");
   const [inlineFeedback, setInlineFeedback] = useState("");
   const [isSavingInline, setIsSavingInline] = useState(false);
+  const [scoreDraft, setScoreDraft] = useState({ domainId: "", value: null });
+  const [savingScoreId, setSavingScoreId] = useState("");
 
   const tree = useMemo(() => buildTree(domains), [domains]);
   const domainPathMap = useMemo(() => buildDomainPathMap(domains), [domains]);
   const rootCount = domains.filter((domain) => !domain.parentId).length;
   const focusDomainIds = new Set(Array.isArray(focus?.focusDomainIds) ? focus.focusDomainIds : []);
   const focusedCount = domains.filter((domain) => focusDomainIds.has(domain.id)).length;
+  const useDecimalDomainScores = Boolean(settings?.useDecimalDomainScores ?? false);
+  const scoreStep = useDecimalDomainScores ? "0.1" : "1";
+  const scoreInputMode = useDecimalDomainScores ? "decimal" : "numeric";
 
   useEffect(() => {
     if (domains.length === 0) return;
@@ -112,6 +130,7 @@ export default function Domains() {
     setInlineParentId(domainId);
     setInlineChildName("");
     setInlineChildNotes("");
+    setInlineChildScoreOutOfTen("");
     setInlineFeedback("");
     expandDomainPath(domainId);
   }
@@ -120,6 +139,7 @@ export default function Domains() {
     setInlineParentId("");
     setInlineChildName("");
     setInlineChildNotes("");
+    setInlineChildScoreOutOfTen("");
     setInlineFeedback("");
   }
 
@@ -128,11 +148,12 @@ export default function Domains() {
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onAddDomain({ name, parentId, notes });
+    const result = await onAddDomain({ name, parentId, notes, scoreOutOfTen });
     if (result?.ok) {
       setName("");
       setParentId("");
       setNotes("");
+      setScoreOutOfTen("");
       setFeedback("Domain added.");
       if (parentId) {
         expandDomainPath(parentId);
@@ -149,7 +170,12 @@ export default function Domains() {
     setInlineFeedback("");
     setIsSavingInline(true);
 
-    const result = await onAddDomain({ name: inlineChildName, parentId: parentDomainId, notes: inlineChildNotes });
+    const result = await onAddDomain({
+      name: inlineChildName,
+      parentId: parentDomainId,
+      notes: inlineChildNotes,
+      scoreOutOfTen: inlineChildScoreOutOfTen
+    });
     if (result?.ok) {
       closeInlineChildForm();
       setFeedback("Child domain added.");
@@ -166,6 +192,11 @@ export default function Domains() {
     setEditName(domain.name);
     setEditParentId(domain.parentId ?? "");
     setEditNotes(domain.notes ?? "");
+    setEditScoreOutOfTen(
+      domain.scoreOutOfTen === null || domain.scoreOutOfTen === undefined
+        ? ""
+        : formatDomainScore(domain.scoreOutOfTen, useDecimalDomainScores)
+    );
     setEditFeedback("");
   }
 
@@ -174,6 +205,7 @@ export default function Domains() {
     setEditName("");
     setEditParentId("");
     setEditNotes("");
+    setEditScoreOutOfTen("");
     setEditFeedback("");
   }
 
@@ -187,7 +219,8 @@ export default function Domains() {
     const result = await onUpdateDomain(editingId, {
       name: editName,
       parentId: editParentId,
-      notes: editNotes
+      notes: editNotes,
+      scoreOutOfTen: editScoreOutOfTen
     });
 
     if (result?.ok) {
@@ -225,6 +258,68 @@ export default function Domains() {
     setPendingDeleteId("");
   }
 
+  function getVisibleScore(domain) {
+    const baseValue =
+      scoreDraft.domainId === domain.id && scoreDraft.value !== null ? scoreDraft.value : domain.scoreOutOfTen;
+
+    if (baseValue === null || baseValue === undefined) {
+      return null;
+    }
+
+    if (!useDecimalDomainScores) {
+      return Math.round(Number(baseValue));
+    }
+
+    if (scoreDraft.domainId === domain.id && scoreDraft.value !== null) {
+      return scoreDraft.value;
+    }
+
+    return domain.scoreOutOfTen;
+  }
+
+  function handleScoreChange(domainId, nextValue) {
+    const numericValue = Number(nextValue);
+    setScoreDraft({
+      domainId,
+      value: useDecimalDomainScores ? numericValue : Math.round(numericValue)
+    });
+  }
+
+  async function commitScoreDraft(domain) {
+    if (savingScoreId === domain.id) {
+      return;
+    }
+
+    const nextScore = scoreDraft.domainId === domain.id ? scoreDraft.value : domain.scoreOutOfTen;
+    if (nextScore === null || nextScore === undefined) {
+      return;
+    }
+
+    if (Number(nextScore) === Number(domain.scoreOutOfTen)) {
+      if (scoreDraft.domainId === domain.id) {
+        setScoreDraft({ domainId: "", value: null });
+      }
+      return;
+    }
+
+    setSavingScoreId(domain.id);
+    const result = await onUpdateDomain(domain.id, {
+      name: domain.name,
+      parentId: domain.parentId,
+      notes: domain.notes,
+      scoreOutOfTen: nextScore
+    });
+
+    if (result?.ok) {
+      setFeedback("Domain score updated.");
+    } else {
+      setFeedback(result?.error ?? "Could not update domain score.");
+    }
+
+    setScoreDraft((current) => (current.domainId === domain.id ? { domainId: "", value: null } : current));
+    setSavingScoreId("");
+  }
+
   function renderDomainNode(domain, depth = 0) {
     const isEditing = editingId === domain.id;
     const hasChildren = domain.children.length > 0;
@@ -246,6 +341,7 @@ export default function Domains() {
     const linkedHabits = habits.filter(
       (habit) => Array.isArray(habit.domainIds) && habit.domainIds.includes(domain.id)
     );
+    const visibleScore = getVisibleScore(domain);
 
     return (
       <li key={domain.id} className="domainspage__node">
@@ -301,6 +397,21 @@ export default function Domains() {
                 />
               </div>
 
+              <div className="domainspage__field">
+                <label htmlFor={`domain-edit-score-${domain.id}`}>Score out of 10</label>
+                <input
+                  id={`domain-edit-score-${domain.id}`}
+                  type="number"
+                  min="0"
+                  max="10"
+                  step={scoreStep}
+                  inputMode={scoreInputMode}
+                  value={editScoreOutOfTen}
+                  onChange={(event) => setEditScoreOutOfTen(event.target.value)}
+                  disabled={isSavingEdit || isPersisting}
+                />
+              </div>
+
               <div className="domainspage__actions">
                 <button type="submit" disabled={isSavingEdit || isPersisting}>
                   {isSavingEdit || isPersisting ? "Saving..." : "Save"}
@@ -341,6 +452,34 @@ export default function Domains() {
                     >
                       {domain.name}
                     </h3>
+                    {domain.scoreOutOfTen !== null && domain.scoreOutOfTen !== undefined ? (
+                      <div
+                        className="domainspage__score"
+                        aria-label={`Score ${formatDomainScore(visibleScore, useDecimalDomainScores)} out of 10`}
+                      >
+                        <span
+                          className={[
+                            "domainspage__score-value",
+                            getDomainScoreColorClass(visibleScore)
+                          ].join(" ")}
+                        >
+                          {formatDomainScore(visibleScore, useDecimalDomainScores)}/10
+                        </span>
+                        <input
+                          className="domainspage__score-track"
+                          type="range"
+                          min="0"
+                          max="10"
+                          step={scoreStep}
+                          value={visibleScore}
+                          onChange={(event) => handleScoreChange(domain.id, event.target.value)}
+                          onPointerUp={() => void commitScoreDraft(domain)}
+                          onBlur={() => void commitScoreDraft(domain)}
+                          disabled={isPersisting || savingScoreId === domain.id}
+                          aria-label={`Adjust score for ${domain.name}`}
+                        />
+                      </div>
+                    ) : null}
                     {hasChildren ? (
                       <button
                         type="button"
@@ -450,6 +589,20 @@ export default function Domains() {
                 disabled={isSavingInline || isPersisting}
               />
             </div>
+            <div className="domainspage__field">
+              <label htmlFor={`inline-child-score-${domain.id}`}>Score out of 10</label>
+              <input
+                id={`inline-child-score-${domain.id}`}
+                  type="number"
+                  min="0"
+                  max="10"
+                  step={scoreStep}
+                  inputMode={scoreInputMode}
+                  value={inlineChildScoreOutOfTen}
+                  onChange={(event) => setInlineChildScoreOutOfTen(event.target.value)}
+                  disabled={isSavingInline || isPersisting}
+              />
+            </div>
             <div className="domainspage__actions">
               <button type="submit" disabled={isSavingInline || isPersisting}>
                 {isSavingInline || isPersisting ? "Saving..." : "Add child"}
@@ -528,6 +681,22 @@ export default function Domains() {
             />
           </div>
 
+          <div className="domainspage__field">
+            <label htmlFor="domain-score">Score out of 10</label>
+            <p>Optional. Use this if you want to rate how this domain is going right now.</p>
+            <input
+              id="domain-score"
+              type="number"
+              min="0"
+              max="10"
+              step={scoreStep}
+              inputMode={scoreInputMode}
+              value={scoreOutOfTen}
+              onChange={(event) => setScoreOutOfTen(event.target.value)}
+              disabled={isSaving || isPersisting}
+            />
+          </div>
+
           <div className="domainspage__actions">
             <button type="submit" disabled={isSaving || isPersisting}>
               {isSaving || isPersisting ? "Saving..." : "Add domain"}
@@ -567,4 +736,34 @@ export default function Domains() {
       </section>
     </div>
   );
+}
+
+function formatDomainScore(value, useDecimalDomainScores = false) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "";
+  }
+
+  if (useDecimalDomainScores) {
+    return Number.isInteger(numericValue) ? String(numericValue) : numericValue.toFixed(1);
+  }
+
+  return String(Math.round(numericValue));
+}
+
+function getDomainScoreColorClass(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "";
+  }
+
+  if (numericValue >= 8) {
+    return "domainspage__score-value--high";
+  }
+
+  if (numericValue >= 4) {
+    return "domainspage__score-value--mid";
+  }
+
+  return "domainspage__score-value--low";
 }

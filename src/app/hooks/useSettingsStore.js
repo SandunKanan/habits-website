@@ -9,6 +9,7 @@ function buildEmptySettings(userId) {
     userId: userId ?? "",
     highlightFocusAttributes: true,
     useAttributeDecay: true,
+    useDecimalDomainScores: false,
     createdAt: null,
     updatedAt: null
   };

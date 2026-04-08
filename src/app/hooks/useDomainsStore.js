@@ -101,7 +101,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
     }
   }
 
-  async function addDomain({ name, parentId, notes }) {
+  async function addDomain({ name, parentId, notes, scoreOutOfTen }) {
     const trimmedName = String(name ?? "").trim();
     if (!trimmedName) {
       return { ok: false, error: "Domain name is required." };
@@ -111,6 +111,11 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
       return { ok: false, error: "Parent domain not found." };
     }
 
+    const normalizedScore = normalizeDomainScore(null, scoreOutOfTen);
+    if (normalizedScore.error) {
+      return { ok: false, error: normalizedScore.error };
+    }
+
     const now = new Date().toISOString();
     const newDomain = {
       id: crypto.randomUUID(),
@@ -118,6 +123,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
       name: trimmedName,
       parentId: String(parentId ?? ""),
       notes: String(notes ?? "").trim(),
+      scoreOutOfTen: normalizedScore.value,
       sortOrder: domains.length,
       createdAt: now,
       updatedAt: now
@@ -156,6 +162,11 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
       return { ok: false, error: "Parent domain not found." };
     }
 
+    const normalizedScore = normalizeDomainScore(existingDomain.scoreOutOfTen, updates?.scoreOutOfTen);
+    if (normalizedScore.error) {
+      return { ok: false, error: normalizedScore.error };
+    }
+
     const nextDomains = domains.map((domain) =>
       domain.id !== domainId
         ? domain
@@ -164,6 +175,7 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
             name: trimmedName,
             parentId: nextParentId,
             notes: String(updates?.notes ?? domain.notes ?? "").trim(),
+            scoreOutOfTen: normalizedScore.value,
             updatedAt: new Date().toISOString()
           }
     );
@@ -214,4 +226,22 @@ export function useDomainsStore({ authEnabled, isAuthReady, session, authUser })
     beginLoadingDomains,
     resetDomainsState
   };
+}
+
+function normalizeDomainScore(currentValue, nextValue) {
+  const valueToUse = nextValue ?? currentValue ?? null;
+  if (valueToUse === null || valueToUse === undefined || valueToUse === "") {
+    return { value: null };
+  }
+
+  const parsed = Number(valueToUse);
+  if (!Number.isFinite(parsed)) {
+    return { error: "Score must be a number between 0 and 10." };
+  }
+
+  if (parsed < 0 || parsed > 10) {
+    return { error: "Score must be between 0 and 10." };
+  }
+
+  return { value: parsed };
 }
