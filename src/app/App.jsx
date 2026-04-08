@@ -300,6 +300,8 @@ export default function App() {
             onDeleteTrackingStructuredEntry={trackingStore.deleteTrackingStructuredEntry}
             onAddNote={notesStore.addNote}
             onUpdateNote={notesStore.updateNote}
+            onArchiveNote={notesStore.archiveNote}
+            onUnarchiveNote={notesStore.unarchiveNote}
             onDeleteNote={notesStore.deleteNote}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}

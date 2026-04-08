@@ -48,14 +48,20 @@ async function fetchSupabase(pathname, accessToken, options = {}) {
 
 function normalizeNote(note) {
   const rawTags = Array.isArray(note.tags ?? note.tags_json) ? note.tags ?? note.tags_json : [];
+  const rawBulletItems = Array.isArray(note.bulletItems ?? note.bullet_items_json)
+    ? note.bulletItems ?? note.bullet_items_json
+    : [];
   return {
     id: String(note.id ?? ""),
     title: String(note.title ?? "").trim(),
+    mode: note.mode === "bullet_list" ? "bullet_list" : "text",
     body: String(note.body ?? note.content ?? ""),
+    bulletItems: rawBulletItems.map((item) => String(item ?? "").trim()).filter(Boolean),
     tags: rawTags
       .map((tag) => String(tag ?? "").trim())
       .filter(Boolean)
       .filter((tag, index, collection) => collection.indexOf(tag) === index),
+    archivedAt: note.archivedAt ?? note.archived_at ?? null,
     createdAt: note.createdAt ?? note.created_at ?? null,
     updatedAt: note.updatedAt ?? note.updated_at ?? null
   };
@@ -66,8 +72,11 @@ function parseNoteRows(rows) {
     normalizeNote({
       id: row.id,
       title: row.title,
+      mode: row.mode,
       body: row.body,
+      bulletItems: row.bullet_items_json,
       tags: row.tags_json,
+      archivedAt: row.archived_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     })
@@ -79,8 +88,11 @@ function serializeNoteRow(note, userId) {
     id: note.id,
     user_id: userId,
     title: note.title,
+    mode: note.mode === "bullet_list" ? "bullet_list" : "text",
     body: note.body,
+    bullet_items_json: Array.isArray(note.bulletItems) ? note.bulletItems : [],
     tags_json: Array.isArray(note.tags) ? note.tags : [],
+    archived_at: note.archivedAt,
     created_at: note.createdAt,
     updated_at: note.updatedAt
   };
@@ -88,7 +100,7 @@ function serializeNoteRow(note, userId) {
 
 export async function loadNotesForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/notes?user_id=eq.${userId}&select=id,title,body,tags_json,created_at,updated_at&order=updated_at.desc&order=created_at.desc`,
+    `/rest/v1/notes?user_id=eq.${userId}&select=id,title,mode,body,bullet_items_json,tags_json,archived_at,created_at,updated_at&order=updated_at.desc&order=created_at.desc`,
     accessToken
   );
 

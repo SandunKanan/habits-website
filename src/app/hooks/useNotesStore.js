@@ -65,19 +65,27 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     }
   }
 
-  async function addNote({ title, body, tags }) {
+  async function addNote({ title, mode, body, bulletItems, tags }) {
     const trimmedTitle = String(title ?? "").trim();
-    const trimmedBody = String(body ?? "").trim();
+    const normalizedMode = mode === "bullet_list" ? "bullet_list" : "text";
+    const trimmedBody = normalizedMode === "text" ? String(body ?? "").trim() : "";
+    const normalizedBulletItems = normalizeBulletItems(bulletItems);
     const normalizedTags = normalizeTags(tags);
     if (!trimmedTitle) return { ok: false, error: "Title is required." };
-    if (!trimmedBody) return { ok: false, error: "Note text is required." };
+    if (normalizedMode === "text" && !trimmedBody) return { ok: false, error: "Note text is required." };
+    if (normalizedMode === "bullet_list" && normalizedBulletItems.length === 0) {
+      return { ok: false, error: "Add at least one bullet item." };
+    }
 
     const now = new Date().toISOString();
     const newNote = {
       id: crypto.randomUUID(),
       title: trimmedTitle,
+      mode: normalizedMode,
       body: trimmedBody,
+      bulletItems: normalizedBulletItems,
       tags: normalizedTags,
+      archivedAt: null,
       createdAt: now,
       updatedAt: now
     };
@@ -87,12 +95,17 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     return { ok: true, id: newNote.id };
   }
 
-  async function updateNote(noteId, { title, body, tags }) {
+  async function updateNote(noteId, { title, mode, body, bulletItems, tags }) {
     const trimmedTitle = String(title ?? "").trim();
-    const trimmedBody = String(body ?? "").trim();
+    const normalizedMode = mode === "bullet_list" ? "bullet_list" : "text";
+    const trimmedBody = normalizedMode === "text" ? String(body ?? "").trim() : "";
+    const normalizedBulletItems = normalizeBulletItems(bulletItems);
     const normalizedTags = normalizeTags(tags);
     if (!trimmedTitle) return { ok: false, error: "Title is required." };
-    if (!trimmedBody) return { ok: false, error: "Note text is required." };
+    if (normalizedMode === "text" && !trimmedBody) return { ok: false, error: "Note text is required." };
+    if (normalizedMode === "bullet_list" && normalizedBulletItems.length === 0) {
+      return { ok: false, error: "Add at least one bullet item." };
+    }
 
     const existingNote = notes.find((note) => note.id === noteId);
     if (!existingNote) return { ok: false, error: "Note not found." };
@@ -103,7 +116,9 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
         : {
             ...note,
             title: trimmedTitle,
+            mode: normalizedMode,
             body: trimmedBody,
+            bulletItems: normalizedBulletItems,
             tags: normalizedTags,
             updatedAt: new Date().toISOString()
           }
@@ -116,6 +131,42 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     const existingNote = notes.find((note) => note.id === noteId);
     if (!existingNote) return { ok: false, error: "Note not found." };
     return persistNotes(notes.filter((note) => note.id !== noteId));
+  }
+
+  async function archiveNote(noteId) {
+    const existingNote = notes.find((note) => note.id === noteId);
+    if (!existingNote) return { ok: false, error: "Note not found." };
+
+    const now = new Date().toISOString();
+    const nextNotes = notes.map((note) =>
+      note.id !== noteId
+        ? note
+        : {
+            ...note,
+            archivedAt: now,
+            updatedAt: now
+          }
+    );
+
+    return persistNotes(nextNotes);
+  }
+
+  async function unarchiveNote(noteId) {
+    const existingNote = notes.find((note) => note.id === noteId);
+    if (!existingNote) return { ok: false, error: "Note not found." };
+
+    const now = new Date().toISOString();
+    const nextNotes = notes.map((note) =>
+      note.id !== noteId
+        ? note
+        : {
+            ...note,
+            archivedAt: null,
+            updatedAt: now
+          }
+    );
+
+    return persistNotes(nextNotes);
   }
 
   function beginLoadingNotes() {
@@ -136,6 +187,8 @@ export function useNotesStore({ authEnabled, isAuthReady, session, authUser }) {
     loadError,
     addNote,
     updateNote,
+    archiveNote,
+    unarchiveNote,
     deleteNote,
     beginLoadingNotes,
     resetNotesState
@@ -148,4 +201,10 @@ function normalizeTags(value) {
     .map((tag) => String(tag ?? "").trim().toLowerCase())
     .filter(Boolean)
     .filter((tag, index, collection) => collection.indexOf(tag) === index);
+}
+
+function normalizeBulletItems(value) {
+  return (Array.isArray(value) ? value : [])
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
 }

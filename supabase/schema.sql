@@ -175,8 +175,11 @@ create table if not exists public.notes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   title text not null,
+  mode text not null default 'text' check (mode in ('text', 'bullet_list')),
   body text not null,
+  bullet_items_json jsonb not null default '[]'::jsonb,
   tags_json jsonb not null default '[]'::jsonb,
+  archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );

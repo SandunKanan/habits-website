@@ -53,6 +53,33 @@
   gap: 16px;
 }
 
+.notespage__archive-drawer {
+  display: grid;
+  gap: 16px;
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    color: $muted;
+    font-size: 0.98rem;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "▾";
+    margin-left: 8px;
+    color: $accent;
+  }
+
+  &[open] summary::after {
+    content: "▴";
+  }
+}
+
 .notespage__tag-details {
   display: grid;
   gap: 12px;
@@ -107,6 +134,41 @@
   }
 }
 
+.notespage__mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notespage__mode-btn,
+.notespage__secondary-btn,
+.notespage__bullet-row button {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: $text;
+  font: inherit;
+  cursor: pointer;
+}
+
+.notespage__mode-btn--active {
+  border-color: $border-strong;
+  background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+}
+
+.notespage__bullets {
+  display: grid;
+  gap: 10px;
+}
+
+.notespage__bullet-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
 .notespage__tag-cloud,
 .notespage__tag-list {
   display: flex;
@@ -153,6 +215,10 @@
   color: $accent;
 }
 
+.notespage__list--archived {
+  margin-top: 8px;
+}
+
 .notespage__item-head {
   display: flex;
   justify-content: space-between;
@@ -184,6 +250,14 @@
   color: rgb(248, 113, 113) !important;
 }
 
+.notespage__item--archived {
+  opacity: 0.88;
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.05), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent),
+    rgba(18, 27, 39, 0.92);
+}
+
 .notespage__body {
   margin: 0;
   color: $text;
@@ -191,10 +265,25 @@
   white-space: pre-wrap;
 }
 
+.notespage__bullet-list {
+  margin: 0;
+  padding-left: 22px;
+  color: $text;
+  display: grid;
+  gap: 8px;
+
+  li {
+    line-height: 1.7;
+  }
+}
+
 .notespage__meta {
   margin-top: 16px;
   color: $muted;
   font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .notespage__empty {
