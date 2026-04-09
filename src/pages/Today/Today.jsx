@@ -87,7 +87,7 @@ export default function Today() {
 
   const todoItems = curatedTop5.filter((item) => {
     const habitId = item.habit.id;
-    return lastDoneById[habitId] !== todayISO && !skippedTodayIds.has(habitId);
+    return lastProgressById[habitId] !== todayISO && !skippedTodayIds.has(habitId);
   });
   const completedToday = habits.filter((habit) => {
     const importance = Number(habit.importance);
