@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import "./TopNav.scss";
 
 export default function TopNav({ authUser, onSignOut }) {
   const location = useLocation();
   const [isHoverCapable, setIsHoverCapable] = useState(false);
+  const [openMenu, setOpenMenu] = useState("");
+  const navRef = useRef(null);
   const isDirectionActive = ["/vision", "/focus", "/domains", "/goals", "/learnings"].includes(
     location.pathname
   );
@@ -29,13 +31,36 @@ export default function TopNav({ authUser, onSignOut }) {
     return () => mediaQuery.removeListener(updateHoverCapability);
   }, []);
 
-  function closeMenu(event) {
-    if (!isHoverCapable) return;
-    event.currentTarget.removeAttribute("open");
+  useEffect(() => {
+    setOpenMenu("");
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!navRef.current?.contains(event.target)) {
+        setOpenMenu("");
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  function handleMenuToggle(menuKey) {
+    setOpenMenu((current) => (current === menuKey ? "" : menuKey));
+  }
+
+  function handleMenuMouseLeave(menuKey) {
+    if (!isHoverCapable || openMenu !== menuKey) return;
+    setOpenMenu("");
+  }
+
+  function closeMenu() {
+    setOpenMenu("");
   }
 
   return (
-    <nav className="topnav">
+    <nav className="topnav" ref={navRef}>
       <div className="container topnav__inner">
         <div className="topnav__brand">Habit Tracker</div>
         <div className="topnav__right">
@@ -49,11 +74,21 @@ export default function TopNav({ authUser, onSignOut }) {
             <NavLink to="/attributes" className={({ isActive }) => (isActive ? "active" : "")}>
               Attributes
             </NavLink>
-            <details
-              className={["topnav__menu", isDirectionActive ? "topnav__menu--active" : ""].join(" ")}
-              onMouseLeave={closeMenu}
+            <div
+              className={[
+                "topnav__menu",
+                isDirectionActive ? "topnav__menu--active" : "",
+                openMenu === "growth" ? "topnav__menu--open" : ""
+              ].join(" ")}
+              onMouseLeave={() => handleMenuMouseLeave("growth")}
             >
-              <summary>
+              <button
+                type="button"
+                className="topnav__menu-trigger"
+                onClick={() => handleMenuToggle("growth")}
+                aria-haspopup="menu"
+                aria-expanded={openMenu === "growth"}
+              >
                 <span>Growth</span>
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path
@@ -65,7 +100,7 @@ export default function TopNav({ authUser, onSignOut }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </summary>
+              </button>
               <div className="topnav__menu-panel">
                 <NavLink to="/vision" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Vision
@@ -83,12 +118,22 @@ export default function TopNav({ authUser, onSignOut }) {
                   Pursuits
                 </NavLink>
               </div>
-            </details>
-            <details
-              className={["topnav__menu", isMoreActive ? "topnav__menu--active" : ""].join(" ")}
-              onMouseLeave={closeMenu}
+            </div>
+            <div
+              className={[
+                "topnav__menu",
+                isMoreActive ? "topnav__menu--active" : "",
+                openMenu === "more" ? "topnav__menu--open" : ""
+              ].join(" ")}
+              onMouseLeave={() => handleMenuMouseLeave("more")}
             >
-              <summary>
+              <button
+                type="button"
+                className="topnav__menu-trigger"
+                onClick={() => handleMenuToggle("more")}
+                aria-haspopup="menu"
+                aria-expanded={openMenu === "more"}
+              >
                 <span>More</span>
                 <svg viewBox="0 0 20 20" aria-hidden="true">
                   <path
@@ -100,7 +145,7 @@ export default function TopNav({ authUser, onSignOut }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </summary>
+              </button>
               <div className="topnav__menu-panel">
                 <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   History
@@ -118,7 +163,7 @@ export default function TopNav({ authUser, onSignOut }) {
                   Help
                 </NavLink>
               </div>
-            </details>
+            </div>
           </div>
 
           {authUser ? (

@@ -49,7 +49,7 @@
   align-items: center;
 
   a,
-  summary {
+  .topnav__menu-trigger {
     color: $muted;
     padding: 10px 14px;
     border-radius: 999px;
@@ -61,6 +61,9 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    font: inherit;
+    text-decoration: none;
+    background: transparent;
 
     &:hover {
       color: $text;
@@ -76,10 +79,6 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
   }
-
-  summary::-webkit-details-marker {
-    display: none;
-  }
 }
 
 .topnav__menu {
@@ -87,32 +86,32 @@
   padding-bottom: 10px;
   margin-bottom: -10px;
 
-  &[open] {
+  &.topnav__menu--open {
     .topnav__menu-panel {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
     }
 
-    summary {
+    .topnav__menu-trigger {
       color: $text;
       border-color: $border;
       background: rgba(255, 255, 255, 0.03);
     }
   }
-
-  &[open] summary svg {
-    transform: rotate(180deg);
-  }
 }
 
 .topnav__menu--active {
-  summary {
+  .topnav__menu-trigger {
     color: $text;
     background: linear-gradient(135deg, rgba(82, 214, 195, 0.15), rgba(143, 211, 255, 0.12));
     border: 1px solid $border-strong;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
+}
+
+.topnav__menu--open .topnav__menu-trigger svg {
+  transform: rotate(180deg);
 }
 
 .topnav__menu-panel {
@@ -145,7 +144,7 @@
   }
 }
 
-.topnav__menu summary svg {
+.topnav__menu-trigger svg {
   width: 14px;
   height: 14px;
   flex: 0 0 auto;
@@ -193,19 +192,24 @@
 
   .topnav__links {
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 0;
     align-items: stretch;
   }
 
   .topnav__menu {
     flex: 0 0 auto;
+    padding-bottom: 0;
+    margin-bottom: 0;
   }
 
   .topnav__menu-panel {
+    top: calc(100% + 6px);
     left: 0;
     right: auto;
-    min-width: 160px;
+    min-width: 180px;
+    z-index: 20;
   }
 
   .topnav__account {
