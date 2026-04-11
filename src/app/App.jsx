@@ -12,6 +12,7 @@ import Goals from "../pages/Goals/Goals.jsx";
 import Learnings from "../pages/Learnings/Learnings.jsx";
 import Tracking from "../pages/Tracking/Tracking.jsx";
 import Notes from "../pages/Notes/Notes.jsx";
+import Journal from "../pages/Journal/Journal.jsx";
 import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
 import Help from "../pages/Help/Help.jsx";
@@ -32,6 +33,7 @@ import { useLearningsStore } from "./hooks/useLearningsStore.js";
 import { useOneOffTasksStore } from "./hooks/useOneOffTasksStore.js";
 import { useTrackingStore } from "./hooks/useTrackingStore.js";
 import { useNotesStore } from "./hooks/useNotesStore.js";
+import { useJournalStore } from "./hooks/useJournalStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
 
@@ -108,6 +110,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const journalStore = useJournalStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const settingsStore = useSettingsStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -128,6 +136,7 @@ export default function App() {
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
+      journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -146,6 +155,7 @@ export default function App() {
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
+      journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -164,6 +174,7 @@ export default function App() {
       oneOffTasksStore.beginLoadingOneOffTasks();
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
+      journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
     return result;
@@ -182,6 +193,7 @@ export default function App() {
     oneOffTasksStore.resetOneOffTasksState();
     trackingStore.resetTrackingState();
     notesStore.resetNotesState();
+    journalStore.resetJournalState();
     settingsStore.resetSettingsState();
   }
 
@@ -204,6 +216,7 @@ export default function App() {
     oneOffTasksStore.isLoading ||
     trackingStore.isLoading ||
     notesStore.isLoading ||
+    journalStore.isLoading ||
     settingsStore.isLoading
   ) {
     return <div className="appstatus card">Loading habits...</div>;
@@ -220,6 +233,7 @@ export default function App() {
     oneOffTasksStore.loadError ||
     trackingStore.loadError ||
     notesStore.loadError ||
+    journalStore.loadError ||
     settingsStore.loadError
   ) {
     return (
@@ -234,6 +248,7 @@ export default function App() {
           oneOffTasksStore.loadError ||
           trackingStore.loadError ||
           notesStore.loadError ||
+          journalStore.loadError ||
           settingsStore.loadError}
       </div>
     );
@@ -271,6 +286,7 @@ export default function App() {
             trackingMetrics={trackingStore.trackingMetrics}
             trackingEntries={trackingStore.trackingEntries}
             notes={notesStore.notes}
+            journalEntries={journalStore.journalEntries}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
@@ -303,6 +319,9 @@ export default function App() {
             onArchiveNote={notesStore.archiveNote}
             onUnarchiveNote={notesStore.unarchiveNote}
             onDeleteNote={notesStore.deleteNote}
+            onAddJournalEntry={journalStore.addJournalEntry}
+            onUpdateJournalEntry={journalStore.updateJournalEntry}
+            onDeleteJournalEntry={journalStore.deleteJournalEntry}
             onSaveSettings={settingsStore.saveSettings}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
@@ -328,6 +347,7 @@ export default function App() {
               oneOffTasksStore.isPersisting ||
               trackingStore.isPersisting ||
               notesStore.isPersisting ||
+              journalStore.isPersisting ||
               settingsStore.isPersisting
             }
             authUser={auth.authUser}
@@ -348,6 +368,7 @@ export default function App() {
         <Route path="/learnings" element={<Learnings />} />
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/notes" element={<Notes />} />
+        <Route path="/journal" element={<Journal />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
         <Route path="/help" element={<Help />} />

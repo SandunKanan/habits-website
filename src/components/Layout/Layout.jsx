@@ -19,6 +19,7 @@ export default function Layout({
   trackingMetrics,
   trackingEntries,
   notes,
+  journalEntries,
   settings,
   onAddHabit,
   onUpdateHabit,
@@ -51,6 +52,9 @@ export default function Layout({
   onArchiveNote,
   onUnarchiveNote,
   onDeleteNote,
+  onAddJournalEntry,
+  onUpdateJournalEntry,
+  onDeleteJournalEntry,
   onSaveSettings,
   onAddSubtask,
   onMarkSubtaskDoneToday,
@@ -173,6 +177,15 @@ export default function Layout({
         </>
       )
     },
+    "/journal": {
+      title: "Journal",
+      subtitle: "Longer reflections and timestamped entries",
+      meta: (
+        <>
+          Total entries: <b>{journalEntries.length}</b>
+        </>
+      )
+    },
     "/settings": {
       title: "Settings",
       subtitle: "Display and behavior preferences",
@@ -234,6 +247,7 @@ export default function Layout({
               trackingMetrics,
               trackingEntries,
               notes,
+              journalEntries,
               settings,
               onAddHabit,
               onUpdateHabit,
@@ -266,6 +280,9 @@ export default function Layout({
               onArchiveNote,
               onUnarchiveNote,
               onDeleteNote,
+              onAddJournalEntry,
+              onUpdateJournalEntry,
+              onDeleteJournalEntry,
               onSaveSettings,
               onAddSubtask,
               onMarkSubtaskDoneToday,
