@@ -115,14 +115,16 @@ export async function saveDomainsForSession(accessToken, userId, domains) {
   const idsToDelete = [...existingIds].filter((id) => !nextIds.has(id));
 
   if (normalized.length > 0) {
-    await fetchSupabase("/rest/v1/domains?on_conflict=id", accessToken, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates, return=representation"
-      },
-      body: JSON.stringify(normalized.map((domain) => serializeDomainRow(domain, userId)))
-    });
+    for (const domain of normalized) {
+      await fetchSupabase("/rest/v1/domains?on_conflict=id", accessToken, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates, return=representation"
+        },
+        body: JSON.stringify([serializeDomainRow(domain, userId)])
+      });
+    }
   }
 
   if (idsToDelete.length > 0) {
