@@ -39,15 +39,6 @@ export default function Settings() {
 
   return (
     <div className="settingspage">
-      <section className="settingspage__hero card">
-        <p className="settingspage__eyebrow">Preferences</p>
-        <h2>Settings</h2>
-        <p className="settingspage__intro">
-          Control how focus and attributes are displayed in the app. These settings change behavior
-          and presentation without changing your underlying data.
-        </p>
-      </section>
-
       <section className="settingspage__section card">
         <form className="settingspage__form" onSubmit={handleSubmit}>
           <label className="settingspage__toggle">

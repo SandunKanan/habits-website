@@ -53,16 +53,6 @@ export default function Vision() {
 
   return (
     <div className="vision">
-      <section className="vision__hero card">
-        <p className="vision__eyebrow">Direction</p>
-        <h2>Your Ideal Self</h2>
-        <p className="vision__intro">
-          This page is about the person you want to become. Let it stay reflective and honest.
-          Habits and attributes can support this vision, but this page is where you define the
-          deeper direction underneath them.
-        </p>
-      </section>
-
       <section className="vision__section card">
         <form className="vision__form" onSubmit={handleSubmit}>
           <div className="vision__field">

@@ -172,15 +172,6 @@ export default function Focus() {
 
   return (
     <div className="focuspage">
-      <section className="focuspage__hero card">
-        <p className="focuspage__eyebrow">Current period</p>
-        <h2>Current Focus</h2>
-        <p className="focuspage__intro">
-          This page is for the block you are in right now. Keep it simple: define what this block
-          is about, who you want to be by the end of it, and what is most likely to get in the way.
-        </p>
-      </section>
-
       <section className="focuspage__section card">
         <form className="focuspage__form" onSubmit={handleSubmit}>
           <div className="focuspage__field">

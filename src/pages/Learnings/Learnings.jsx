@@ -285,17 +285,6 @@ export default function Learnings() {
 
   return (
     <div className="learningspage">
-      <section className="learningspage__hero card">
-        <p className="learningspage__eyebrow">Learning stack</p>
-        <h2>Keep your learnings and projects in one place</h2>
-        <p className="learningspage__intro">
-          Use this page for courses you want to finish, topics you want to learn, and projects you
-          want to build. The point is not to do everything at once. It is to keep what you are
-          actively undertaking in one place, so it is easier to stay honest about what is actually
-          on your plate right now.
-        </p>
-      </section>
-
       <section className="learningspage__section card">
         <form className="learningspage__form" onSubmit={handleAddItem}>
           <div className="learningspage__field">

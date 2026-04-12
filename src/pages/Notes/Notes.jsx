@@ -384,15 +384,6 @@ export default function Notes() {
 
   return (
     <div className="notespage">
-      <section className="notespage__hero card">
-        <p className="notespage__eyebrow">Capture</p>
-        <h2>Notes</h2>
-        <p className="notespage__intro">
-          Keep quick thoughts, observations, and longer notes in one place. Each note is timestamped
-          automatically so you can come back to the context later.
-        </p>
-      </section>
-
       <section className="notespage__section card">
         <form className="notespage__form" onSubmit={handleAddNote}>
           <div className="notespage__field">

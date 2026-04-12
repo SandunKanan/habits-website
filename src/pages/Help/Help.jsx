@@ -29,16 +29,6 @@ const quickChecks = [
 export default function Help() {
   return (
     <div className="help">
-      <section className="help__hero card">
-        <p className="help__eyebrow">Guide</p>
-        <h2>Use it simply</h2>
-        <p className="help__intro">
-          Habit Tracker works best when it stays small, clear, and adjustable. Build a habit
-          library that reflects real life, let Today narrow your focus, and tweak the setup when it
-          stops feeling useful.
-        </p>
-      </section>
-
       <section className="help__section">
         <article className="help__panel card">
           <h3>The basic workflow</h3>

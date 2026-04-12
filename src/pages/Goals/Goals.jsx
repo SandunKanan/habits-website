@@ -220,16 +220,6 @@ export default function Goals() {
 
   return (
     <div className="goalspage">
-      <section className="goalspage__hero card">
-        <p className="goalspage__eyebrow">Aim higher</p>
-        <h2>Keep your goals visible</h2>
-        <p className="goalspage__intro">
-          Use this page for the outcomes you want to move toward over time. Some goals will stay
-          open-ended. Others will have a defined window. The point is to keep them visible enough
-          that your habits, focus, and pursuits have somewhere real to point.
-        </p>
-      </section>
-
       <section className="goalspage__section card">
         <form className="goalspage__form" onSubmit={handleAddGoal}>
           <div className="goalspage__field">

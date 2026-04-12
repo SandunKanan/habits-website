@@ -245,14 +245,6 @@ export default function Attributes() {
   return (
     <div className="attributes">
       <section className="attributes__intro card">
-        <p className="attributes__eyebrow">Growth areas</p>
-        <h2>Build your attributes library</h2>
-        <p className="attributes__copy">
-          Attributes are the areas your habits will eventually strengthen over time, like Fitness,
-          Focus, or Calm. For now, you can create and organize them here before we connect habits,
-          weights, and decay.
-        </p>
-
         <div className="attributes__help">
           <button
             type="button"

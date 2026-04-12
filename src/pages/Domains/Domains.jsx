@@ -69,6 +69,7 @@ export default function Domains() {
   const [parentId, setParentId] = useState("");
   const [notes, setNotes] = useState("");
   const [scoreOutOfTen, setScoreOutOfTen] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState("");
@@ -154,6 +155,7 @@ export default function Domains() {
       setParentId("");
       setNotes("");
       setScoreOutOfTen("");
+      setShowAddForm(false);
       setFeedback("Domain added.");
       if (parentId) {
         expandDomainPath(parentId);
@@ -349,7 +351,8 @@ export default function Domains() {
           className={[
             "domainspage__item",
             "card",
-            depth > 0 ? "domainspage__item--child" : "domainspage__item--root"
+            depth > 0 ? "domainspage__item--child" : "domainspage__item--root",
+            depth > 0 && !hasChildren ? "domainspage__item--child-leaf" : ""
           ].join(" ")}
           style={{ "--domain-depth": depth }}
         >
@@ -624,88 +627,6 @@ export default function Domains() {
 
   return (
     <div className="domainspage">
-      <section className="domainspage__hero card">
-        <p className="domainspage__eyebrow">Life structure</p>
-        <h2>Map your domains</h2>
-        <p className="domainspage__intro">
-          Use domains to capture the larger areas of your life and work, then break them into
-          branches and smaller components. Think in roots, branches, and sub-branches rather than
-          flat lists.
-        </p>
-      </section>
-
-      <section className="domainspage__section card">
-        <form className="domainspage__form" onSubmit={handleAddDomain}>
-          <div className="domainspage__grid">
-            <div className="domainspage__field">
-              <label htmlFor="domain-name">Domain</label>
-              <p>Add a root area or a more specific branch.</p>
-              <input
-                id="domain-name"
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={isSaving || isPersisting}
-                required
-              />
-            </div>
-
-            <div className="domainspage__field">
-              <label htmlFor="domain-parent">Parent</label>
-              <p>Leave blank to create a root node.</p>
-              <select
-                id="domain-parent"
-                value={parentId}
-                onChange={(event) => setParentId(event.target.value)}
-                disabled={isSaving || isPersisting}
-              >
-                <option value="">No parent</option>
-                {domains.map((domain) => (
-                  <option key={domain.id} value={domain.id}>
-                    {domainPathMap.get(domain.id) ?? domain.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="domainspage__field">
-            <label htmlFor="domain-notes">Notes</label>
-            <p>Optional context about what this area includes or why it matters.</p>
-            <textarea
-              id="domain-notes"
-              rows={3}
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="domainspage__field">
-            <label htmlFor="domain-score">Score out of 10</label>
-            <p>Optional. Use this if you want to rate how this domain is going right now.</p>
-            <input
-              id="domain-score"
-              type="number"
-              min="0"
-              max="10"
-              step={scoreStep}
-              inputMode={scoreInputMode}
-              value={scoreOutOfTen}
-              onChange={(event) => setScoreOutOfTen(event.target.value)}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="domainspage__actions">
-            <button type="submit" disabled={isSaving || isPersisting}>
-              {isSaving || isPersisting ? "Saving..." : "Add domain"}
-            </button>
-            {feedback ? <p className="domainspage__feedback">{feedback}</p> : null}
-          </div>
-        </form>
-      </section>
-
       <section className="domainspage__summary">
         <article className="domainspage__summary-card card">
           <span>Total nodes</span>
@@ -719,6 +640,90 @@ export default function Domains() {
           <span>Focused now</span>
           <strong>{focusedCount}</strong>
         </article>
+      </section>
+
+      <section className="domainspage__section card">
+        <div className="domainspage__actions">
+          <button
+            type="button"
+            onClick={() => setShowAddForm((current) => !current)}
+            disabled={isSaving || isPersisting}
+          >
+            {showAddForm ? "Hide new domain" : "Add new domain"}
+          </button>
+          {feedback ? <p className="domainspage__feedback">{feedback}</p> : null}
+        </div>
+
+        {showAddForm ? (
+          <form className="domainspage__form" onSubmit={handleAddDomain}>
+            <div className="domainspage__grid">
+              <div className="domainspage__field">
+                <label htmlFor="domain-name">Domain</label>
+                <p>Add a root area or a more specific branch.</p>
+                <input
+                  id="domain-name"
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  disabled={isSaving || isPersisting}
+                  required
+                />
+              </div>
+
+              <div className="domainspage__field">
+                <label htmlFor="domain-parent">Parent</label>
+                <p>Leave blank to create a root node.</p>
+                <select
+                  id="domain-parent"
+                  value={parentId}
+                  onChange={(event) => setParentId(event.target.value)}
+                  disabled={isSaving || isPersisting}
+                >
+                  <option value="">No parent</option>
+                  {domains.map((domain) => (
+                    <option key={domain.id} value={domain.id}>
+                      {domainPathMap.get(domain.id) ?? domain.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="domainspage__field">
+              <label htmlFor="domain-notes">Notes</label>
+              <p>Optional context about what this area includes or why it matters.</p>
+              <textarea
+                id="domain-notes"
+                rows={3}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                disabled={isSaving || isPersisting}
+              />
+            </div>
+
+            <div className="domainspage__field">
+              <label htmlFor="domain-score">Score out of 10</label>
+              <p>Optional. Use this if you want to rate how this domain is going right now.</p>
+              <input
+                id="domain-score"
+                type="number"
+                min="0"
+                max="10"
+                step={scoreStep}
+                inputMode={scoreInputMode}
+                value={scoreOutOfTen}
+                onChange={(event) => setScoreOutOfTen(event.target.value)}
+                disabled={isSaving || isPersisting}
+              />
+            </div>
+
+            <div className="domainspage__actions">
+              <button type="submit" disabled={isSaving || isPersisting}>
+                {isSaving || isPersisting ? "Saving..." : "Add domain"}
+              </button>
+            </div>
+          </form>
+        ) : null}
       </section>
 
       <section className="domainspage__list">

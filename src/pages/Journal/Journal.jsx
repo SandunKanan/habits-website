@@ -108,15 +108,6 @@ export default function Journal() {
 
   return (
     <div className="journalpage">
-      <section className="journalpage__hero card">
-        <p className="journalpage__eyebrow">Reflection</p>
-        <h2>Journal</h2>
-        <p className="journalpage__intro">
-          Keep timestamped entries about what happened, what you noticed, and what feels worth
-          remembering. Titles are optional when the writing should stand on its own.
-        </p>
-      </section>
-
       <section className="journalpage__section card">
         <form className="journalpage__form" onSubmit={handleAddEntry}>
           <div className="journalpage__field">

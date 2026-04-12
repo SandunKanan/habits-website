@@ -149,15 +149,6 @@ export default function Tracking() {
 
   return (
     <div className="trackingpage">
-      <section className="trackingpage__hero card">
-        <p className="trackingpage__eyebrow">Daily capture</p>
-        <h2>Set up what you want to track</h2>
-        <p className="trackingpage__intro">
-          Use simple metrics for one number per day, or structured logs for things like meals,
-          workouts, or any entry with multiple fields.
-        </p>
-      </section>
-
       <section className="trackingpage__section card">
         <form className="trackingpage__form" onSubmit={handleAddMetric}>
           <div className="trackingpage__grid">
