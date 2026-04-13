@@ -68,6 +68,9 @@ export default function TopNav({ authUser, onSignOut }) {
             <NavLink to="/today" className={({ isActive }) => (isActive ? "active" : "")}>
               Today
             </NavLink>
+            <NavLink to="/calendar" className={({ isActive }) => (isActive ? "active" : "")}>
+              Calendar
+            </NavLink>
             <NavLink to="/habits" className={({ isActive }) => (isActive ? "active" : "")}>
               Habits
             </NavLink>

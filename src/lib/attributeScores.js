@@ -86,6 +86,10 @@ export function buildAttributeSummaries(attributes, habits, todayISO, options = 
 
     const oneOffContributors = safeOneOffTasks
       .map((task) => {
+        if (!task.completedOn) {
+          return null;
+        }
+
         const links = Array.isArray(task.attributeLinks) ? task.attributeLinks : [];
         const link = links.find((item) => item.attributeId === attribute.id);
         if (!link) return null;

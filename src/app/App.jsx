@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "../components/Layout/Layout.jsx";
 
 import Today from "../pages/Today/Today.jsx";
+import Calendar from "../pages/Calendar/Calendar.jsx";
 import Habits from "../pages/Habits/Habits.jsx";
 import Attributes from "../pages/Attributes/Attributes.jsx";
 import Vision from "../pages/Vision/Vision.jsx";
@@ -306,6 +307,8 @@ export default function App() {
             onUpdateLearningItem={learningsStore.updateLearningItem}
             onDeleteLearningItem={learningsStore.deleteLearningItem}
             onAddOneOffTask={oneOffTasksStore.addOneOffTask}
+            onCompleteOneOffTask={oneOffTasksStore.completeOneOffTask}
+            onReopenOneOffTask={oneOffTasksStore.reopenOneOffTask}
             onDeleteOneOffTask={oneOffTasksStore.deleteOneOffTask}
             onAddTrackingMetric={trackingStore.addTrackingMetric}
             onUpdateTrackingMetric={trackingStore.updateTrackingMetric}
@@ -359,6 +362,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/today" replace />} />
         <Route path="/today" element={<Today />} />
+        <Route path="/calendar" element={<Calendar />} />
         <Route path="/habits" element={<Habits />} />
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/vision" element={<Vision />} />

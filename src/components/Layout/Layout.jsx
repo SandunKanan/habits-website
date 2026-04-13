@@ -39,6 +39,8 @@ export default function Layout({
   onUpdateLearningItem,
   onDeleteLearningItem,
   onAddOneOffTask,
+  onCompleteOneOffTask,
+  onReopenOneOffTask,
   onDeleteOneOffTask,
   onAddTrackingMetric,
   onUpdateTrackingMetric,
@@ -77,6 +79,8 @@ export default function Layout({
 }) {
   const location = useLocation();
   const activeTodayCount = curatedTop5.filter((item) => !skippedTodayIds.has(item.habit.id)).length;
+  const completedOneOffTaskCount = oneOffTasks.filter((task) => Boolean(task.completedOn)).length;
+  const upcomingOneOffTaskCount = oneOffTasks.filter((task) => task.scheduledFor && !task.completedOn).length;
   const pageMetaByPath = {
     "/today": {
       title: "Today",
@@ -96,12 +100,21 @@ export default function Layout({
         </>
       )
     },
+    "/calendar": {
+      title: "Calendar",
+      subtitle: "Projected habits and scheduled one-off tasks",
+      meta: (
+        <>
+          Upcoming one-off tasks: <b>{upcomingOneOffTaskCount}</b>
+        </>
+      )
+    },
     "/history": {
       title: "History",
       subtitle: "Recent completion records",
           meta: (
         <>
-          Logged entries: <b>{completionLog.length + oneOffTasks.length + trackingEntries.length}</b>
+          Logged entries: <b>{completionLog.length + completedOneOffTaskCount + trackingEntries.length}</b>
         </>
       )
     },
@@ -267,6 +280,8 @@ export default function Layout({
               onUpdateLearningItem,
               onDeleteLearningItem,
               onAddOneOffTask,
+              onCompleteOneOffTask,
+              onReopenOneOffTask,
               onDeleteOneOffTask,
               onAddTrackingMetric,
               onUpdateTrackingMetric,

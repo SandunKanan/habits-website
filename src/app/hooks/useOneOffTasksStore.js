@@ -80,21 +80,23 @@ export function useOneOffTasksStore({ authEnabled, isAuthReady, session, authUse
     }
   }
 
-  async function addOneOffTask({ title, completedOn, attributeLinks }) {
+  async function addOneOffTask({ title, scheduledFor, completedOn, attributeLinks }) {
     const trimmedTitle = String(title ?? "").trim();
     if (!trimmedTitle) {
       return { ok: false, error: "Task name is required." };
     }
 
+    const normalizedScheduledFor = String(scheduledFor ?? "").slice(0, 10);
     const normalizedCompletedOn = String(completedOn ?? "").slice(0, 10);
-    if (!normalizedCompletedOn) {
-      return { ok: false, error: "Completed date is required." };
+    if (!normalizedScheduledFor && !normalizedCompletedOn) {
+      return { ok: false, error: "Scheduled or completed date is required." };
     }
 
     const now = new Date().toISOString();
     const newTask = {
       id: crypto.randomUUID(),
       title: trimmedTitle,
+      scheduledFor: normalizedScheduledFor || normalizedCompletedOn,
       completedOn: normalizedCompletedOn,
       attributeLinks: normalizeAttributeLinks(attributeLinks),
       createdAt: now,
@@ -107,6 +109,60 @@ export function useOneOffTasksStore({ authEnabled, isAuthReady, session, authUse
     }
 
     return { ok: true, id: newTask.id };
+  }
+
+  async function completeOneOffTask(taskId, completedOn) {
+    const existingTask = oneOffTasks.find((task) => task.id === taskId);
+    if (!existingTask) {
+      return { ok: false, error: "Task not found." };
+    }
+
+    const normalizedCompletedOn = String(completedOn ?? "").slice(0, 10);
+    if (!normalizedCompletedOn) {
+      return { ok: false, error: "Completed date is required." };
+    }
+
+    const nextTasks = oneOffTasks.map((task) =>
+      task.id !== taskId
+        ? task
+        : {
+            ...task,
+            scheduledFor: task.scheduledFor || normalizedCompletedOn,
+            completedOn: normalizedCompletedOn,
+            updatedAt: new Date().toISOString()
+          }
+    );
+
+    const persisted = await persistTasks(nextTasks);
+    if (!persisted.ok) {
+      return { ok: false, error: "Could not update task." };
+    }
+
+    return { ok: true };
+  }
+
+  async function reopenOneOffTask(taskId) {
+    const existingTask = oneOffTasks.find((task) => task.id === taskId);
+    if (!existingTask) {
+      return { ok: false, error: "Task not found." };
+    }
+
+    const nextTasks = oneOffTasks.map((task) =>
+      task.id !== taskId
+        ? task
+        : {
+            ...task,
+            completedOn: "",
+            updatedAt: new Date().toISOString()
+          }
+    );
+
+    const persisted = await persistTasks(nextTasks);
+    if (!persisted.ok) {
+      return { ok: false, error: "Could not update task." };
+    }
+
+    return { ok: true };
   }
 
   async function deleteOneOffTask(taskId) {
@@ -140,6 +196,8 @@ export function useOneOffTasksStore({ authEnabled, isAuthReady, session, authUse
     isPersisting,
     loadError,
     addOneOffTask,
+    completeOneOffTask,
+    reopenOneOffTask,
     deleteOneOffTask,
     beginLoadingOneOffTasks,
     resetOneOffTasksState

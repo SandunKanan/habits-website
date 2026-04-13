@@ -141,7 +141,8 @@ create table if not exists public.one_off_tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   title text not null,
-  completed_on date not null,
+  scheduled_for date,
+  completed_on date,
   attribute_links_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())

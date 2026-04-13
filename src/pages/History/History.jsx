@@ -112,6 +112,8 @@ export default function History() {
   }
 
   for (const task of Array.isArray(oneOffTasks) ? oneOffTasks : []) {
+    if (!task.completedOn) continue;
+
     const dateGroup = ensureDateGroup(task.completedOn);
     dateGroup.set(`one-off:${task.id}`, {
       habitName: task.title,

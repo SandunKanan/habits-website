@@ -58,10 +58,14 @@ function normalizeAttributeLinks(attributeLinks) {
 }
 
 function normalizeOneOffTask(task) {
+  const completedOn = String(task.completedOn ?? task.completed_on ?? "").slice(0, 10);
+  const scheduledFor = String(task.scheduledFor ?? task.scheduled_for ?? completedOn ?? "").slice(0, 10);
+
   return {
     id: String(task.id ?? ""),
     title: String(task.title ?? "").trim(),
-    completedOn: String(task.completedOn ?? task.completed_on ?? ""),
+    scheduledFor,
+    completedOn,
     attributeLinks: normalizeAttributeLinks(task.attributeLinks ?? task.attribute_links_json),
     createdAt: task.createdAt ?? task.created_at ?? null,
     updatedAt: task.updatedAt ?? task.updated_at ?? null
@@ -73,6 +77,7 @@ function parseTaskRows(rows) {
     normalizeOneOffTask({
       id: row.id,
       title: row.title,
+      scheduledFor: row.scheduled_for,
       completedOn: row.completed_on,
       attributeLinks: row.attribute_links_json,
       createdAt: row.created_at,
@@ -86,6 +91,7 @@ function serializeTaskRow(task, userId) {
     id: task.id,
     user_id: userId,
     title: task.title,
+    scheduled_for: task.scheduledFor || null,
     completed_on: task.completedOn,
     attribute_links_json: Array.isArray(task.attributeLinks) ? task.attributeLinks : []
   };
@@ -93,11 +99,15 @@ function serializeTaskRow(task, userId) {
 
 export async function loadOneOffTasksForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/one_off_tasks?user_id=eq.${userId}&select=id,title,completed_on,attribute_links_json,created_at,updated_at&order=completed_on.desc&order=created_at.desc`,
+    `/rest/v1/one_off_tasks?user_id=eq.${userId}&select=id,title,scheduled_for,completed_on,attribute_links_json,created_at,updated_at&order=created_at.desc`,
     accessToken
   );
 
-  return parseTaskRows(Array.isArray(rows) ? rows : []);
+  return parseTaskRows(Array.isArray(rows) ? rows : []).sort((a, b) => {
+    const aAnchor = a.scheduledFor || a.completedOn || "";
+    const bAnchor = b.scheduledFor || b.completedOn || "";
+    return bAnchor.localeCompare(aAnchor) || String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? ""));
+  });
 }
 
 export async function saveOneOffTasksForSession(accessToken, userId, tasks) {
