@@ -280,6 +280,7 @@ export default function App() {
             attributes={attributesStore.attributes}
             vision={visionStore.vision}
             focus={focusStore.focus}
+            focusBlocks={focusStore.focusBlocks}
             domains={domainsStore.domains}
             goals={goalsStore.goals}
             learnings={learningsStore.learnings}
@@ -297,6 +298,7 @@ export default function App() {
             onDeleteAttribute={attributesStore.deleteAttribute}
             onSaveVision={visionStore.saveVision}
             onSaveFocus={focusStore.saveFocus}
+            onDeleteFocus={focusStore.deleteFocus}
             onAddDomain={domainsStore.addDomain}
             onUpdateDomain={domainsStore.updateDomain}
             onDeleteDomain={domainsStore.deleteDomain}

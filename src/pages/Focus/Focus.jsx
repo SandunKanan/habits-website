@@ -1,45 +1,84 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import {
+  getCurrentFocusBlock,
+  isFutureFocusBlock,
+  isPastFocusBlock,
+  sortFocusBlocksByStartDate
+} from "../../lib/focusUtils.js";
 import "./Focus.scss";
 
-export default function Focus() {
-  const { focus, goals, domains, learnings, onSaveFocus, isPersisting } = useOutletContext();
-  const [title, setTitle] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [whyNow, setWhyNow] = useState("");
-  const [endState, setEndState] = useState("");
-  const [currentObstacles, setCurrentObstacles] = useState("");
-  const [focusDomainIds, setFocusDomainIds] = useState([]);
-  const [domainDraft, setDomainDraft] = useState("");
-  const [focusTargets, setFocusTargets] = useState([]);
-  const [targetDraft, setTargetDraft] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+function buildEmptyDraft() {
+  return {
+    id: "",
+    title: "",
+    startDate: "",
+    endDate: "",
+    whyNow: "",
+    endState: "",
+    currentObstacles: "",
+    focusDomainIds: [],
+    focusTargets: []
+  };
+}
 
-  function buildTargetKey(target) {
-    if (target.kind === "subgoal") {
-      return `subgoal:${target.goalId}:${target.subgoalId}`;
-    }
-
-    return `goal:${target.goalId}`;
+function buildTargetKey(target) {
+  if (target.kind === "subgoal") {
+    return `subgoal:${target.goalId}:${target.subgoalId}`;
   }
 
-  useEffect(() => {
-    setTitle(focus?.title ?? "");
-    setStartDate(focus?.startDate ?? "");
-    setEndDate(focus?.endDate ?? "");
-    setWhyNow(focus?.whyNow ?? "");
-    setEndState(focus?.endState ?? "");
-    setCurrentObstacles(focus?.currentObstacles ?? "");
-    setFocusDomainIds(Array.isArray(focus?.focusDomainIds) ? focus.focusDomainIds : []);
-    setDomainDraft("");
-    setFocusTargets(Array.isArray(focus?.focusTargets) ? focus.focusTargets : []);
-    setTargetDraft("");
-  }, [focus]);
+  return `goal:${target.goalId}`;
+}
 
-  const selectedDomainIds = new Set(focusDomainIds);
-  const selectedTargetKeys = new Set(focusTargets.map(buildTargetKey));
+function parseTargetKey(targetKey) {
+  const [kind, goalId, subgoalId] = String(targetKey ?? "").split(":");
+  if (!goalId) return null;
+  if (kind === "subgoal" && subgoalId) return { kind: "subgoal", goalId, subgoalId };
+  if (kind === "goal") return { kind: "goal", goalId, subgoalId: "" };
+  return null;
+}
+
+function describeTarget(target, goals) {
+  const goal = goals.find((item) => item.id === target.goalId);
+  if (!goal) return "Unknown target";
+  if (target.kind === "goal") return goal.title;
+  const subgoal = Array.isArray(goal.subgoals) ? goal.subgoals.find((item) => item.id === target.subgoalId) : null;
+  return subgoal ? `${goal.title} -> ${subgoal.title}` : goal.title;
+}
+
+function describeDomain(domainId, domains) {
+  const domain = domains.find((item) => item.id === domainId);
+  return domain ? domain.name : "Unknown domain";
+}
+
+function formatDateRange(block) {
+  const startDate = block?.startDate || "No start";
+  const endDate = block?.endDate || "Open-ended";
+  return `${startDate} -> ${endDate}`;
+}
+
+function FocusBlockEditor({
+  title,
+  draft,
+  setDraft,
+  goals,
+  domains,
+  isSaving,
+  onSubmit,
+  onCancel,
+  feedback,
+  submitLabel
+}) {
+  const selectedDomainIds = new Set(draft.focusDomainIds);
+  const selectedTargetKeys = new Set(draft.focusTargets.map(buildTargetKey));
+  const [domainDraft, setDomainDraft] = useState("");
+  const [targetDraft, setTargetDraft] = useState("");
+
+  useEffect(() => {
+    setDomainDraft("");
+    setTargetDraft("");
+  }, [draft.id]);
+
   const domainOptions = [...domains].sort((a, b) => a.name.localeCompare(b.name));
   const targetOptions = goals.flatMap((goal) => {
     const options = [
@@ -53,11 +92,7 @@ export default function Focus() {
     if (Array.isArray(goal.subgoals)) {
       goal.subgoals.forEach((subgoal) => {
         options.push({
-          value: buildTargetKey({
-            kind: "subgoal",
-            goalId: goal.id,
-            subgoalId: subgoal.id
-          }),
+          value: buildTargetKey({ kind: "subgoal", goalId: goal.id, subgoalId: subgoal.id }),
           label: `${goal.title} -> ${subgoal.title}`,
           kindLabel: "Subgoal"
         });
@@ -66,354 +101,493 @@ export default function Focus() {
 
     return options;
   });
-  const focusedDomains = domains.filter((domain) => selectedDomainIds.has(domain.id));
-  const alignedGoalIds = new Set(focusTargets.map((target) => target.goalId));
-  const alignedGoals = goals.filter((goal) => alignedGoalIds.has(goal.id));
-  const alignedPursuits = learnings.filter((item) => {
-    const matchesDomain =
-      Array.isArray(item.domainIds) && item.domainIds.some((domainId) => selectedDomainIds.has(domainId));
-    const matchesGoal =
-      Array.isArray(item.pursuitTargets) &&
-      item.pursuitTargets.some((target) => alignedGoalIds.has(target.goalId));
-    return matchesDomain || matchesGoal;
-  });
 
-  function parseTargetKey(targetKey) {
-    const [kind, goalId, subgoalId] = String(targetKey ?? "").split(":");
-    if (!goalId) return null;
-
-    if (kind === "subgoal" && subgoalId) {
-      return { kind: "subgoal", goalId, subgoalId };
-    }
-
-    if (kind === "goal") {
-      return { kind: "goal", goalId, subgoalId: "" };
-    }
-
-    return null;
-  }
-
-  function addTargetFromDraft() {
-    const nextTarget = parseTargetKey(targetDraft);
-    if (!nextTarget) return;
-
-    const targetKey = buildTargetKey(nextTarget);
-    setFocusTargets((current) =>
-      current.some((target) => buildTargetKey(target) === targetKey) ? current : [...current, nextTarget]
-    );
-    setTargetDraft("");
+  function updateDraft(field, value) {
+    setDraft((current) => ({ ...current, [field]: value }));
   }
 
   function addDomainFromDraft() {
     const nextDomainId = String(domainDraft ?? "");
     if (!nextDomainId) return;
-
-    setFocusDomainIds((current) =>
-      current.includes(nextDomainId) ? current : [...current, nextDomainId]
+    updateDraft(
+      "focusDomainIds",
+      draft.focusDomainIds.includes(nextDomainId) ? draft.focusDomainIds : [...draft.focusDomainIds, nextDomainId]
     );
     setDomainDraft("");
   }
 
   function removeDomain(domainId) {
-    setFocusDomainIds((current) => current.filter((id) => id !== domainId));
+    updateDraft(
+      "focusDomainIds",
+      draft.focusDomainIds.filter((id) => id !== domainId)
+    );
   }
 
-  function describeDomain(domainId) {
-    const domain = domains.find((item) => item.id === domainId);
-    return domain ? domain.name : "Unknown domain";
+  function addTargetFromDraft() {
+    const nextTarget = parseTargetKey(targetDraft);
+    if (!nextTarget) return;
+    const targetKey = buildTargetKey(nextTarget);
+    updateDraft(
+      "focusTargets",
+      draft.focusTargets.some((target) => buildTargetKey(target) === targetKey)
+        ? draft.focusTargets
+        : [...draft.focusTargets, nextTarget]
+    );
+    setTargetDraft("");
   }
 
   function removeTarget(targetKey) {
-    setFocusTargets((current) => current.filter((target) => buildTargetKey(target) !== targetKey));
+    updateDraft(
+      "focusTargets",
+      draft.focusTargets.filter((target) => buildTargetKey(target) !== targetKey)
+    );
   }
 
-  function describeTarget(target) {
-    const goal = goals.find((item) => item.id === target.goalId);
-    if (!goal) {
-      return "Unknown target";
+  return (
+    <form className="focuspage__form" onSubmit={onSubmit}>
+      <div className="focuspage__form-head">
+        <h3>{title}</h3>
+      </div>
+
+      <div className="focuspage__field">
+        <label htmlFor={`${draft.id || "new"}-focus-title`}>Focus title</label>
+        <input
+          id={`${draft.id || "new"}-focus-title`}
+          type="text"
+          value={draft.title}
+          onChange={(event) => updateDraft("title", event.target.value)}
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="focuspage__split">
+        <div className="focuspage__field">
+          <label htmlFor={`${draft.id || "new"}-focus-start-date`}>Start date</label>
+          <input
+            id={`${draft.id || "new"}-focus-start-date`}
+            type="date"
+            value={draft.startDate}
+            onChange={(event) => updateDraft("startDate", event.target.value)}
+            disabled={isSaving}
+          />
+        </div>
+        <div className="focuspage__field">
+          <label htmlFor={`${draft.id || "new"}-focus-end-date`}>End date</label>
+          <input
+            id={`${draft.id || "new"}-focus-end-date`}
+            type="date"
+            value={draft.endDate}
+            onChange={(event) => updateDraft("endDate", event.target.value)}
+            disabled={isSaving}
+          />
+        </div>
+      </div>
+
+      <div className="focuspage__field">
+        <label htmlFor={`${draft.id || "new"}-focus-why-now`}>What is your main focus for this block?</label>
+        <textarea
+          id={`${draft.id || "new"}-focus-why-now`}
+          value={draft.whyNow}
+          onChange={(event) => updateDraft("whyNow", event.target.value)}
+          rows={4}
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="focuspage__field">
+        <label htmlFor={`${draft.id || "new"}-focus-end-state`}>Who do you want to be by the end of this block?</label>
+        <textarea
+          id={`${draft.id || "new"}-focus-end-state`}
+          value={draft.endState}
+          onChange={(event) => updateDraft("endState", event.target.value)}
+          rows={4}
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="focuspage__field">
+        <label htmlFor={`${draft.id || "new"}-focus-obstacles`}>What is getting in the way?</label>
+        <textarea
+          id={`${draft.id || "new"}-focus-obstacles`}
+          value={draft.currentObstacles}
+          onChange={(event) => updateDraft("currentObstacles", event.target.value)}
+          rows={4}
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="focuspage__field">
+        <label>Focus domains</label>
+        <div className="focuspage__targets">
+          {domains.length === 0 ? (
+            <p className="focuspage__targets-empty">Add domains first if you want to connect this focus block to them.</p>
+          ) : (
+            <>
+              <div className="focuspage__target-picker">
+                <select value={domainDraft} onChange={(event) => setDomainDraft(event.target.value)} disabled={isSaving}>
+                  <option value="">Select a domain</option>
+                  {domainOptions.map((domain) => (
+                    <option key={domain.id} value={domain.id} disabled={selectedDomainIds.has(domain.id)}>
+                      {domain.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={addDomainFromDraft} disabled={isSaving || !domainDraft}>
+                  Add
+                </button>
+              </div>
+
+              {draft.focusDomainIds.length > 0 ? (
+                <ul className="focuspage__target-list">
+                  {draft.focusDomainIds.map((domainId) => (
+                    <li key={domainId}>
+                      <span>{describeDomain(domainId, domains)}</span>
+                      <button type="button" onClick={() => removeDomain(domainId)} disabled={isSaving}>
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="focuspage__field">
+        <label>Focus goals</label>
+        <div className="focuspage__targets">
+          {goals.length === 0 ? (
+            <p className="focuspage__targets-empty">Add goals first if you want to connect this focus block to them.</p>
+          ) : (
+            <>
+              <div className="focuspage__target-picker">
+                <select value={targetDraft} onChange={(event) => setTargetDraft(event.target.value)} disabled={isSaving}>
+                  <option value="">Select a goal or subgoal</option>
+                  {targetOptions.map((option) => (
+                    <option key={option.value} value={option.value} disabled={selectedTargetKeys.has(option.value)}>
+                      {option.kindLabel}: {option.label}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={addTargetFromDraft} disabled={isSaving || !targetDraft}>
+                  Add
+                </button>
+              </div>
+
+              {draft.focusTargets.length > 0 ? (
+                <ul className="focuspage__target-list">
+                  {draft.focusTargets.map((target) => {
+                    const targetKey = buildTargetKey(target);
+                    return (
+                      <li key={targetKey}>
+                        <span>{describeTarget(target, goals)}</span>
+                        <button type="button" onClick={() => removeTarget(targetKey)} disabled={isSaving}>
+                          Remove
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="focuspage__actions">
+        <button type="submit" disabled={isSaving}>
+          {submitLabel}
+        </button>
+        {onCancel ? (
+          <button type="button" className="focuspage__secondary-btn" onClick={onCancel} disabled={isSaving}>
+            Cancel
+          </button>
+        ) : null}
+        {feedback ? <p className="focuspage__feedback">{feedback}</p> : null}
+      </div>
+    </form>
+  );
+}
+
+export default function Focus() {
+  const { todayISO, focus, focusBlocks, goals, domains, onSaveFocus, onDeleteFocus, isPersisting } =
+    useOutletContext();
+  const [newDraft, setNewDraft] = useState(buildEmptyDraft());
+  const [editingId, setEditingId] = useState("");
+  const [editDraft, setEditDraft] = useState(buildEmptyDraft());
+  const [feedback, setFeedback] = useState("");
+  const [editFeedback, setEditFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("current");
+  const [pastOpen, setPastOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState("");
+
+  const currentFocus = useMemo(() => getCurrentFocusBlock(focusBlocks, todayISO) ?? focus ?? null, [focus, focusBlocks, todayISO]);
+  const futureFocusBlocks = useMemo(
+    () => sortFocusBlocksByStartDate(focusBlocks.filter((block) => isFutureFocusBlock(block, todayISO))),
+    [focusBlocks, todayISO]
+  );
+  const pastFocusBlocks = useMemo(
+    () => sortFocusBlocksByStartDate(focusBlocks.filter((block) => isPastFocusBlock(block, todayISO)), "desc"),
+    [focusBlocks, todayISO]
+  );
+
+  useEffect(() => {
+    if (!currentFocus && futureFocusBlocks.length === 0 && pastFocusBlocks.length === 0) {
+      setIsEditorOpen(true);
     }
+  }, [currentFocus, futureFocusBlocks.length, pastFocusBlocks.length]);
 
-    if (target.kind === "goal") {
-      return goal.title;
-    }
-
-    const subgoal = Array.isArray(goal.subgoals)
-      ? goal.subgoals.find((item) => item.id === target.subgoalId)
-      : null;
-
-    return subgoal ? `${goal.title} -> ${subgoal.title}` : goal.title;
+  function startEdit(block) {
+    setEditingId(block.id);
+    setEditDraft({
+      id: block.id,
+      title: block.title ?? "",
+      startDate: block.startDate ?? "",
+      endDate: block.endDate ?? "",
+      whyNow: block.whyNow ?? "",
+      endState: block.endState ?? "",
+      currentObstacles: block.currentObstacles ?? "",
+      focusDomainIds: Array.isArray(block.focusDomainIds) ? block.focusDomainIds : [],
+      focusTargets: Array.isArray(block.focusTargets) ? block.focusTargets : []
+    });
+    setEditFeedback("");
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  function cancelEdit() {
+    setEditingId("");
+    setEditDraft(buildEmptyDraft());
+    setEditFeedback("");
+  }
+
+  async function handleAddFocus(event) {
+    event.preventDefault();
     setFeedback("");
     setIsSaving(true);
 
-    const result = await onSaveFocus({
-      ...focus,
-      title,
-      startDate,
-      endDate,
-      whyNow,
-      endState,
-      currentObstacles,
-      focusDomainIds,
-      focusTargets
-    });
-
+    const result = await onSaveFocus(newDraft);
     if (result?.ok) {
-      setFeedback("Focus saved.");
+      setNewDraft(buildEmptyDraft());
+      setFeedback("Focus block added.");
+      setIsEditorOpen(false);
+      setActiveTab(newDraft.startDate && newDraft.startDate > todayISO ? "future" : "current");
     } else {
-      setFeedback(result?.error ?? "Could not save focus.");
+      setFeedback(result?.error ?? "Could not save focus block.");
     }
 
     setIsSaving(false);
   }
 
+  async function handleUpdateFocus(event) {
+    event.preventDefault();
+    setEditFeedback("");
+    setIsSaving(true);
+
+    const result = await onSaveFocus(editDraft);
+    if (result?.ok) {
+      setEditFeedback("Focus block updated.");
+      setEditingId("");
+    } else {
+      setEditFeedback(result?.error ?? "Could not save focus block.");
+    }
+
+    setIsSaving(false);
+  }
+
+  async function handleDeleteFocus(block) {
+    const confirmed = window.confirm(`Delete "${block.title || "this focus block"}"?`);
+    if (!confirmed) return;
+
+    setPendingDeleteId(block.id);
+    const result = await onDeleteFocus(block.id);
+    if (!result?.ok) {
+      setFeedback(result?.error ?? "Could not delete focus block.");
+    }
+    setPendingDeleteId("");
+  }
+
+  function renderFocusCard(block, { tone = "current" } = {}) {
+    const isEditing = editingId === block.id;
+    const toneLabel = tone === "future" ? "Future block" : tone === "past" ? "Past block" : "Current block";
+
+    if (isEditing) {
+      return (
+        <article key={block.id} className="focuspage__block card">
+          <FocusBlockEditor
+            title="Edit focus block"
+            draft={editDraft}
+            setDraft={setEditDraft}
+            goals={goals}
+            domains={domains}
+            isSaving={isSaving || isPersisting}
+            onSubmit={handleUpdateFocus}
+            onCancel={cancelEdit}
+            feedback={editFeedback}
+            submitLabel={isSaving || isPersisting ? "Saving..." : "Save changes"}
+          />
+        </article>
+      );
+    }
+
+    return (
+      <article key={block.id} className={["focuspage__block card", `focuspage__block--${tone}`].join(" ")}>
+        <div className="focuspage__block-head">
+          <div>
+            <span className="focuspage__block-kicker">{toneLabel}</span>
+            <h3>{block.title || "Untitled focus block"}</h3>
+            <p>{formatDateRange(block)}</p>
+          </div>
+          <div className="focuspage__block-actions">
+            <button type="button" onClick={() => startEdit(block)} disabled={isPersisting}>
+              Edit
+            </button>
+            <button
+              type="button"
+              className="focuspage__delete-btn"
+              onClick={() => handleDeleteFocus(block)}
+              disabled={isPersisting || pendingDeleteId === block.id}
+            >
+              {pendingDeleteId === block.id ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+
+        <div className="focuspage__block-grid">
+          <div>
+            <span>Why now</span>
+            <p>{block.whyNow || "Not set yet."}</p>
+          </div>
+          <div>
+            <span>End state</span>
+            <p>{block.endState || "Not set yet."}</p>
+          </div>
+          <div>
+            <span>Obstacles</span>
+            <p>{block.currentObstacles || "None noted yet."}</p>
+          </div>
+        </div>
+
+        <div className="focuspage__linked-grid">
+          <div className="focuspage__linked-card">
+            <span>Domains</span>
+            {block.focusDomainIds?.length ? (
+              <ul>
+                {block.focusDomainIds.map((domainId) => (
+                  <li key={domainId}>{describeDomain(domainId, domains)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>None linked.</p>
+            )}
+          </div>
+          <div className="focuspage__linked-card">
+            <span>Goals</span>
+            {block.focusTargets?.length ? (
+              <ul>
+                {block.focusTargets.map((target) => (
+                  <li key={buildTargetKey(target)}>{describeTarget(target, goals)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>None linked.</p>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <div className="focuspage">
-      <section className="focuspage__section card">
-        <form className="focuspage__form" onSubmit={handleSubmit}>
-          <div className="focuspage__field">
-            <label htmlFor="focus-title">Focus title</label>
-            <p>Give this block a short name.</p>
-            <input
-              id="focus-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="focuspage__split">
-            <div className="focuspage__field">
-              <label htmlFor="focus-start-date">Start date</label>
-              <input
-                id="focus-start-date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                disabled={isSaving || isPersisting}
-              />
-            </div>
-
-            <div className="focuspage__field">
-              <label htmlFor="focus-end-date">End date</label>
-              <input
-                id="focus-end-date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                disabled={isSaving || isPersisting}
-              />
-            </div>
-          </div>
-
-          <div className="focuspage__field">
-            <label htmlFor="focus-why-now">What is your main focus for this block?</label>
-            <p>What is this block really about?</p>
-            <textarea
-              id="focus-why-now"
-              value={whyNow}
-              onChange={(e) => setWhyNow(e.target.value)}
-              rows={5}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="focuspage__field">
-            <label htmlFor="focus-end-state">Who do you want to be by the end of this block?</label>
-            <p>Describe how you want to see yourself after this.</p>
-            <textarea
-              id="focus-end-state"
-              value={endState}
-              onChange={(e) => setEndState(e.target.value)}
-              rows={5}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="focuspage__field">
-            <label htmlFor="focus-obstacles">What is getting in the way, or likely to get in the way?</label>
-            <p>Name the obstacles clearly so this block stays realistic.</p>
-            <textarea
-              id="focus-obstacles"
-              value={currentObstacles}
-              onChange={(e) => setCurrentObstacles(e.target.value)}
-              rows={5}
-              disabled={isSaving || isPersisting}
-            />
-          </div>
-
-          <div className="focuspage__field">
-            <label>What domains matter most during this block?</label>
-            <p>Select the larger areas or branches you want this block to support.</p>
-            <div className="focuspage__targets">
-              {domains.length === 0 ? (
-                <p className="focuspage__targets-empty">
-                  Add domains first if you want to connect this focus block to them.
-                </p>
-              ) : (
-                <>
-                  <div className="focuspage__target-picker">
-                    <select
-                      value={domainDraft}
-                      onChange={(e) => setDomainDraft(e.target.value)}
-                      disabled={isSaving || isPersisting}
-                    >
-                      <option value="">Select a domain</option>
-                      {domainOptions.map((domain) => (
-                        <option key={domain.id} value={domain.id} disabled={selectedDomainIds.has(domain.id)}>
-                          {domain.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={addDomainFromDraft}
-                      disabled={isSaving || isPersisting || !domainDraft}
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {focusDomainIds.length > 0 ? (
-                    <ul className="focuspage__target-list">
-                      {focusDomainIds.map((domainId) => (
-                        <li key={domainId}>
-                          <span>{describeDomain(domainId)}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeDomain(domainId)}
-                            disabled={isSaving || isPersisting}
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="focuspage__field">
-            <label>What are you focusing on within your goals?</label>
-            <p>Select whole goals, specific subgoals, or both.</p>
-            <div className="focuspage__targets">
-              {goals.length === 0 ? (
-                <p className="focuspage__targets-empty">
-                  Add goals first if you want to connect this focus period to them.
-                </p>
-              ) : (
-                <>
-                  <div className="focuspage__target-picker">
-                    <select
-                      value={targetDraft}
-                      onChange={(e) => setTargetDraft(e.target.value)}
-                      disabled={isSaving || isPersisting}
-                    >
-                      <option value="">Select a goal or subgoal</option>
-                      {targetOptions.map((option) => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                          disabled={selectedTargetKeys.has(option.value)}
-                        >
-                          {option.kindLabel}: {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={addTargetFromDraft}
-                      disabled={isSaving || isPersisting || !targetDraft}
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {focusTargets.length > 0 ? (
-                    <ul className="focuspage__target-list">
-                      {focusTargets.map((target) => {
-                        const targetKey = buildTargetKey(target);
-                        return (
-                          <li key={targetKey}>
-                            <span>{describeTarget(target)}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeTarget(targetKey)}
-                              disabled={isSaving || isPersisting}
-                            >
-                              Remove
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : null}
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="focuspage__actions">
-            <button type="submit" disabled={isSaving || isPersisting}>
-              {isSaving || isPersisting ? "Saving..." : "Save focus"}
-            </button>
-            {feedback ? <p className="focuspage__feedback">{feedback}</p> : null}
-          </div>
-        </form>
+      <section className="focuspage__hero card">
+        <p className="focuspage__eyebrow">Focus Blocks</p>
+        <h2>Shape your time in deliberate blocks</h2>
+        <p className="focuspage__intro">
+          Create focus blocks for the current period, plan future blocks ahead of time, and keep a record of past ones.
+        </p>
       </section>
 
       <section className="focuspage__section card">
-        <div className="focuspage__overview-head">
-          <h3>Currently aligned</h3>
-          <p>What this block is pointing at right now.</p>
+        <details className="focuspage__editor" open={isEditorOpen} onToggle={(event) => setIsEditorOpen(event.currentTarget.open)}>
+          <summary className="focuspage__editor-summary">
+            <div>
+              <h3>Add new focus</h3>
+              <p>Create a new current or future focus block.</p>
+            </div>
+          </summary>
+
+          <FocusBlockEditor
+            title="New focus block"
+            draft={newDraft}
+            setDraft={setNewDraft}
+            goals={goals}
+            domains={domains}
+            isSaving={isSaving || isPersisting}
+            onSubmit={handleAddFocus}
+            feedback={feedback}
+            submitLabel={isSaving || isPersisting ? "Saving..." : "Add focus block"}
+          />
+        </details>
+      </section>
+
+      <section className="focuspage__section card">
+        <div className="focuspage__tabs" role="tablist" aria-label="Focus block views">
+          <button
+            type="button"
+            className={activeTab === "current" ? "active" : ""}
+            onClick={() => setActiveTab("current")}
+          >
+            Current focus
+          </button>
+          <button
+            type="button"
+            className={activeTab === "future" ? "active" : ""}
+            onClick={() => setActiveTab("future")}
+          >
+            Future focus blocks
+          </button>
         </div>
 
-        <div className="focuspage__overview">
-          <article className="focuspage__overview-card">
-            <span>Domains</span>
-            {focusedDomains.length === 0 ? (
-              <p>None selected yet.</p>
-            ) : (
-              <ul>
-                {focusedDomains.map((domain) => (
-                  <li key={domain.id}>{domain.name}</li>
-                ))}
-              </ul>
-            )}
-          </article>
+        {activeTab === "current" ? (
+          currentFocus ? (
+            renderFocusCard(currentFocus, { tone: "current" })
+          ) : (
+            <div className="focuspage__empty-state">
+              <h3>No current focus block</h3>
+              <p>Nothing currently spans {todayISO}. You can add one above or plan a future block.</p>
+            </div>
+          )
+        ) : futureFocusBlocks.length > 0 ? (
+          <div className="focuspage__block-list">
+            {futureFocusBlocks.map((block) => renderFocusCard(block, { tone: "future" }))}
+          </div>
+        ) : (
+          <div className="focuspage__empty-state">
+            <h3>No future focus blocks</h3>
+            <p>Add a block with a future start date and it will appear here.</p>
+          </div>
+        )}
+      </section>
 
-          <article className="focuspage__overview-card">
-            <span>Goals</span>
-            {alignedGoals.length === 0 ? (
-              <p>None selected yet.</p>
-            ) : (
-              <ul>
-                {alignedGoals.map((goal) => (
-                  <li key={goal.id}>{goal.title}</li>
-                ))}
-              </ul>
-            )}
-          </article>
+      <section className="focuspage__section card">
+        <details className="focuspage__history" open={pastOpen} onToggle={(event) => setPastOpen(event.currentTarget.open)}>
+          <summary className="focuspage__history-summary">
+            <div>
+              <h3>Past focus blocks</h3>
+              <p>{pastFocusBlocks.length} saved block{pastFocusBlocks.length === 1 ? "" : "s"}</p>
+            </div>
+          </summary>
 
-          <article className="focuspage__overview-card">
-            <span>Pursuits</span>
-            {alignedPursuits.length === 0 ? (
-              <p>No linked pursuits yet.</p>
-            ) : (
-              <ul>
-                {alignedPursuits.map((item) => (
-                  <li key={item.id}>{item.title}</li>
-                ))}
-              </ul>
-            )}
-          </article>
-        </div>
+          {pastFocusBlocks.length > 0 ? (
+            <div className="focuspage__block-list">
+              {pastFocusBlocks.map((block) => renderFocusCard(block, { tone: "past" }))}
+            </div>
+          ) : (
+            <p className="focuspage__targets-empty">No past focus blocks yet.</p>
+          )}
+        </details>
       </section>
     </div>
   );

@@ -79,7 +79,8 @@ create table if not exists public.vision_focus_attributes (
 );
 
 create table if not exists public.focus_periods (
-  user_id uuid primary key references auth.users (id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
   title text not null default '',
   start_date date,
   end_date date,

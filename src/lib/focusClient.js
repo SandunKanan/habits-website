@@ -48,6 +48,7 @@ async function fetchSupabase(pathname, accessToken, options = {}) {
 
 function normalizeFocus(focus) {
   return {
+    id: String(focus.id ?? ""),
     userId: String(focus.userId ?? focus.user_id ?? ""),
     title: String(focus.title ?? "").trim(),
     startDate: focus.startDate ?? focus.start_date ?? "",
@@ -74,6 +75,7 @@ function normalizeFocus(focus) {
 
 function buildEmptyFocus(userId) {
   return normalizeFocus({
+    id: "",
     userId,
     title: "",
     startDate: "",
@@ -90,6 +92,7 @@ function buildEmptyFocus(userId) {
 
 function serializeFocusRow(focus, userId) {
   return {
+    id: focus.id,
     user_id: userId,
     title: focus.title,
     start_date: focus.startDate || null,
@@ -104,27 +107,43 @@ function serializeFocusRow(focus, userId) {
 
 export async function loadFocusForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/focus_periods?user_id=eq.${userId}&select=user_id,title,start_date,end_date,why_now,end_state,current_obstacles,focus_domain_ids_json,focus_targets_json,created_at,updated_at&limit=1`,
+    `/rest/v1/focus_periods?user_id=eq.${userId}&select=id,user_id,title,start_date,end_date,why_now,end_state,current_obstacles,focus_domain_ids_json,focus_targets_json,created_at,updated_at`,
     accessToken
   );
 
   if (!Array.isArray(rows) || rows.length === 0) {
-    return buildEmptyFocus(userId);
+    return [];
   }
 
-  return normalizeFocus(rows[0]);
+  return rows.map(normalizeFocus);
 }
 
 export async function saveFocusForSession(accessToken, userId, focus) {
   const normalized = normalizeFocus(focus);
 
-  await fetchSupabase("/rest/v1/focus_periods?on_conflict=user_id", accessToken, {
+  await fetchSupabase("/rest/v1/focus_periods?on_conflict=id", accessToken, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Prefer: "resolution=merge-duplicates, return=representation"
     },
-    body: JSON.stringify([serializeFocusRow(normalized, userId)])
+    body: JSON.stringify([
+      serializeFocusRow(
+        {
+          ...normalized,
+          id: normalized.id || crypto.randomUUID()
+        },
+        userId
+      )
+    ])
+  });
+
+  return loadFocusForSession(accessToken, userId);
+}
+
+export async function deleteFocusForSession(accessToken, userId, focusId) {
+  await fetchSupabase(`/rest/v1/focus_periods?id=eq.${focusId}&user_id=eq.${userId}`, accessToken, {
+    method: "DELETE"
   });
 
   return loadFocusForSession(accessToken, userId);

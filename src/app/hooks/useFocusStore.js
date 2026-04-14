@@ -1,27 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  deleteFocusForSession,
   loadFocusForSession,
   saveFocusForSession
 } from "../../lib/focusClient.js";
-
-function buildEmptyFocus(userId) {
-  return {
-    userId: userId ?? "",
-    title: "",
-    startDate: "",
-    endDate: "",
-    whyNow: "",
-    endState: "",
-    currentObstacles: "",
-    focusDomainIds: [],
-    focusTargets: [],
-    createdAt: null,
-    updatedAt: null
-  };
-}
+import { getCurrentFocusBlock } from "../../lib/focusUtils.js";
+import { startOfTodayLocalISO } from "../../lib/date.js";
 
 export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
-  const [focus, setFocus] = useState(buildEmptyFocus(authUser?.id));
+  const [focusBlocks, setFocusBlocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPersisting, setIsPersisting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -33,7 +20,7 @@ export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
       if (!isAuthReady) return;
       if (authEnabled && !session?.access_token) {
         if (!ignore) {
-          setFocus(buildEmptyFocus(authUser?.id));
+          setFocusBlocks([]);
           setIsLoading(false);
           setLoadError("");
         }
@@ -47,7 +34,7 @@ export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
         setLoadError("");
         const data = await loadFocusForSession(session?.access_token, authUser?.id);
         if (!ignore) {
-          setFocus(data ?? buildEmptyFocus(authUser?.id));
+          setFocusBlocks(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         if (!ignore) {
@@ -68,15 +55,31 @@ export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
     };
   }, [authEnabled, authUser?.id, isAuthReady, session?.access_token]);
 
+  const focus = useMemo(() => getCurrentFocusBlock(focusBlocks, startOfTodayLocalISO()), [focusBlocks]);
+
   async function saveFocus(nextFocus) {
     try {
       setIsPersisting(true);
       const data = await saveFocusForSession(session?.access_token, authUser?.id, nextFocus);
-      setFocus(data ?? buildEmptyFocus(authUser?.id));
+      setFocusBlocks(Array.isArray(data) ? data : []);
       return { ok: true, focus: data };
     } catch (error) {
       console.error("Failed to persist focus", error);
       return { ok: false, error: "Could not save focus." };
+    } finally {
+      setIsPersisting(false);
+    }
+  }
+
+  async function deleteFocus(focusId) {
+    try {
+      setIsPersisting(true);
+      const data = await deleteFocusForSession(session?.access_token, authUser?.id, focusId);
+      setFocusBlocks(Array.isArray(data) ? data : []);
+      return { ok: true };
+    } catch (error) {
+      console.error("Failed to delete focus", error);
+      return { ok: false, error: "Could not delete focus." };
     } finally {
       setIsPersisting(false);
     }
@@ -87,7 +90,7 @@ export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
   }
 
   function resetFocusState() {
-    setFocus(buildEmptyFocus(""));
+    setFocusBlocks([]);
     setIsLoading(false);
     setLoadError("");
     setIsPersisting(false);
@@ -95,10 +98,12 @@ export function useFocusStore({ authEnabled, isAuthReady, session, authUser }) {
 
   return {
     focus,
+    focusBlocks,
     isLoading,
     isPersisting,
     loadError,
     saveFocus,
+    deleteFocus,
     beginLoadingFocus,
     resetFocusState
   };
