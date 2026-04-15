@@ -1,0 +1,245 @@
+@use "../../styles/variables" as *;
+
+.listspage {
+  display: grid;
+  gap: 18px;
+}
+
+.listspage__composer,
+.listspage__empty,
+.listspage__item {
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(143, 211, 255, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    $panel;
+}
+
+.listspage__composer-head {
+  h2 {
+    margin: 0 0 8px;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.8rem;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+}
+
+.listspage__composer-form,
+.listspage__edit {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+
+  input,
+  textarea {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+    line-height: 1.6;
+  }
+}
+
+.listspage__grid {
+  display: grid;
+  gap: 16px;
+}
+
+.listspage__item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+
+  h2 {
+    margin: 0;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 1.55rem;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: $muted;
+  }
+}
+
+.listspage__item-meta {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+
+  span {
+    color: $muted;
+    font-size: 0.85rem;
+  }
+}
+
+.listspage__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.listspage button {
+  border: 1px solid $border-strong;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+  color: $text;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.listspage__secondary-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.listspage__danger-btn {
+  border-color: rgba(255, 107, 107, 0.35) !important;
+  color: rgb(248, 113, 113) !important;
+  background: transparent !important;
+}
+
+.listspage__add-item {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+
+  input {
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: $text;
+    font: inherit;
+  }
+}
+
+.listspage__columns {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.listspage__panel {
+  border: 1px solid $border;
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.listspage__panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 0;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  span {
+    color: $muted;
+    font-size: 0.82rem;
+  }
+}
+
+.listspage__panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.listspage__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid $border;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  span {
+    word-break: break-word;
+  }
+
+  button {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-color: $border;
+  }
+}
+
+.listspage__items--completed span {
+  color: $muted;
+  text-decoration: line-through;
+}
+
+.listspage__empty-copy,
+.listspage__feedback,
+.listspage__empty p {
+  margin: 0;
+  color: $muted;
+}
+
+.listspage__empty h2 {
+  margin: 0 0 8px;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 1.8rem;
+}
+
+@media (max-width: 860px) {
+  .listspage__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .listspage__item-head,
+  .listspage__add-item {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .listspage__item-meta {
+    justify-items: start;
+  }
+
+  .listspage__items li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

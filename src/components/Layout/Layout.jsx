@@ -20,6 +20,7 @@ export default function Layout({
   trackingMetrics,
   trackingEntries,
   notes,
+  lists,
   journalEntries,
   settings,
   onAddHabit,
@@ -56,6 +57,12 @@ export default function Layout({
   onArchiveNote,
   onUnarchiveNote,
   onDeleteNote,
+  onAddList,
+  onUpdateList,
+  onDeleteList,
+  onAddListItem,
+  onToggleListItem,
+  onDeleteListItem,
   onAddJournalEntry,
   onUpdateJournalEntry,
   onDeleteJournalEntry,
@@ -192,6 +199,15 @@ export default function Layout({
         </>
       )
     },
+    "/lists": {
+      title: "Lists",
+      subtitle: "Persistent lists you can keep reusing",
+      meta: (
+        <>
+          Total lists: <b>{lists.length}</b>
+        </>
+      )
+    },
     "/journal": {
       title: "Journal",
       subtitle: "Longer reflections and timestamped entries",
@@ -263,6 +279,7 @@ export default function Layout({
               trackingMetrics,
               trackingEntries,
               notes,
+              lists,
               journalEntries,
               settings,
               onAddHabit,
@@ -299,6 +316,12 @@ export default function Layout({
               onArchiveNote,
               onUnarchiveNote,
               onDeleteNote,
+              onAddList,
+              onUpdateList,
+              onDeleteList,
+              onAddListItem,
+              onToggleListItem,
+              onDeleteListItem,
               onAddJournalEntry,
               onUpdateJournalEntry,
               onDeleteJournalEntry,

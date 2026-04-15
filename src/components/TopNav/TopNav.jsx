@@ -10,7 +10,7 @@ export default function TopNav({ authUser, onSignOut }) {
   const isDirectionActive = ["/vision", "/focus", "/domains", "/goals", "/learnings"].includes(
     location.pathname
   );
-  const isMoreActive = ["/history", "/tracking", "/notes", "/journal", "/settings", "/help"].includes(location.pathname);
+  const isMoreActive = ["/history", "/tracking", "/notes", "/lists", "/journal", "/settings", "/help"].includes(location.pathname);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -158,6 +158,9 @@ export default function TopNav({ authUser, onSignOut }) {
                 </NavLink>
                 <NavLink to="/notes" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Notes
+                </NavLink>
+                <NavLink to="/lists" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
+                  Lists
                 </NavLink>
                 <NavLink to="/journal" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Journal
