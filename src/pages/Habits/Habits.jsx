@@ -4,6 +4,7 @@ import { startOfTodayLocalISO } from "../../lib/date.js";
 import {
   normalizeFrequency
 } from "../../lib/frequency.js";
+import { HABIT_DISPLAY_MODES, normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
 import {
   DEFAULT_IMPORTANCE_VALUE,
   IMPORTANCE_LEVELS,
@@ -33,6 +34,7 @@ export default function Habits() {
   } = useOutletContext();
   const [name, setName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [habitDisplayMode, setHabitDisplayMode] = useState("scheduled");
   const [frequencyMode, setFrequencyMode] = useState("interval");
   const [frequencyValue, setFrequencyValue] = useState("1");
   const [frequencyUnit, setFrequencyUnit] = useState("day");
@@ -45,6 +47,7 @@ export default function Habits() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editHabitDisplayMode, setEditHabitDisplayMode] = useState("scheduled");
   const [editFrequencyMode, setEditFrequencyMode] = useState("interval");
   const [editFrequencyValue, setEditFrequencyValue] = useState("1");
   const [editFrequencyUnit, setEditFrequencyUnit] = useState("day");
@@ -122,6 +125,7 @@ export default function Habits() {
 
     const result = await onAddHabit({
       name,
+      habitDisplayMode,
       frequencyMode,
       frequencyValue,
       frequencyUnit,
@@ -132,6 +136,7 @@ export default function Habits() {
 
     if (result?.ok) {
       setName("");
+      setHabitDisplayMode("scheduled");
       setFrequencyMode("interval");
       setFrequencyValue("1");
       setFrequencyUnit("day");
@@ -152,6 +157,7 @@ export default function Habits() {
     const frequency = normalizeFrequency(habit);
     setEditingId(habit.id);
     setEditName(String(habit.name ?? ""));
+    setEditHabitDisplayMode(normalizeHabitDisplayMode(habit.habitDisplayMode));
     setEditFrequencyMode(frequency.frequencyMode);
     setEditFrequencyValue(String(frequency.frequencyValue));
     setEditFrequencyUnit(frequency.frequencyUnit);
@@ -188,6 +194,7 @@ export default function Habits() {
 
     const result = await onUpdateHabit(editingId, {
       name: editName,
+      habitDisplayMode: editHabitDisplayMode,
       frequencyMode: editFrequencyMode,
       frequencyValue: editFrequencyValue,
       frequencyUnit: editFrequencyUnit,
@@ -369,21 +376,42 @@ export default function Habits() {
               />
             </label>
 
+            <label className="habits__form-field habits__form-field--priority">
+              <span>Today section</span>
+              <select
+                value={habitDisplayMode}
+                onChange={(e) => setHabitDisplayMode(e.target.value)}
+                title="Today section"
+                disabled={isSaving || isPersisting}
+                required
+              >
+                {HABIT_DISPLAY_MODES.map((mode) => (
+                  <option key={mode.value} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <div className="habits__form-group">
               <div className="habits__form-label">Frequency</div>
-              <HabitFrequencyControls
-                mode={frequencyMode}
-                value={frequencyValue}
-                unit={frequencyUnit}
-                disabled={isSaving || isPersisting}
-                onModeChange={(e) => {
-                  const nextMode = e.target.value;
-                  setFrequencyMode(nextMode);
-                  setFrequencyUnit(nextMode === "rate" ? "week" : "day");
-                }}
-                onValueChange={(e) => setFrequencyValue(e.target.value)}
-                onUnitChange={(e) => setFrequencyUnit(e.target.value)}
-              />
+              {habitDisplayMode === "daily" ? (
+                <input type="text" value="Every 1 day" disabled />
+              ) : (
+                <HabitFrequencyControls
+                  mode={frequencyMode}
+                  value={frequencyValue}
+                  unit={frequencyUnit}
+                  disabled={isSaving || isPersisting}
+                  onModeChange={(e) => {
+                    const nextMode = e.target.value;
+                    setFrequencyMode(nextMode);
+                    setFrequencyUnit(nextMode === "rate" ? "week" : "day");
+                  }}
+                  onValueChange={(e) => setFrequencyValue(e.target.value)}
+                  onUnitChange={(e) => setFrequencyUnit(e.target.value)}
+                />
+              )}
             </div>
 
             <label className="habits__form-field habits__form-field--priority">
@@ -607,6 +635,8 @@ export default function Habits() {
             editState={{
               name: editName,
               onNameChange: (e) => setEditName(e.target.value),
+              habitDisplayMode: editHabitDisplayMode,
+              onHabitDisplayModeChange: (e) => setEditHabitDisplayMode(e.target.value),
               frequencyMode: editFrequencyMode,
               frequencyValue: editFrequencyValue,
               frequencyUnit: editFrequencyUnit,

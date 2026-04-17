@@ -1,5 +1,6 @@
 import React from "react";
 import { IMPORTANCE_LEVELS } from "../../../lib/importance.js";
+import { HABIT_DISPLAY_MODES } from "../../../lib/habitDisplayMode.js";
 import HabitFrequencyControls from "./HabitFrequencyControls.jsx";
 import HabitAttributeLinksEditor from "./HabitAttributeLinksEditor.jsx";
 
@@ -7,6 +8,8 @@ export default function HabitEditor({
   title,
   name,
   onNameChange,
+  habitDisplayMode,
+  onHabitDisplayModeChange,
   frequencyMode,
   frequencyValue,
   frequencyUnit,
@@ -43,17 +46,34 @@ export default function HabitEditor({
         <input type="text" value={name} onChange={onNameChange} disabled={isSaving} required />
       </label>
       <label>
-        Frequency
-        <HabitFrequencyControls
-          mode={frequencyMode}
-          value={frequencyValue}
-          unit={frequencyUnit}
-          disabled={isSaving}
-          onModeChange={onFrequencyModeChange}
-          onValueChange={onFrequencyValueChange}
-          onUnitChange={onFrequencyUnitChange}
-        />
+        Today section
+        <select value={habitDisplayMode} onChange={onHabitDisplayModeChange} disabled={isSaving} required>
+          {HABIT_DISPLAY_MODES.map((mode) => (
+            <option key={mode.value} value={mode.value}>
+              {mode.label}
+            </option>
+          ))}
+        </select>
       </label>
+      {habitDisplayMode === "daily" ? (
+        <label>
+          Frequency
+          <input type="text" value="Every 1 day" disabled />
+        </label>
+      ) : (
+        <label>
+          Frequency
+          <HabitFrequencyControls
+            mode={frequencyMode}
+            value={frequencyValue}
+            unit={frequencyUnit}
+            disabled={isSaving}
+            onModeChange={onFrequencyModeChange}
+            onValueChange={onFrequencyValueChange}
+            onUnitChange={onFrequencyUnitChange}
+          />
+        </label>
+      )}
       {onCreatedAtChange ? (
         <label>
           Created at

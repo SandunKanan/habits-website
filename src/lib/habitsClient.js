@@ -1,5 +1,6 @@
 import { normalizeFrequency } from "./frequency.js";
 import { normalizeImportanceValue } from "./importance.js";
+import { normalizeHabitDisplayMode } from "./habitDisplayMode.js";
 import { loadHabitsSnapshot } from "./habitsSnapshot.js";
 import { computeHabitsSyncPlan } from "./habitsSyncPlan.js";
 import { executeHabitsSyncPlan } from "./executeHabitsSyncPlan.js";
@@ -88,6 +89,7 @@ function normalizeHabit(habit) {
     ...habit,
     id: String(habit.id ?? ""),
     slug: String(habit.slug ?? habit.id ?? ""),
+    habitDisplayMode: normalizeHabitDisplayMode(habit.habitDisplayMode ?? habit.habit_display_mode),
     ...frequency,
     importance: normalizeImportanceValue(habit.importance),
     createdAt: habit.createdAt ?? null,
@@ -132,6 +134,7 @@ function parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows) 
       id: habitRow.id,
       slug: habitRow.slug,
       name: habitRow.name,
+      habitDisplayMode: habitRow.habit_display_mode,
       frequencyMode: habitRow.frequency_mode,
       frequencyValue: habitRow.frequency_value,
       frequencyUnit: habitRow.frequency_unit,
@@ -156,6 +159,7 @@ function serializeHabitRow(habit, userId) {
     user_id: userId,
     slug: habit.slug ?? habit.id,
     name: habit.name,
+    habit_display_mode: normalizeHabitDisplayMode(habit.habitDisplayMode),
     frequency_mode: frequency.frequencyMode,
     frequency_value: frequency.frequencyValue,
     frequency_unit: frequency.frequencyUnit,

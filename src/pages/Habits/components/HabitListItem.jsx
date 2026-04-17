@@ -1,5 +1,6 @@
 import React from "react";
 import { formatFrequencyLabel } from "../../../lib/frequency.js";
+import { getHabitDisplayModeLabel } from "../../../lib/habitDisplayMode.js";
 import { getImportanceLabel } from "../../../lib/importance.js";
 import { getHabitSlug, getMostRecentProgressISO, getSortedDoneDates } from "../../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../../lib/scoring.js";
@@ -61,6 +62,8 @@ export default function HabitListItem({
           title={`Editing: ${getHabitSlug(habit)}`}
           name={editState.name}
           onNameChange={editState.onNameChange}
+          habitDisplayMode={editState.habitDisplayMode}
+          onHabitDisplayModeChange={editState.onHabitDisplayModeChange}
           frequencyMode={editState.frequencyMode}
           frequencyValue={editState.frequencyValue}
           frequencyUnit={editState.frequencyUnit}
@@ -150,8 +153,12 @@ export default function HabitListItem({
 
       <dl className="habits__details">
         <div>
+          <dt>Mode</dt>
+          <dd>{getHabitDisplayModeLabel(habit.habitDisplayMode)}</dd>
+        </div>
+        <div>
           <dt>Frequency</dt>
-          <dd>{formatFrequencyLabel(habit)}</dd>
+          <dd>{habit.habitDisplayMode === "daily" ? "Every 1 day" : formatFrequencyLabel(habit)}</dd>
         </div>
         <div>
           <dt>Priority</dt>

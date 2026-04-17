@@ -7,6 +7,8 @@ import {
   getHabitAttributeGains
 } from "../../lib/attributeScores.js";
 import { daysBetweenISO } from "../../lib/date.js";
+import { normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
+import { formatRecentDateLabel } from "../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import "./Today.scss";
 
@@ -85,10 +87,28 @@ export default function Today() {
       })
     : [];
 
-  const todoItems = curatedTop5.filter((item) => {
-    const habitId = item.habit.id;
-    return lastProgressById[habitId] !== todayISO && !skippedTodayIds.has(habitId);
-  });
+  const scoredHabits = habits
+    .map((habit) => {
+      const lastDoneISO = lastProgressById[habit.id];
+      return {
+        habit,
+        displayMode: normalizeHabitDisplayMode(habit.habitDisplayMode),
+        ...scoreHabitForToday({ habit, lastDoneISO, todayISO })
+      };
+    })
+    .filter((item) => Number(item.habit.importance) > 0);
+  const dailyItems = scoredHabits
+    .filter((item) => item.displayMode === "daily")
+    .filter((item) => lastProgressById[item.habit.id] !== todayISO && !skippedTodayIds.has(item.habit.id))
+    .sort((a, b) => b.importance - a.importance || a.habit.name.localeCompare(b.habit.name));
+  const scheduledItems = scoredHabits
+    .filter((item) => item.displayMode === "scheduled" && item.due)
+    .filter((item) => lastProgressById[item.habit.id] !== todayISO && !skippedTodayIds.has(item.habit.id))
+    .sort((a, b) => b.priorityScore - a.priorityScore);
+  const optionalItems = scoredHabits
+    .filter((item) => item.displayMode === "optional" && item.trackingScore > 1)
+    .filter((item) => lastProgressById[item.habit.id] !== todayISO && !skippedTodayIds.has(item.habit.id))
+    .sort((a, b) => b.priorityScore - a.priorityScore);
   const completedToday = habits.filter((habit) => {
     const importance = Number(habit.importance);
     return importance > 0 && lastDoneById[habit.id] === todayISO;
@@ -105,6 +125,9 @@ export default function Today() {
   const upcomingItems = habits
     .map((habit) => {
       const lastDoneISO = lastProgressById[habit.id];
+      if (normalizeHabitDisplayMode(habit.habitDisplayMode) !== "scheduled") {
+        return null;
+      }
       const item = scoreHabitForToday({ habit, lastDoneISO, todayISO });
       const intervalDays = item.intervalDays ?? 0;
       if (Number(habit.importance) <= 0 || item.due || intervalDays < 7 || !item.nextDueISO) {
@@ -144,6 +167,10 @@ export default function Today() {
 
   function formatGain(value) {
     return Number(value).toFixed(2).replace(/\.00$/, "");
+  }
+
+  function formatLastDone(habitId) {
+    return formatRecentDateLabel(lastDoneById[habitId], todayISO, "lower");
   }
 
   function formatStructuredEntry(entry, metric) {
@@ -372,12 +399,33 @@ export default function Today() {
       ) : null}
 
       <section className="today__section card">
-        <h2>To Do</h2>
-        {todoItems.length === 0 ? (
-          <p className="today__empty">No tasks left for today.</p>
+        <h2>Everyday Non-Negotiables</h2>
+        {dailyItems.length === 0 ? (
+          <p className="today__empty">No daily non-negotiables left for today.</p>
+        ) : (
+          <ul className="today__compact-list">
+            {dailyItems.map((item) => (
+              <li key={item.habit.id} className="today__compact-item today__compact-item--daily">
+                <div>
+                  <span>{item.habit.name}</span>
+                  <small>Last done {formatLastDone(item.habit.id)}</small>
+                </div>
+                <button className="today__tick-btn" type="button" onClick={() => handleDoToday(item.habit.id)} disabled={isPersisting}>
+                  {pendingUpcomingHabitId === item.habit.id ? "..." : "✓"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="today__section card">
+        <h2>Scheduled Habits</h2>
+        {scheduledItems.length === 0 ? (
+          <p className="today__empty">No scheduled habits left for today.</p>
         ) : (
           <div className="today__grid">
-            {todoItems.map((item) => (
+            {scheduledItems.map((item) => (
               <HabitCard
                 key={item.habit.id}
                 item={item}
@@ -391,6 +439,29 @@ export default function Today() {
               />
             ))}
           </div>
+        )}
+      </section>
+
+      <section className="today__section card">
+        <h2>Optional Tasks</h2>
+        {optionalItems.length === 0 ? (
+          <p className="today__empty">No optional tasks are overdue enough to show right now.</p>
+        ) : (
+          <ul className="today__compact-list">
+            {optionalItems.map((item) => (
+              <li key={item.habit.id} className="today__compact-item">
+                <div>
+                  <span>{item.habit.name}</span>
+                  <small>
+                    {item.frequencyLabel} · Last done {formatLastDone(item.habit.id)}
+                  </small>
+                </div>
+                <button className="today__do-btn" type="button" onClick={() => handleDoToday(item.habit.id)} disabled={isPersisting}>
+                  {pendingUpcomingHabitId === item.habit.id ? "Saving..." : "Done"}
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadHabitsForSession, saveHabitsForSession } from "../../lib/habitsClient.js";
 import { normalizeFrequency } from "../../lib/frequency.js";
 import { normalizeImportanceValue } from "../../lib/importance.js";
+import { normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import {
   getCycleSkippedDates,
@@ -131,10 +132,13 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   const curatedTop5 = useMemo(() => {
     const scored = habits.map((habit) => {
+      if (normalizeHabitDisplayMode(habit.habitDisplayMode) !== "scheduled") {
+        return null;
+      }
       const lastDoneISO = lastProgressById[habit.id];
       const score = scoreHabitForToday({ habit, lastDoneISO, todayISO });
       return { habit, ...score };
-    });
+    }).filter(Boolean);
 
     const schedulable = scored.filter((item) => item.importance > 0 && item.due);
     schedulable.sort((a, b) => b.priorityScore - a.priorityScore);
@@ -160,6 +164,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   async function addHabit({
     name,
+    habitDisplayMode,
     frequencyMode,
     frequencyValue,
     frequencyUnit,
@@ -172,7 +177,11 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       return { ok: false, error: "Habit name is required." };
     }
 
-    const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
+    const normalizedDisplayMode = normalizeHabitDisplayMode(habitDisplayMode);
+    const frequency =
+      normalizedDisplayMode === "daily"
+        ? normalizeFrequency({ frequencyMode: "interval", frequencyValue: 1, frequencyUnit: "day" })
+        : normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
     const slug = buildSlug(trimmedName, new Set(habits.map((habit) => habit.slug ?? habit.id)));
 
@@ -180,6 +189,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       id: crypto.randomUUID(),
       slug,
       name: trimmedName,
+      habitDisplayMode: normalizedDisplayMode,
       ...frequency,
       importance: parsedImportance,
       createdAt: new Date().toISOString(),
@@ -202,7 +212,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   async function updateHabit(
     habitId,
-    { name, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks, domainIds }
+    { name, habitDisplayMode, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks, domainIds }
   ) {
     const habit = habits.find((item) => item.id === habitId);
     if (!habit) {
@@ -217,7 +227,11 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       return { ok: false, error: "Created date is required." };
     }
 
-    const frequency = normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
+    const normalizedDisplayMode = normalizeHabitDisplayMode(habitDisplayMode);
+    const frequency =
+      normalizedDisplayMode === "daily"
+        ? normalizeFrequency({ frequencyMode: "interval", frequencyValue: 1, frequencyUnit: "day" })
+        : normalizeFrequency({ frequencyMode, frequencyValue, frequencyUnit });
     const parsedImportance = normalizeImportanceValue(importance);
     const normalizedCreatedAt = `${String(createdAt).slice(0, 10)}T00:00:00.000Z`;
 
@@ -227,6 +241,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
         : {
             ...item,
             name: trimmedName,
+            habitDisplayMode: normalizedDisplayMode,
             ...frequency,
             importance: parsedImportance,
             createdAt: normalizedCreatedAt,

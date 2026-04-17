@@ -5,6 +5,7 @@ create table if not exists public.habits (
   user_id uuid not null references auth.users (id) on delete cascade,
   slug text not null,
   name text not null,
+  habit_display_mode text not null default 'scheduled' check (habit_display_mode in ('daily', 'scheduled', 'optional')),
   frequency_mode text not null check (frequency_mode in ('interval', 'rate')),
   frequency_value integer not null check (frequency_value >= 1),
   frequency_unit text not null check (frequency_unit in ('day', 'week', 'month')),
