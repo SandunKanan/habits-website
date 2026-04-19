@@ -210,6 +210,8 @@ create table if not exists public.journal_entries (
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   highlight_focus_attributes boolean not null default true,
+  show_today_mantra boolean not null default false,
+  today_mantra text not null default '',
   use_attribute_decay boolean not null default true,
   use_decimal_domain_scores boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),

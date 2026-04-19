@@ -249,7 +249,10 @@ export default function Lists() {
                     <span>{completedItems.length}</span>
                     <button
                       type="button"
-                      className="listspage__secondary-btn"
+                      className={[
+                        "listspage__caret-btn",
+                        isShowingCompleted ? "listspage__caret-btn--open" : ""
+                      ].join(" ")}
                       onClick={() =>
                         setShowCompletedByListId((current) => ({
                           ...current,
@@ -257,8 +260,19 @@ export default function Lists() {
                         }))
                       }
                       disabled={completedItems.length === 0}
+                      aria-label={isShowingCompleted ? "Hide completed items" : "Show completed items"}
+                      title={isShowingCompleted ? "Hide completed items" : "Show completed items"}
                     >
-                      {isShowingCompleted ? "Hide completed" : "Show completed"}
+                      <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path
+                          d="M5.5 7.5 10 12l4.5-4.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
                   </div>
                 </div>

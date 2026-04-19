@@ -167,6 +167,27 @@
   flex-wrap: wrap;
 }
 
+.listspage__caret-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04) !important;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.18s ease;
+  }
+}
+
+.listspage__caret-btn--open svg {
+  transform: rotate(180deg);
+}
+
 .listspage__items {
   margin: 0;
   padding: 0;

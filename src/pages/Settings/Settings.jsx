@@ -5,6 +5,8 @@ import "./Settings.scss";
 export default function Settings() {
   const { settings, onSaveSettings, isPersisting } = useOutletContext();
   const [highlightFocusAttributes, setHighlightFocusAttributes] = useState(true);
+  const [showTodayMantra, setShowTodayMantra] = useState(false);
+  const [todayMantra, setTodayMantra] = useState("");
   const [useAttributeDecay, setUseAttributeDecay] = useState(true);
   const [useDecimalDomainScores, setUseDecimalDomainScores] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -12,6 +14,8 @@ export default function Settings() {
 
   useEffect(() => {
     setHighlightFocusAttributes(Boolean(settings?.highlightFocusAttributes ?? true));
+    setShowTodayMantra(Boolean(settings?.showTodayMantra ?? false));
+    setTodayMantra(String(settings?.todayMantra ?? ""));
     setUseAttributeDecay(Boolean(settings?.useAttributeDecay ?? true));
     setUseDecimalDomainScores(Boolean(settings?.useDecimalDomainScores ?? false));
   }, [settings]);
@@ -24,6 +28,8 @@ export default function Settings() {
     const result = await onSaveSettings({
       ...settings,
       highlightFocusAttributes,
+      showTodayMantra,
+      todayMantra,
       useAttributeDecay,
       useDecimalDomainScores
     });
@@ -87,6 +93,34 @@ export default function Settings() {
               />
               <span className="settingspage__switch-track" aria-hidden="true" />
             </span>
+          </label>
+
+          <label className="settingspage__toggle">
+            <div>
+              <strong>Show mantra on Today page</strong>
+              <p>Display a collapsible mantra block at the top of Today.</p>
+            </div>
+            <span className="settingspage__switch">
+              <input
+                type="checkbox"
+                checked={showTodayMantra}
+                onChange={(e) => setShowTodayMantra(e.target.checked)}
+                disabled={isSaving || isPersisting}
+              />
+              <span className="settingspage__switch-track" aria-hidden="true" />
+            </span>
+          </label>
+
+          <label className="settingspage__field">
+            <strong>Today mantra</strong>
+            <p>Short reminders, affirmations, or guiding phrases for the day.</p>
+            <textarea
+              value={todayMantra}
+              onChange={(e) => setTodayMantra(e.target.value)}
+              rows={4}
+              placeholder="Move with clarity. Finish what matters. Stay kind."
+              disabled={isSaving || isPersisting}
+            />
           </label>
 
           <div className="settingspage__actions">

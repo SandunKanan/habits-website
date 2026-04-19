@@ -60,7 +60,9 @@ export default function Today() {
   const [metricFeedback, setMetricFeedback] = useState("");
   const [pendingMetricId, setPendingMetricId] = useState("");
   const [pendingStructuredEntryId, setPendingStructuredEntryId] = useState("");
+  const [isMantraOpen, setIsMantraOpen] = useState(true);
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
+  const shouldShowTodayMantra = Boolean(settings?.showTodayMantra && String(settings?.todayMantra ?? "").trim());
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
   );
@@ -335,6 +337,22 @@ export default function Today() {
 
   return (
     <div className="today">
+      {shouldShowTodayMantra ? (
+        <section className="today__section today__section--compact card">
+          <details className="today__drawer today__drawer--mantra" open={isMantraOpen} onToggle={(event) => setIsMantraOpen(event.currentTarget.open)}>
+            <summary className="today__mantra-summary">
+              <div>
+                <span className="today__drawer-title">Mantras</span>
+                <span className="today__drawer-subtitle">A short reminder for how you want to move through today</span>
+              </div>
+            </summary>
+            <div className="today__drawer-body">
+              <p className="today__mantra-copy">{settings.todayMantra}</p>
+            </div>
+          </details>
+        </section>
+      ) : null}
+
       {habits.length === 0 ? (
         <section className="today__welcome card">
           <p className="today__eyebrow">New account</p>

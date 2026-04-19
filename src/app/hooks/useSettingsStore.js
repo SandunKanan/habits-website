@@ -8,6 +8,8 @@ function buildEmptySettings(userId) {
   return {
     userId: userId ?? "",
     highlightFocusAttributes: true,
+    showTodayMantra: false,
+    todayMantra: "",
     useAttributeDecay: true,
     useDecimalDomainScores: false,
     createdAt: null,

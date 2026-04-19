@@ -52,6 +52,8 @@ function normalizeSettings(settings) {
     highlightFocusAttributes: Boolean(
       settings.highlightFocusAttributes ?? settings.highlight_focus_attributes ?? true
     ),
+    showTodayMantra: Boolean(settings.showTodayMantra ?? settings.show_today_mantra ?? false),
+    todayMantra: String(settings.todayMantra ?? settings.today_mantra ?? ""),
     useAttributeDecay: Boolean(settings.useAttributeDecay ?? settings.use_attribute_decay ?? true),
     useDecimalDomainScores: Boolean(
       settings.useDecimalDomainScores ?? settings.use_decimal_domain_scores ?? false
@@ -65,6 +67,8 @@ function buildEmptySettings(userId) {
   return normalizeSettings({
     userId,
     highlightFocusAttributes: true,
+    showTodayMantra: false,
+    todayMantra: "",
     useAttributeDecay: true,
     useDecimalDomainScores: false,
     createdAt: null,
@@ -76,6 +80,8 @@ function serializeSettingsRow(settings, userId) {
   return {
     user_id: userId,
     highlight_focus_attributes: settings.highlightFocusAttributes,
+    show_today_mantra: settings.showTodayMantra,
+    today_mantra: settings.todayMantra,
     use_attribute_decay: settings.useAttributeDecay,
     use_decimal_domain_scores: settings.useDecimalDomainScores
   };
@@ -83,7 +89,7 @@ function serializeSettingsRow(settings, userId) {
 
 export async function loadSettingsForSession(accessToken, userId) {
   const rows = await fetchSupabase(
-    `/rest/v1/user_settings?user_id=eq.${userId}&select=user_id,highlight_focus_attributes,use_attribute_decay,use_decimal_domain_scores,created_at,updated_at&limit=1`,
+    `/rest/v1/user_settings?user_id=eq.${userId}&select=user_id,highlight_focus_attributes,show_today_mantra,today_mantra,use_attribute_decay,use_decimal_domain_scores,created_at,updated_at&limit=1`,
     accessToken
   );
 
