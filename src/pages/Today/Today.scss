@@ -312,15 +312,22 @@
 }
 
 .today__compact-item--daily {
-  background: linear-gradient(135deg, rgba(82, 214, 195, 0.08), rgba(255, 255, 255, 0.03));
+  border-color: rgba(240, 191, 85, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(240, 191, 85, 0.06), transparent 45%),
+    linear-gradient(135deg, rgba(240, 191, 85, 0.04), rgba(255, 255, 255, 0.03));
+
+  span {
+    color: $text;
+  }
 }
 
 .today__tick-btn {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid $border-strong;
-  background: linear-gradient(135deg, rgba(82, 214, 195, 0.18), rgba(143, 211, 255, 0.12));
+  border: 1px solid rgba(240, 191, 85, 0.18);
+  background: linear-gradient(135deg, rgba(240, 191, 85, 0.1), rgba(255, 255, 255, 0.06));
   color: $text;
   font: inherit;
   font-size: 1.25rem;
@@ -330,7 +337,7 @@
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(82, 214, 195, 0.12);
+    box-shadow: 0 10px 20px rgba(240, 191, 85, 0.08);
   }
 
   &:disabled {

@@ -4,7 +4,7 @@ import { startOfTodayLocalISO } from "../../lib/date.js";
 import {
   normalizeFrequency
 } from "../../lib/frequency.js";
-import { HABIT_DISPLAY_MODES, normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
+import { HABIT_DISPLAY_MODES, resolveHabitDisplayMode } from "../../lib/habitDisplayMode.js";
 import {
   DEFAULT_IMPORTANCE_VALUE,
   IMPORTANCE_LEVELS,
@@ -157,7 +157,7 @@ export default function Habits() {
     const frequency = normalizeFrequency(habit);
     setEditingId(habit.id);
     setEditName(String(habit.name ?? ""));
-    setEditHabitDisplayMode(normalizeHabitDisplayMode(habit.habitDisplayMode));
+    setEditHabitDisplayMode(resolveHabitDisplayMode(habit));
     setEditFrequencyMode(frequency.frequencyMode);
     setEditFrequencyValue(String(frequency.frequencyValue));
     setEditFrequencyUnit(frequency.frequencyUnit);

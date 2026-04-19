@@ -7,7 +7,7 @@ import {
   getHabitAttributeGains
 } from "../../lib/attributeScores.js";
 import { daysBetweenISO } from "../../lib/date.js";
-import { normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
+import { resolveHabitDisplayMode } from "../../lib/habitDisplayMode.js";
 import { formatRecentDateLabel } from "../../lib/habitUtils.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import "./Today.scss";
@@ -92,7 +92,7 @@ export default function Today() {
       const lastDoneISO = lastProgressById[habit.id];
       return {
         habit,
-        displayMode: normalizeHabitDisplayMode(habit.habitDisplayMode),
+        displayMode: resolveHabitDisplayMode(habit),
         ...scoreHabitForToday({ habit, lastDoneISO, todayISO })
       };
     })
@@ -125,7 +125,7 @@ export default function Today() {
   const upcomingItems = habits
     .map((habit) => {
       const lastDoneISO = lastProgressById[habit.id];
-      if (normalizeHabitDisplayMode(habit.habitDisplayMode) !== "scheduled") {
+      if (resolveHabitDisplayMode(habit) !== "scheduled") {
         return null;
       }
       const item = scoreHabitForToday({ habit, lastDoneISO, todayISO });

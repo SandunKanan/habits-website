@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadHabitsForSession, saveHabitsForSession } from "../../lib/habitsClient.js";
 import { normalizeFrequency } from "../../lib/frequency.js";
 import { normalizeImportanceValue } from "../../lib/importance.js";
-import { normalizeHabitDisplayMode } from "../../lib/habitDisplayMode.js";
+import { normalizeHabitDisplayMode, resolveHabitDisplayMode } from "../../lib/habitDisplayMode.js";
 import { scoreHabitForToday } from "../../lib/scoring.js";
 import {
   getCycleSkippedDates,
@@ -132,7 +132,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   const curatedTop5 = useMemo(() => {
     const scored = habits.map((habit) => {
-      if (normalizeHabitDisplayMode(habit.habitDisplayMode) !== "scheduled") {
+      if (resolveHabitDisplayMode(habit) !== "scheduled") {
         return null;
       }
       const lastDoneISO = lastProgressById[habit.id];
