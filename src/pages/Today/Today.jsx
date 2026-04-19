@@ -61,6 +61,7 @@ export default function Today() {
   const [pendingMetricId, setPendingMetricId] = useState("");
   const [pendingStructuredEntryId, setPendingStructuredEntryId] = useState("");
   const [isMantraOpen, setIsMantraOpen] = useState(true);
+  const [isDailyOpen, setIsDailyOpen] = useState(true);
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const shouldShowTodayMantra = Boolean(settings?.showTodayMantra && String(settings?.todayMantra ?? "").trim());
   const focusAttributeIds = new Set(
@@ -101,7 +102,7 @@ export default function Today() {
     .filter((item) => Number(item.habit.importance) > 0);
   const dailyItems = scoredHabits
     .filter((item) => item.displayMode === "daily")
-    .filter((item) => lastProgressById[item.habit.id] !== todayISO && !skippedTodayIds.has(item.habit.id))
+    .filter((item) => !skippedTodayIds.has(item.habit.id))
     .sort((a, b) => b.importance - a.importance || a.habit.name.localeCompare(b.habit.name));
   const scheduledItems = scoredHabits
     .filter((item) => item.displayMode === "scheduled" && item.due)
@@ -416,25 +417,66 @@ export default function Today() {
         </section>
       ) : null}
 
-      <section className="today__section card">
-        <h2>Everyday Non-Negotiables</h2>
-        {dailyItems.length === 0 ? (
-          <p className="today__empty">No daily non-negotiables left for today.</p>
-        ) : (
-          <ul className="today__compact-list">
-            {dailyItems.map((item) => (
-              <li key={item.habit.id} className="today__compact-item today__compact-item--daily">
-                <div>
-                  <span>{item.habit.name}</span>
-                  <small>Last done {formatLastDone(item.habit.id)}</small>
-                </div>
-                <button className="today__tick-btn" type="button" onClick={() => handleDoToday(item.habit.id)} disabled={isPersisting}>
-                  {pendingUpcomingHabitId === item.habit.id ? "..." : "✓"}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section className="today__section today__section--compact card">
+        <details className="today__drawer today__drawer--mantra" open={isDailyOpen} onToggle={(event) => setIsDailyOpen(event.currentTarget.open)}>
+          <summary className="today__mantra-summary">
+            <div>
+              <span className="today__drawer-title">Everyday Non-Negotiables</span>
+              <span className="today__drawer-subtitle">
+                {dailyItems.length === 0
+                  ? "No daily non-negotiables left for today"
+                  : `${dailyItems.length} daily ${dailyItems.length === 1 ? "item" : "items"}`}
+              </span>
+            </div>
+          </summary>
+          <div className="today__drawer-body">
+            {dailyItems.length === 0 ? (
+              <p className="today__empty">No daily non-negotiables left for today.</p>
+            ) : (
+              <ul className="today__compact-list">
+                {dailyItems.map((item) => (
+                  <li
+                    key={item.habit.id}
+                    className={[
+                      "today__compact-item",
+                      "today__compact-item--daily",
+                      lastProgressById[item.habit.id] === todayISO ? "today__compact-item--checked" : ""
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <div>
+                      <span>{item.habit.name}</span>
+                      <small>
+                        {lastProgressById[item.habit.id] === todayISO
+                          ? `Completed today · ${todayISO}`
+                          : `Last done ${formatLastDone(item.habit.id)}`}
+                      </small>
+                    </div>
+                    <button
+                      className={[
+                        "today__tick-btn",
+                        lastProgressById[item.habit.id] === todayISO ? "today__tick-btn--checked" : ""
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      type="button"
+                      onClick={() => handleDoToday(item.habit.id)}
+                      disabled={isPersisting || lastProgressById[item.habit.id] === todayISO}
+                      aria-label={
+                        lastProgressById[item.habit.id] === todayISO
+                          ? `${item.habit.name} completed today`
+                          : `Mark ${item.habit.name} done`
+                      }
+                    >
+                      {pendingUpcomingHabitId === item.habit.id ? "..." : "✓"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </details>
       </section>
 
       <section className="today__section card">

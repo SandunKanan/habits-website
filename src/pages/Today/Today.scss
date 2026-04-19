@@ -316,7 +316,7 @@
 
 .today__compact-list {
   list-style: none;
-  margin: 0;
+  margin: 10px 0 0;
   padding: 0;
   display: grid;
   gap: 10px;
@@ -349,22 +349,29 @@
 }
 
 .today__compact-item--daily {
-  border-color: rgba(240, 191, 85, 0.16);
+  border-color: rgba(240, 191, 85, 0.18);
   background:
-    radial-gradient(circle at top right, rgba(240, 191, 85, 0.06), transparent 45%),
-    linear-gradient(135deg, rgba(240, 191, 85, 0.04), rgba(255, 255, 255, 0.03));
+    radial-gradient(circle at top right, rgba(240, 191, 85, 0.12), transparent 45%),
+    linear-gradient(135deg, rgba(240, 191, 85, 0.085), rgba(255, 255, 255, 0.04));
 
   span {
     color: $text;
   }
 }
 
+.today__compact-item--checked {
+  border-color: rgba(240, 191, 85, 0.44);
+  background:
+    radial-gradient(circle at top right, rgba(240, 191, 85, 0.28), transparent 45%),
+    linear-gradient(135deg, rgba(240, 191, 85, 0.2), rgba(255, 255, 255, 0.05));
+}
+
 .today__tick-btn {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid rgba(240, 191, 85, 0.18);
-  background: linear-gradient(135deg, rgba(240, 191, 85, 0.1), rgba(255, 255, 255, 0.06));
+  border: 1px solid $border;
+  background: $bg-elevated;
   color: $text;
   font: inherit;
   font-size: 1.25rem;
@@ -383,6 +390,13 @@
     transform: none;
     box-shadow: none;
   }
+}
+
+.today__tick-btn--checked {
+  border-color: $border;
+  background: $bg-elevated;
+  color: #3cff9b;
+  opacity: 1 !important;
 }
 
 .today__tracking-list {
