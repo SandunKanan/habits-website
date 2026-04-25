@@ -7,7 +7,7 @@ export default function TopNav({ authUser, onSignOut }) {
   const [isHoverCapable, setIsHoverCapable] = useState(false);
   const [openMenu, setOpenMenu] = useState("");
   const navRef = useRef(null);
-  const isDirectionActive = ["/vision", "/focus", "/domains", "/goals", "/learnings"].includes(
+  const isDirectionActive = ["/vision", "/focus", "/timeline", "/domains", "/goals", "/learnings"].includes(
     location.pathname
   );
   const isMoreActive = ["/history", "/tracking", "/notes", "/lists", "/journal", "/settings", "/help"].includes(location.pathname);
@@ -110,6 +110,9 @@ export default function TopNav({ authUser, onSignOut }) {
                 </NavLink>
                 <NavLink to="/focus" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Focus
+                </NavLink>
+                <NavLink to="/timeline" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
+                  Timeline
                 </NavLink>
                 <NavLink to="/domains" className={({ isActive }) => (isActive ? "active" : "")} onClick={closeMenu}>
                   Domains

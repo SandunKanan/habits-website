@@ -21,6 +21,7 @@ export default function Layout({
   trackingEntries,
   notes,
   lists,
+  timelineBlocks,
   journalEntries,
   settings,
   onAddHabit,
@@ -63,6 +64,9 @@ export default function Layout({
   onAddListItem,
   onToggleListItem,
   onDeleteListItem,
+  onAddTimelineBlock,
+  onUpdateTimelineBlock,
+  onDeleteTimelineBlock,
   onAddJournalEntry,
   onUpdateJournalEntry,
   onDeleteJournalEntry,
@@ -208,6 +212,15 @@ export default function Layout({
         </>
       )
     },
+    "/timeline": {
+      title: "Timeline",
+      subtitle: "Map how you currently imagine the rest of life unfolding",
+      meta: (
+        <>
+          Planned blocks: <b>{timelineBlocks.length}</b>
+        </>
+      )
+    },
     "/journal": {
       title: "Journal",
       subtitle: "Longer reflections and timestamped entries",
@@ -280,6 +293,7 @@ export default function Layout({
               trackingEntries,
               notes,
               lists,
+              timelineBlocks,
               journalEntries,
               settings,
               onAddHabit,
@@ -322,6 +336,9 @@ export default function Layout({
               onAddListItem,
               onToggleListItem,
               onDeleteListItem,
+              onAddTimelineBlock,
+              onUpdateTimelineBlock,
+              onDeleteTimelineBlock,
               onAddJournalEntry,
               onUpdateJournalEntry,
               onDeleteJournalEntry,

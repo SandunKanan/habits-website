@@ -198,6 +198,18 @@ create table if not exists public.lists (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.timeline_blocks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  title text not null,
+  lane_key text not null check (lane_key in ('location', 'main_focus', 'career', 'relationships', 'health', 'hobbies', 'financial')),
+  start_month date not null,
+  end_month date not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  check (end_month >= start_month)
+);
+
 create table if not exists public.journal_entries (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -249,6 +261,7 @@ create index if not exists track_metric_entries_metric_id_idx on public.track_me
 create index if not exists track_metric_entries_entry_date_idx on public.track_metric_entries (entry_date);
 create index if not exists notes_user_id_idx on public.notes (user_id);
 create index if not exists lists_user_id_idx on public.lists (user_id);
+create index if not exists timeline_blocks_user_id_idx on public.timeline_blocks (user_id);
 create index if not exists journal_entries_user_id_idx on public.journal_entries (user_id);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
 
@@ -268,6 +281,7 @@ alter table public.track_metrics enable row level security;
 alter table public.track_metric_entries enable row level security;
 alter table public.notes enable row level security;
 alter table public.lists enable row level security;
+alter table public.timeline_blocks enable row level security;
 alter table public.journal_entries enable row level security;
 alter table public.user_settings enable row level security;
 alter table public.user_roles enable row level security;
@@ -379,6 +393,12 @@ create policy "Users can read own lists"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own timeline blocks" on public.timeline_blocks;
+create policy "Users can read own timeline blocks"
+  on public.timeline_blocks
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can read own journal entries" on public.journal_entries;
 create policy "Users can read own journal entries"
   on public.journal_entries
@@ -394,6 +414,12 @@ create policy "Users can insert own notes"
 drop policy if exists "Users can insert own lists" on public.lists;
 create policy "Users can insert own lists"
   on public.lists
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own timeline blocks" on public.timeline_blocks;
+create policy "Users can insert own timeline blocks"
+  on public.timeline_blocks
   for insert
   with check (auth.uid() = user_id);
 
@@ -417,6 +443,13 @@ create policy "Users can update own lists"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own timeline blocks" on public.timeline_blocks;
+create policy "Users can update own timeline blocks"
+  on public.timeline_blocks
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 drop policy if exists "Users can update own journal entries" on public.journal_entries;
 create policy "Users can update own journal entries"
   on public.journal_entries
@@ -433,6 +466,12 @@ create policy "Users can delete own notes"
 drop policy if exists "Users can delete own lists" on public.lists;
 create policy "Users can delete own lists"
   on public.lists
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own timeline blocks" on public.timeline_blocks;
+create policy "Users can delete own timeline blocks"
+  on public.timeline_blocks
   for delete
   using (auth.uid() = user_id);
 

@@ -14,6 +14,7 @@ import Learnings from "../pages/Learnings/Learnings.jsx";
 import Tracking from "../pages/Tracking/Tracking.jsx";
 import Notes from "../pages/Notes/Notes.jsx";
 import Lists from "../pages/Lists/Lists.jsx";
+import Timeline from "../pages/Timeline/Timeline.jsx";
 import Journal from "../pages/Journal/Journal.jsx";
 import Settings from "../pages/Settings/Settings.jsx";
 import History from "../pages/History/History.jsx";
@@ -36,6 +37,7 @@ import { useOneOffTasksStore } from "./hooks/useOneOffTasksStore.js";
 import { useTrackingStore } from "./hooks/useTrackingStore.js";
 import { useNotesStore } from "./hooks/useNotesStore.js";
 import { useListsStore } from "./hooks/useListsStore.js";
+import { useTimelineStore } from "./hooks/useTimelineStore.js";
 import { useJournalStore } from "./hooks/useJournalStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
 import "./App.scss";
@@ -119,6 +121,12 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const timelineStore = useTimelineStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser
+  });
   const journalStore = useJournalStore({
     authEnabled,
     isAuthReady: auth.isAuthReady,
@@ -146,6 +154,7 @@ export default function App() {
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
       listsStore.beginLoadingLists();
+      timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
@@ -166,6 +175,7 @@ export default function App() {
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
       listsStore.beginLoadingLists();
+      timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
@@ -186,6 +196,7 @@ export default function App() {
       trackingStore.beginLoadingTracking();
       notesStore.beginLoadingNotes();
       listsStore.beginLoadingLists();
+      timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
     }
@@ -206,6 +217,7 @@ export default function App() {
     trackingStore.resetTrackingState();
     notesStore.resetNotesState();
     listsStore.resetListsState();
+    timelineStore.resetTimelineState();
     journalStore.resetJournalState();
     settingsStore.resetSettingsState();
   }
@@ -230,6 +242,7 @@ export default function App() {
     trackingStore.isLoading ||
     notesStore.isLoading ||
     listsStore.isLoading ||
+    timelineStore.isLoading ||
     journalStore.isLoading ||
     settingsStore.isLoading
   ) {
@@ -248,6 +261,7 @@ export default function App() {
     trackingStore.loadError ||
     notesStore.loadError ||
     listsStore.loadError ||
+    timelineStore.loadError ||
     journalStore.loadError ||
     settingsStore.loadError
   ) {
@@ -264,6 +278,7 @@ export default function App() {
           trackingStore.loadError ||
           notesStore.loadError ||
           listsStore.loadError ||
+          timelineStore.loadError ||
           journalStore.loadError ||
           settingsStore.loadError}
       </div>
@@ -304,6 +319,7 @@ export default function App() {
             trackingEntries={trackingStore.trackingEntries}
             notes={notesStore.notes}
             lists={listsStore.lists}
+            timelineBlocks={timelineStore.timelineBlocks}
             journalEntries={journalStore.journalEntries}
             settings={settingsStore.settings}
             onAddHabit={habitsStore.addHabit}
@@ -346,6 +362,9 @@ export default function App() {
             onAddListItem={listsStore.addListItem}
             onToggleListItem={listsStore.toggleListItem}
             onDeleteListItem={listsStore.deleteListItem}
+            onAddTimelineBlock={timelineStore.addTimelineBlock}
+            onUpdateTimelineBlock={timelineStore.updateTimelineBlock}
+            onDeleteTimelineBlock={timelineStore.deleteTimelineBlock}
             onAddJournalEntry={journalStore.addJournalEntry}
             onUpdateJournalEntry={journalStore.updateJournalEntry}
             onDeleteJournalEntry={journalStore.deleteJournalEntry}
@@ -375,6 +394,7 @@ export default function App() {
               trackingStore.isPersisting ||
               notesStore.isPersisting ||
               listsStore.isPersisting ||
+              timelineStore.isPersisting ||
               journalStore.isPersisting ||
               settingsStore.isPersisting
             }
@@ -398,6 +418,7 @@ export default function App() {
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/notes" element={<Notes />} />
         <Route path="/lists" element={<Lists />} />
+        <Route path="/timeline" element={<Timeline />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
