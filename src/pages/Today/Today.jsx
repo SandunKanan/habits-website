@@ -107,6 +107,8 @@ export default function Today() {
     .filter((item) => item.displayMode === "daily")
     .filter((item) => !skippedTodayIds.has(item.habit.id))
     .sort((a, b) => b.importance - a.importance || a.habit.name.localeCompare(b.habit.name));
+  const areAllDailyItemsCompleted =
+    dailyItems.length > 0 && dailyItems.every((item) => lastProgressById[item.habit.id] === todayISO);
   const scheduledItems = scoredHabits
     .filter((item) => item.displayMode === "scheduled" && item.due)
     .filter((item) => lastProgressById[item.habit.id] !== todayISO && !skippedTodayIds.has(item.habit.id))
@@ -169,6 +171,10 @@ export default function Today() {
   useEffect(() => {
     setIsMantraOpen(false);
   }, [todayISO]);
+
+  useEffect(() => {
+    setIsDailyOpen(!areAllDailyItemsCompleted);
+  }, [areAllDailyItemsCompleted, todayISO]);
 
   function formatUpcomingLabel(daysUntilDue) {
     if (daysUntilDue === 1) return "Due tomorrow";
@@ -463,6 +469,11 @@ export default function Today() {
                   : `${dailyItems.length} daily ${dailyItems.length === 1 ? "item" : "items"}`}
               </span>
             </div>
+            {areAllDailyItemsCompleted ? (
+              <span className="today__drawer-status" aria-hidden="true">
+                <span className="today__drawer-status-box">✓</span>
+              </span>
+            ) : null}
           </summary>
           <div className="today__drawer-body">
             {dailyItems.length === 0 ? (
