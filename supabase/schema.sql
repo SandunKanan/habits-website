@@ -230,6 +230,15 @@ create table if not exists public.user_settings (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.daily_ui_state (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  entry_date date not null,
+  mantra_checked boolean not null default false,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  primary key (user_id, entry_date)
+);
+
 create table if not exists public.user_roles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   is_admin boolean not null default false,
@@ -264,6 +273,7 @@ create index if not exists lists_user_id_idx on public.lists (user_id);
 create index if not exists timeline_blocks_user_id_idx on public.timeline_blocks (user_id);
 create index if not exists journal_entries_user_id_idx on public.journal_entries (user_id);
 create index if not exists user_settings_user_id_idx on public.user_settings (user_id);
+create index if not exists daily_ui_state_user_id_entry_date_idx on public.daily_ui_state (user_id, entry_date);
 
 alter table public.habits enable row level security;
 alter table public.habit_completions enable row level security;
@@ -284,6 +294,7 @@ alter table public.lists enable row level security;
 alter table public.timeline_blocks enable row level security;
 alter table public.journal_entries enable row level security;
 alter table public.user_settings enable row level security;
+alter table public.daily_ui_state enable row level security;
 alter table public.user_roles enable row level security;
 
 create or replace function public.handle_new_user_role()
@@ -511,6 +522,12 @@ create policy "Users can read own settings"
   for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can read own daily ui state" on public.daily_ui_state;
+create policy "Users can read own daily ui state"
+  on public.daily_ui_state
+  for select
+  using (auth.uid() = user_id);
+
 drop policy if exists "Users can insert own vision" on public.visions;
 create policy "Users can insert own vision"
   on public.visions
@@ -595,6 +612,12 @@ create policy "Users can insert own track metric entries"
 drop policy if exists "Users can insert own settings" on public.user_settings;
 create policy "Users can insert own settings"
   on public.user_settings
+  for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own daily ui state" on public.daily_ui_state;
+create policy "Users can insert own daily ui state"
+  on public.daily_ui_state
   for insert
   with check (auth.uid() = user_id);
 
@@ -695,6 +718,13 @@ create policy "Users can update own settings"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own daily ui state" on public.daily_ui_state;
+create policy "Users can update own daily ui state"
+  on public.daily_ui_state
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 drop policy if exists "Users can delete own vision" on public.visions;
 create policy "Users can delete own vision"
   on public.visions
@@ -752,6 +782,12 @@ create policy "Users can delete own track metric entries"
 drop policy if exists "Users can delete own settings" on public.user_settings;
 create policy "Users can delete own settings"
   on public.user_settings
+  for delete
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own daily ui state" on public.daily_ui_state;
+create policy "Users can delete own daily ui state"
+  on public.daily_ui_state
   for delete
   using (auth.uid() = user_id);
 

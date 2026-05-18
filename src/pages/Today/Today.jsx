@@ -30,8 +30,10 @@ export default function Today() {
     trackingMetrics,
     trackingEntries,
     settings,
+    todayUiState,
     skippedTodayIds,
     cycleSkippedTodayIds,
+    onSetTodayMantraChecked,
     onAddOneOffTask,
     onSaveTrackingEntry,
     onDeleteTrackingEntry,
@@ -60,10 +62,11 @@ export default function Today() {
   const [metricFeedback, setMetricFeedback] = useState("");
   const [pendingMetricId, setPendingMetricId] = useState("");
   const [pendingStructuredEntryId, setPendingStructuredEntryId] = useState("");
-  const [isMantraOpen, setIsMantraOpen] = useState(true);
+  const [isMantraOpen, setIsMantraOpen] = useState(false);
   const [isDailyOpen, setIsDailyOpen] = useState(true);
   const isFocusViewEnabled = Boolean(settings?.highlightFocusAttributes ?? true);
   const shouldShowTodayMantra = Boolean(settings?.showTodayMantra && String(settings?.todayMantra ?? "").trim());
+  const isMantraChecked = Boolean(todayUiState?.entryDate === todayISO && todayUiState?.mantraChecked);
   const focusAttributeIds = new Set(
     isFocusViewEnabled && Array.isArray(vision?.focusAttributeIds) ? vision.focusAttributeIds : []
   );
@@ -163,6 +166,10 @@ export default function Today() {
     setMetricDrafts(nextDrafts);
   }, [todayISO, trackingEntries, trackingMetrics]);
 
+  useEffect(() => {
+    setIsMantraOpen(false);
+  }, [todayISO]);
+
   function formatUpcomingLabel(daysUntilDue) {
     if (daysUntilDue === 1) return "Due tomorrow";
     return `Due in ${daysUntilDue} days`;
@@ -185,6 +192,10 @@ export default function Today() {
         return `${field.label}: ${value}${suffix}`;
       })
       .filter(Boolean);
+  }
+
+  async function handleToggleMantraChecked(event) {
+    await onSetTodayMantraChecked(event.target.checked);
   }
 
   function addTaskAttributeLink() {
@@ -340,12 +351,36 @@ export default function Today() {
     <div className="today">
       {shouldShowTodayMantra ? (
         <section className="today__section today__section--compact card">
-          <details className="today__drawer today__drawer--mantra" open={isMantraOpen} onToggle={(event) => setIsMantraOpen(event.currentTarget.open)}>
+          <details
+            className="today__drawer today__drawer--mantra"
+            open={isMantraOpen}
+            onToggle={(event) => setIsMantraOpen(event.currentTarget.open)}
+          >
             <summary className="today__mantra-summary">
-              <div>
+              <div className="today__mantra-summary-copy">
                 <span className="today__drawer-title">Mantras</span>
                 <span className="today__drawer-subtitle">A short reminder for how you want to move through today</span>
               </div>
+              <label
+                className={[
+                  "today__mantra-check",
+                  isMantraChecked ? "today__mantra-check--checked" : ""
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.preventDefault()}
+              >
+                <input
+                  type="checkbox"
+                  checked={isMantraChecked}
+                  onChange={handleToggleMantraChecked}
+                  disabled={isPersisting}
+                />
+                <span className="today__mantra-check-box" aria-hidden="true">
+                  ✓
+                </span>
+              </label>
             </summary>
             <div className="today__drawer-body">
               <p className="today__mantra-copy">{settings.todayMantra}</p>

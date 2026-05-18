@@ -40,6 +40,7 @@ import { useListsStore } from "./hooks/useListsStore.js";
 import { useTimelineStore } from "./hooks/useTimelineStore.js";
 import { useJournalStore } from "./hooks/useJournalStore.js";
 import { useSettingsStore } from "./hooks/useSettingsStore.js";
+import { useTodayUiStore } from "./hooks/useTodayUiStore.js";
 import "./App.scss";
 
 export default function App() {
@@ -139,6 +140,13 @@ export default function App() {
     session: auth.session,
     authUser: auth.authUser
   });
+  const todayUiStore = useTodayUiStore({
+    authEnabled,
+    isAuthReady: auth.isAuthReady,
+    session: auth.session,
+    authUser: auth.authUser,
+    todayISO
+  });
 
   async function handleSignIn(credentials) {
     const result = await auth.handleSignIn(credentials);
@@ -157,6 +165,7 @@ export default function App() {
       timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
+      todayUiStore.beginLoadingTodayUi();
     }
     return result;
   }
@@ -178,6 +187,7 @@ export default function App() {
       timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
+      todayUiStore.beginLoadingTodayUi();
     }
     return result;
   }
@@ -199,6 +209,7 @@ export default function App() {
       timelineStore.beginLoadingTimeline();
       journalStore.beginLoadingJournal();
       settingsStore.beginLoadingSettings();
+      todayUiStore.beginLoadingTodayUi();
     }
     return result;
   }
@@ -220,6 +231,7 @@ export default function App() {
     timelineStore.resetTimelineState();
     journalStore.resetJournalState();
     settingsStore.resetSettingsState();
+    todayUiStore.resetTodayUiState();
   }
 
   if (authEnabled && !auth.isAuthReady) {
@@ -244,7 +256,8 @@ export default function App() {
     listsStore.isLoading ||
     timelineStore.isLoading ||
     journalStore.isLoading ||
-    settingsStore.isLoading
+    settingsStore.isLoading ||
+    todayUiStore.isLoading
   ) {
     return <div className="appstatus card">Loading habits...</div>;
   }
@@ -263,7 +276,8 @@ export default function App() {
     listsStore.loadError ||
     timelineStore.loadError ||
     journalStore.loadError ||
-    settingsStore.loadError
+    settingsStore.loadError ||
+    todayUiStore.loadError
   ) {
     return (
       <div className="appstatus card">
@@ -280,7 +294,8 @@ export default function App() {
           listsStore.loadError ||
           timelineStore.loadError ||
           journalStore.loadError ||
-          settingsStore.loadError}
+          settingsStore.loadError ||
+          todayUiStore.loadError}
       </div>
     );
   }
@@ -322,6 +337,7 @@ export default function App() {
             timelineBlocks={timelineStore.timelineBlocks}
             journalEntries={journalStore.journalEntries}
             settings={settingsStore.settings}
+            todayUiState={todayUiStore.todayUiState}
             onAddHabit={habitsStore.addHabit}
             onUpdateHabit={habitsStore.updateHabit}
             onDeleteHabit={habitsStore.deleteHabit}
@@ -369,6 +385,7 @@ export default function App() {
             onUpdateJournalEntry={journalStore.updateJournalEntry}
             onDeleteJournalEntry={journalStore.deleteJournalEntry}
             onSaveSettings={settingsStore.saveSettings}
+            onSetTodayMantraChecked={todayUiStore.setTodayMantraChecked}
             onAddSubtask={habitsStore.addSubtask}
             onMarkSubtaskDoneToday={habitsStore.markSubtaskDoneToday}
             onUndoSubtaskDoneToday={habitsStore.undoSubtaskDoneToday}
@@ -396,7 +413,8 @@ export default function App() {
               listsStore.isPersisting ||
               timelineStore.isPersisting ||
               journalStore.isPersisting ||
-              settingsStore.isPersisting
+              settingsStore.isPersisting ||
+              todayUiStore.isPersisting
             }
             authUser={auth.authUser}
             isAdmin={role.isAdmin}
