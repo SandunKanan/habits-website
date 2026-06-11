@@ -7,6 +7,7 @@
 
 .calendar__hero,
 .calendar__planner,
+.calendar__feed,
 .calendar__empty,
 .calendar__day,
 .calendar__month,
@@ -78,12 +79,14 @@
   }
 }
 
-.calendar__planner {
+.calendar__planner,
+.calendar__feed {
   display: grid;
   gap: 16px;
 }
 
 .calendar__planner-head,
+.calendar__feed-head,
 .calendar__day-head,
 .calendar__selected-head,
 .calendar__month-head {
@@ -139,6 +142,7 @@
 }
 
 .calendar__task-form button,
+.calendar__feed-head button,
 .calendar__item-actions button,
 .calendar__month-head button {
   border: 1px solid $border-strong;

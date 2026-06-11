@@ -43,7 +43,9 @@ export default function Calendar() {
     onAddOneOffTask,
     onCompleteOneOffTask,
     onDeleteOneOffTask,
-    isPersisting
+    isPersisting,
+    session,
+    authUser
   } = useOutletContext();
   const [viewMode, setViewMode] = useState("list");
   const [monthAnchorISO, setMonthAnchorISO] = useState(todayISO);
@@ -53,6 +55,7 @@ export default function Calendar() {
   const [feedback, setFeedback] = useState("");
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [pendingTaskActionKey, setPendingTaskActionKey] = useState("");
+  const [feedCopyStatus, setFeedCopyStatus] = useState("");
 
   const projectedHabitEvents = useMemo(
     () => buildProjectedHabitEvents({ habits, todayISO, horizonDays: CALENDAR_HORIZON_DAYS }),
@@ -80,6 +83,26 @@ export default function Calendar() {
   const selectedItems = eventsByDate.get(selectedDateISO) ?? [];
   const habitsThisWindow = projectedHabitEvents.length;
   const tasksThisWindow = upcomingOneOffEvents.length;
+
+  async function handleCopyFeedLink() {
+    setFeedCopyStatus("loading");
+    try {
+      const res = await fetch("/api/calendar-token", {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      if (!res.ok) {
+        setFeedCopyStatus("error");
+        return;
+      }
+      const data = await res.json();
+      const feedUrl = `${window.location.origin}/api/calendar?userId=${encodeURIComponent(data.userId)}&token=${encodeURIComponent(data.token)}`;
+      await navigator.clipboard.writeText(feedUrl);
+      setFeedCopyStatus("copied");
+      setTimeout(() => setFeedCopyStatus(""), 4000);
+    } catch {
+      setFeedCopyStatus("error");
+    }
+  }
 
   async function handleScheduleTask(event) {
     event.preventDefault();
@@ -239,6 +262,30 @@ export default function Calendar() {
         </form>
         {feedback ? <p className="calendar__feedback">{feedback}</p> : null}
       </section>
+
+      {authUser ? (
+        <section className="calendar__feed card">
+          <div className="calendar__feed-head">
+            <div>
+              <h2>Calendar Feed</h2>
+              <p>Subscribe to your projected habits and scheduled tasks in Google Calendar, Apple Calendar, or Outlook.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyFeedLink}
+              disabled={feedCopyStatus === "loading"}
+            >
+              {feedCopyStatus === "loading" ? "Generating..." : feedCopyStatus === "copied" ? "Copied!" : "Copy feed link"}
+            </button>
+          </div>
+          {feedCopyStatus === "copied" ? (
+            <p className="calendar__feedback">Link copied. In Google Calendar, go to Other calendars → From URL and paste it.</p>
+          ) : null}
+          {feedCopyStatus === "error" ? (
+            <p className="calendar__feedback">Could not generate feed link. Please try again.</p>
+          ) : null}
+        </section>
+      ) : null}
 
       {viewMode === "list" ? (
         groupedAgenda.length === 0 ? (
