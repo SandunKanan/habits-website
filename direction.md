@@ -1,5 +1,3 @@
-- Sync my calendar to google calendar (items that I choose)
-
 - Drill to improve skills. Under my skill domains (out of 10s), I will have some drills I can use to improve on these. as a child domain.
 For example, for boxing it can be close-up sparring drills. I want to have a counter for the number of times completed. e.g. "Close-up partner boxing drills 0/10
 

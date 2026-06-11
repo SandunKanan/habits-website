@@ -81,6 +81,7 @@ export default function Domains() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
   const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [expandedLinkedIds, setExpandedLinkedIds] = useState(() => new Set());
   const [inlineParentId, setInlineParentId] = useState("");
   const [inlineChildName, setInlineChildName] = useState("");
   const [inlineChildNotes, setInlineChildNotes] = useState("");
@@ -117,6 +118,18 @@ export default function Domains() {
 
   function toggleExpanded(domainId) {
     setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(domainId)) {
+        next.delete(domainId);
+      } else {
+        next.add(domainId);
+      }
+      return next;
+    });
+  }
+
+  function toggleLinked(domainId) {
+    setExpandedLinkedIds((current) => {
       const next = new Set(current);
       if (next.has(domainId)) {
         next.delete(domainId);
@@ -326,6 +339,7 @@ export default function Domains() {
     const isEditing = editingId === domain.id;
     const hasChildren = domain.children.length > 0;
     const isExpanded = expandedIds.has(domain.id);
+    const isLinkedExpanded = expandedLinkedIds.has(domain.id);
     const unavailableParentIds = new Set([domain.id]);
 
     function collectChildrenIds(node) {
@@ -448,6 +462,15 @@ export default function Domains() {
                         {linkedHabits.length} habit{linkedHabits.length === 1 ? "" : "s"}
                       </span>
                     ) : null}
+                    {linkedGoals.length > 0 || linkedPursuits.length > 0 || linkedHabits.length > 0 ? (
+                      <button
+                        type="button"
+                        className="domainspage__linked-toggle"
+                        onClick={() => toggleLinked(domain.id)}
+                      >
+                        {isLinkedExpanded ? "Hide" : "Show"}
+                      </button>
+                    ) : null}
                   </div>
                   <div className="domainspage__title-row">
                     <h3
@@ -513,35 +536,39 @@ export default function Domains() {
                     ) : null}
                   </div>
                   {domain.notes ? <p className="domainspage__notes">{domain.notes}</p> : null}
-                  {linkedGoals.length > 0 ? (
-                    <div className="domainspage__linked">
-                      <h4>Linked goals</h4>
-                      <ul className="domainspage__linked-list">
-                        {linkedGoals.slice(0, 3).map((goal) => (
-                          <li key={goal.id}>{goal.title}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {linkedPursuits.length > 0 ? (
-                    <div className="domainspage__linked">
-                      <h4>Linked pursuits</h4>
-                      <ul className="domainspage__linked-list">
-                        {linkedPursuits.slice(0, 3).map((item) => (
-                          <li key={item.id}>{item.title}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {linkedHabits.length > 0 ? (
-                    <div className="domainspage__linked">
-                      <h4>Linked habits</h4>
-                      <ul className="domainspage__linked-list">
-                        {linkedHabits.slice(0, 3).map((habit) => (
-                          <li key={habit.id}>{habit.name}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  {isLinkedExpanded ? (
+                    <>
+                      {linkedGoals.length > 0 ? (
+                        <div className="domainspage__linked">
+                          <h4>Linked goals</h4>
+                          <ul className="domainspage__linked-list">
+                            {linkedGoals.slice(0, 3).map((goal) => (
+                              <li key={goal.id}>{goal.title}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {linkedPursuits.length > 0 ? (
+                        <div className="domainspage__linked">
+                          <h4>Linked pursuits</h4>
+                          <ul className="domainspage__linked-list">
+                            {linkedPursuits.slice(0, 3).map((item) => (
+                              <li key={item.id}>{item.title}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {linkedHabits.length > 0 ? (
+                        <div className="domainspage__linked">
+                          <h4>Linked habits</h4>
+                          <ul className="domainspage__linked-list">
+                            {linkedHabits.slice(0, 3).map((habit) => (
+                              <li key={habit.id}>{habit.name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </>
                   ) : null}
                 </div>
                 <div className="domainspage__item-actions">

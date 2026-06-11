@@ -449,6 +449,24 @@
   color: rgba(143, 211, 255, 0.98);
 }
 
+.domainspage__linked-toggle {
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: transparent;
+  color: $muted;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    color: $text;
+    border-color: $border-strong;
+  }
+}
+
 .domainspage__toggle {
   width: 28px;
   height: 28px;
