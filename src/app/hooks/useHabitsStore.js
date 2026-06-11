@@ -199,7 +199,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
       cycleSkipDates: [],
       subtasks: [],
       attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : [],
-      domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : []
+      domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : [],
+      calendarSync: false
     };
 
     const persisted = await persistHabits([...habits, newHabit]);
@@ -212,7 +213,7 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
 
   async function updateHabit(
     habitId,
-    { name, habitDisplayMode, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks, domainIds }
+    { name, habitDisplayMode, frequencyMode, frequencyValue, frequencyUnit, importance, createdAt, attributeLinks, domainIds, calendarSync }
   ) {
     const habit = habits.find((item) => item.id === habitId);
     if (!habit) {
@@ -246,7 +247,8 @@ export function useHabitsStore({ authEnabled, isAuthReady, session, authUser, to
             importance: parsedImportance,
             createdAt: normalizedCreatedAt,
             attributeLinks: Array.isArray(attributeLinks) ? attributeLinks : [],
-            domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : []
+            domainIds: Array.isArray(domainIds) ? [...new Set(domainIds.map(String).filter(Boolean))] : [],
+            calendarSync: calendarSync !== undefined ? Boolean(calendarSync) : Boolean(item.calendarSync)
           }
     );
 

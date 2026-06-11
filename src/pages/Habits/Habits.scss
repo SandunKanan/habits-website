@@ -357,6 +357,14 @@
     margin-top: 10px;
   }
 
+  &__sync-btn {
+    opacity: 0.6;
+
+    &--on {
+      opacity: 1;
+    }
+  }
+
   &__subtasks {
     margin-top: 14px;
     padding-top: 14px;

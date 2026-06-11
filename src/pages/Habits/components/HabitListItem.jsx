@@ -41,6 +41,7 @@ export default function HabitListItem({
   onUndoSubtaskDoneToday,
   onMarkDone,
   onUndoDoneToday,
+  onToggleCalendarSync,
   formatLastCompleted,
   attributes,
   domains
@@ -223,6 +224,15 @@ export default function HabitListItem({
             )}
             <button type="button" onClick={() => onTogglePastCompletionForm(habit.id)} disabled={isPersisting}>
               {isPastOpen ? "Cancel past date" : "Add past completion"}
+            </button>
+            <button
+              type="button"
+              className={`habits__sync-btn${habit.calendarSync ? " habits__sync-btn--on" : ""}`}
+              onClick={() => onToggleCalendarSync(habit.id)}
+              disabled={isPersisting}
+              title={habit.calendarSync ? "Remove from calendar feed" : "Add to calendar feed"}
+            >
+              {habit.calendarSync ? "Calendar: On" : "Calendar: Off"}
             </button>
           </div>
 

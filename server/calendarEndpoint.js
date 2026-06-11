@@ -68,7 +68,7 @@ function verifyToken(userId, token, secret) {
 async function fetchHabitsForUser(config, userId) {
   const habitRows = await fetchSupabase(
     config,
-    `/rest/v1/habits?user_id=eq.${userId}&select=id,slug,name,frequency_mode,frequency_value,frequency_unit,importance,initial_last_done,created_at,cycle_skip_dates_json&order=created_at.asc`
+    `/rest/v1/habits?user_id=eq.${userId}&calendar_sync=eq.true&select=id,slug,name,frequency_mode,frequency_value,frequency_unit,importance,initial_last_done,created_at,cycle_skip_dates_json&order=created_at.asc`
   ) ?? [];
 
   if (habitRows.length === 0) return [];

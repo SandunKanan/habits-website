@@ -214,6 +214,24 @@ export default function Habits() {
     setIsSavingEdit(false);
   }
 
+  async function handleToggleCalendarSync(habitId) {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    await onUpdateHabit(habitId, {
+      name: habit.name,
+      habitDisplayMode: resolveHabitDisplayMode(habit),
+      frequencyMode: habit.frequencyMode,
+      frequencyValue: habit.frequencyValue,
+      frequencyUnit: habit.frequencyUnit,
+      importance: habit.importance,
+      createdAt: habit.createdAt ? String(habit.createdAt).slice(0, 10) : todayISO,
+      attributeLinks: habit.attributeLinks ?? [],
+      domainIds: habit.domainIds ?? [],
+      calendarSync: !habit.calendarSync
+    });
+  }
+
   async function handleDeleteHabit(habit) {
     const confirmed = window.confirm(`Delete "${habit.name}"? This cannot be undone.`);
     if (!confirmed) return;
@@ -717,6 +735,7 @@ export default function Habits() {
             onUndoSubtaskDoneToday={handleUndoSubtaskDone}
             onMarkDone={handleMarkDoneToday}
             onUndoDoneToday={handleUndoDoneToday}
+            onToggleCalendarSync={handleToggleCalendarSync}
             formatLastCompleted={(dateISO) => formatRecentDateLabel(dateISO, todayISO)}
           />
         ))}

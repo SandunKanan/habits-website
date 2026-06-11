@@ -268,7 +268,7 @@ export default function Calendar() {
           <div className="calendar__feed-head">
             <div>
               <h2>Calendar Feed</h2>
-              <p>Subscribe to your projected habits and scheduled tasks in Google Calendar, Apple Calendar, or Outlook.</p>
+              <p>Subscribe to habits you've marked "Calendar: On" in Google Calendar, Apple Calendar, or Outlook. Toggle sync per habit on the Habits page.</p>
             </div>
             <button
               type="button"

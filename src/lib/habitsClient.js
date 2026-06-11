@@ -99,7 +99,8 @@ function normalizeHabit(habit) {
     cycleSkipDates,
     subtasks,
     attributeLinks,
-    domainIds
+    domainIds,
+    calendarSync: Boolean(habit.calendarSync ?? false)
   };
 }
 
@@ -146,7 +147,8 @@ function parseHabitRows(habitRows, completionRows, skipRows, attributeLinkRows) 
       cycleSkipDates: habitRow.cycle_skip_dates_json,
       subtasks: habitRow.subtasks ?? [],
       attributeLinks: linksByHabitId.get(habitRow.id) ?? [],
-      domainIds: habitRow.domain_ids_json
+      domainIds: habitRow.domain_ids_json,
+      calendarSync: habitRow.calendar_sync
     })
   );
 }
@@ -168,7 +170,8 @@ function serializeHabitRow(habit, userId) {
     initial_last_done: habit.initialLastDone ?? null,
     subtasks: habit.subtasks ?? [],
     cycle_skip_dates_json: Array.isArray(habit.cycleSkipDates) ? habit.cycleSkipDates : [],
-    domain_ids_json: Array.isArray(habit.domainIds) ? habit.domainIds : []
+    domain_ids_json: Array.isArray(habit.domainIds) ? habit.domainIds : [],
+    calendar_sync: Boolean(habit.calendarSync ?? false)
   };
 }
 
